@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# Set these paths appropriately
+
+BIN=/Users/michele/Dropbox/Workspace/ManTIME/TreeTagger/bin
+CMD=/Users/michele/Dropbox/Workspace/ManTIME/TreeTagger/cmd
+LIB=/Users/michele/Dropbox/Workspace/ManTIME/TreeTagger/lib
+
+OPTIONS="-token -lemma -sgml -no-unknown -quiet"
+
+TAGGER=${BIN}/tree-tagger
+ABBR_LIST=${LIB}/english-abbreviations
+PARFILE=${LIB}/english.par
+LEXFILE=${LIB}/english-lexicon.txt
+
+# remove empty lines
+grep -v '^$' |
+# external lexicon lookup
+perl $CMD/lookup.perl $LEXFILE |
+# tagging
+$TAGGER $OPTIONS $PARFILE | 
+perl -pe 's/\tV[BDHV]/\tVB/;s/IN\/that/\tIN/;'
