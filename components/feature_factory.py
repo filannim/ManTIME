@@ -22,8 +22,8 @@ import KMP
 import nlp_functions
 from nlp_functions import NLP
 from nlp_functions import TreeTaggerTokeniser
-from nlp_functions import Parser
-from properties import properties
+# from nlp_functions import Parser
+from properties import property as paths
 
 class Memoize:
     def __init__(self, fn):
@@ -44,7 +44,7 @@ class FeatureFactory(object):
 		self.lancasterstemmer = Memoize(nltk.LancasterStemmer().stem)
 		self.wordnetlemmatiser = Memoize(nltk.WordNetLemmatizer().lemmatize)
 		self.tokeniser = TreeTaggerTokeniser()
-		self.parser = Parser()
+		self.parser = None	# Parser()
 		self.phonemedictionary = nltk.corpus.cmudict.dict()
 		self.wordnet = nltk.corpus.wordnet
 		self.stopwords = nltk.corpus.stopwords.words('english')
@@ -74,7 +74,7 @@ class FeatureFactory(object):
 		"""For each token in the sentence the compute feature vector"""
 		sentence = sentence.replace('`','\\`')
 		featuretable = []
-		treetagger_path = properties['path_treetagger']
+		treetagger_path = paths['path_treetagger']
 		# Tokenise
 		tokens = self.tokeniser.tokenize(sentence)
 		tokens = [t.replace('"','\\"') for t in tokens]	# " character escape

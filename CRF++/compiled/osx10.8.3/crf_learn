@@ -188,7 +188,7 @@ func_exec_program ()
 
   if test -f "$progdir/$program"; then
     # Add our own library path to DYLD_LIBRARY_PATH
-    DYLD_LIBRARY_PATH="/Users/michele/Downloads/CRF++-0.58/.libs:$DYLD_LIBRARY_PATH"
+    DYLD_LIBRARY_PATH="/Users/michele/Dropbox/Workspace/ManTIME/CRF++/compiled/osx10.8.3/.libs:$DYLD_LIBRARY_PATH"
 
     # Some systems cannot cope with colon-terminated DYLD_LIBRARY_PATH
     # The second colon is a workaround for a bug in BeOS R4 sed

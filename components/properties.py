@@ -14,11 +14,11 @@
 
 installation_path = '/Users/michele/Dropbox/Workspace/ManTIME'
 
-properties = {}
+property = {}
 
-properties['path_crf++'] = installation_path + '/CRF++/compiled/osx10.8.3/'
-properties['path_crf++_model'] = installation_path + '/components/crf_modules/both_m1.crf'
-properties['path_consistency_module'] = installation_path + '/components/make_consistent.py'
-properties['path_adjustment_module'] = installation_path + '/components/make_adjusted.py'
-properties['path_treetagger'] = installation_path + '/components/tree-tagger-bundle'
-properties['path_treetagger_tokenizer'] = installation_path + '/cmd/tokenize.pl'
+property['path_crf++'] = installation_path + '/CRF++/compiled/osx10.8.3/'
+property['path_crf++_model'] = installation_path + '/components/crf_modules/both_m1.crf'
+property['path_consistency_module'] = installation_path + '/components/make_consistent.py'
+property['path_adjustment_module'] = installation_path + '/components/make_adjusted.py'
+property['path_treetagger'] = installation_path + '/components/tree-tagger-bundle'
+property['path_treetagger_tokenizer'] = installation_path + '/cmd/tokenize.pl'

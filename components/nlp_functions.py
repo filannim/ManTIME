@@ -19,7 +19,7 @@ import nltk
 
 # import MBSP
 
-from properties import properties
+from properties import property as paths
 
 
 def memoise(f):
@@ -253,7 +253,7 @@ class TreeTaggerTokeniser():
 	It runs tokenize.pl script through the command line and parse the result.
 	"""
 
-	path = properties['path_treetagger_tokenizer']
+	path = paths['path_treetagger_tokenizer']
 
 	@classmethod
 	def tokenize(cls, sentence):

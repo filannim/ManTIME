@@ -1,0 +1,25 @@
+<?xml version="1.0" ?>
+<TimeML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://timeml.org/timeMLdocs/TimeML_1.2.1.xsd">
+
+<DOCID>CNN_20130322_248</DOCID>
+
+<DCT><TIMEX3 tid="t0" type="DATE" value="2013-03-22" temporalFunction="false" functionInDocument="CREATION_TIME">March 22, 2013</TIMEX3></DCT>
+
+<TITLE>FAA to close 149 regional airport control towers, spare 40 others</TITLE>
+
+
+
+<TEXT>
+
+The FAA on Friday announced it will close 149 regional airport control towers because of forced spending cuts -- sparing 40 others that the FAA had been expected to shutter.
+
+A four-week, phased closure of the 149 control towers will begin on April 7, the FAA said.
+
+The FAA had been expected to announce the closure of 189 low- or moderate-volume towers staffed by contractors. Before Friday's announcement, it said it would consider keeping a tower open if the airport convinces the agency it is in the "national interest" to do so.
+
+By congressional mandate, the FAA must cut nearly $600 million from its nearly $48 billion budget this fiscal year. Because the majority of its 47,000 employees are air traffic controllers, it is impossible to cut its budget without affecting controllers, the agency says.
+
+</TEXT>
+
+
+</TimeML>

@@ -31,14 +31,15 @@ from nlp_functions import NLP
 from nlp_functions import TreeTaggerTokeniser
 from normalisers.general_timex_normaliser import normalise as generally_normalise
 from text_extractor import TextExtractor
+from properties import property as paths
 
 class Tagger(object):
 
 	def __init__(self):
-		self.crf_path = properties['path_crf++']
-		self.crf_timex_model = properties['path_crf++_model']
-		self.crf_consistency_module = properties['path_consistency_module']
-		self.crf_adjustment_module = properties['path_adjustment_module']
+		self.crf_path = paths['path_crf++']
+		self.crf_timex_model = paths['path_crf++_model']
+		self.crf_consistency_module = paths['path_consistency_module']
+		self.crf_adjustment_module = paths['path_adjustment_module']
 
 	def identify(self, sentence, IOB, debug=False):
 		file_name = '/tmp/sentence_' + str(random.randint(0,9999999999)) + '.tmp'

@@ -41,25 +41,18 @@ def pipeline(file_set, debug=False):
 	for file in file_set:
 		source_folder_path = abspath(dirname(file))
 		original_file = abspath(file)
-		splitted_file = source_folder_path + '/splitted/' + basename(file)
 		annotated_file = source_folder_path + '/annotated_output/' + basename(file).replace(".TE3input","")
 		
 		utterance = te.get_utterance(original_file)
 		save_file = open(annotated_file,'w')
 		save_file_content = open(original_file,'r').read()
-		for sentence, offsets in te.read(splitted_file, ['TIMEX3','EVENT','SIGNAL']):
+		for sentence, offsets in te.read(original_file, ['TIMEX3','EVENT','SIGNAL']):
 			sentence = sentence.replace('__space__', ' ').strip()
 			if debug: print 'SENTENCE:', sentence
 			sentence_iob = ff.getFeaturedSentence([sentence, offsets], 'TIMEX3', True)
 			tagged = tagger.tag(sentence, sentence_iob, utterance, start_id)
 			if debug: print 'TAGGED:', tagged
-			sentence_replaced = save_file_content.replace(sentence.replace("&", "&amp;"), tagged['sentence'])
-
-			if (sentence_replaced == save_file_content) and tagged['tagged']:
-				print sentence
-				raise NameError('Sentence not found!')
-			else:
-				save_file_content = sentence_replaced
+			save_file_content = save_file_content.replace(sentence.replace("&", "&amp;"), tagged['sentence'])
 			start_id = tagged['start_id']
 		start_id = 1
 		save_file.write(save_file_content)
