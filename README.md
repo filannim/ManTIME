@@ -3,10 +3,16 @@ ManTIME
 
 Temporal expression extraction pipeline for general domain. System submitted to TempEval-3 challenge.
 
+##Dependencies
+
+You should have installed the following softwares:
+* NLTK ([web page](http://nltk.org/))
+* MBSP CLIPS for Python ([web page](http://www.clips.ua.ac.be/software/mbsp-for-python)) [the code is commented]
+* TreeTagger ([web page](http://www.ims.uni-stuttgart.de/projekte/corplex/TreeTagger/))
+* CRF++ 0.57 ([web page](http://crfpp.googlecode.com/svn/trunk/doc/index.html))
+
 ##Installation
 
-Install TreeTagger in this folder (you can find a Mac OS X 10.8.3 compiled version). Make sure the paths in cmd/tree-tugger-bundle are the right ones (bin, cmd and lib).
-Install CRF++ in this folder (you can find a Mac OS X 10.8.3 compiled version).
 Edit the file components/properties.py and update the paths according to your configuration.
 
 ##How to use it
@@ -21,13 +27,6 @@ or if you want to annotate just a sentence, than use the following command:
 
 
 The script will create a new folder in it, called "annotated", with the annotated .tml documents.
-
-##Dependencies
-
-You should have installed the following softwares:
-* MBSP CLIPS for Python ([web page](http://www.clips.ua.ac.be/software/mbsp-for-python)) [the code is commented]
-* TreeTagger ([web page](http://www.ims.uni-stuttgart.de/projekte/corplex/TreeTagger/))
-* CRF++ 0.57 ([web page](http://crfpp.googlecode.com/svn/trunk/doc/index.html))
 
 ##License
 
