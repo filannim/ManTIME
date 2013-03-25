@@ -3,19 +3,28 @@ ManTIME
 
 Temporal expression extraction pipeline for general domain. System submitted to TempEval-3 challenge.
 
+##Installation
+
+Install TreeTagger in this folder (you can find a Mac OS X 10.8.3 compiled version). Make sure the paths in cmd/tree-tugger-bundle are the right ones (bin, cmd and lib).
+Edit the file components/properties.py and update the paths according to your configuration.
+
 ##How to use it
 
 Put the .tml files in a particular folder and run the pipeline.py script.
 
     $ python pipeline.py <folder_path>
-    $
+
+or if you want to annotate just a sentence, than use the following command:
+
+    $ echo "<sentence>" | python annotate_sentence.py
+
 
 The script will create a new folder in it, called "annotated", with the annotated .tml documents.
 
 ##Dependencies
 
 You should have installed the following softwares:
-* MBSP CLIPS for Python ([web page](http://www.clips.ua.ac.be/software/mbsp-for-python))
+* MBSP CLIPS for Python ([web page](http://www.clips.ua.ac.be/software/mbsp-for-python)) [the code is commented]
 * TreeTagger ([web page](http://www.ims.uni-stuttgart.de/projekte/corplex/TreeTagger/))
 * CRF++ 0.57 ([web page](http://crfpp.googlecode.com/svn/trunk/doc/index.html))
 
