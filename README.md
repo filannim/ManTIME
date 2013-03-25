@@ -6,10 +6,11 @@ Temporal expression extraction pipeline for general domain. System submitted to 
 ##Dependencies
 
 You should have installed the following softwares:
-* NLTK ([web page](http://nltk.org/))
-* MBSP CLIPS for Python ([web page](http://www.clips.ua.ac.be/software/mbsp-for-python)) [the code is commented]
-* TreeTagger ([web page](http://www.ims.uni-stuttgart.de/projekte/corplex/TreeTagger/))
+
 * CRF++ 0.57 ([web page](http://crfpp.googlecode.com/svn/trunk/doc/index.html))
+* NLTK ([web page](http://nltk.org/))
+* TreeTagger ([web page](http://www.ims.uni-stuttgart.de/projekte/corplex/TreeTagger/))
+* MBSP CLIPS for Python ([web page](http://www.clips.ua.ac.be/software/mbsp-for-python)) [the code is commented]
 
 ##Installation
 
