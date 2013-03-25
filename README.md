@@ -6,6 +6,7 @@ Temporal expression extraction pipeline for general domain. System submitted to 
 ##Installation
 
 Install TreeTagger in this folder (you can find a Mac OS X 10.8.3 compiled version). Make sure the paths in cmd/tree-tugger-bundle are the right ones (bin, cmd and lib).
+Install CRF++ in this folder (you can find a Mac OS X 10.8.3 compiled version).
 Edit the file components/properties.py and update the paths according to your configuration.
 
 ##How to use it
