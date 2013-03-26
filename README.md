@@ -20,9 +20,11 @@ Edit the file components/properties.py and update the paths according to your co
 
 Put the .tml files in a particular folder and run the pipeline.py script.
 
-    $ python pipeline.py <folder_path>
+    $ python pipeline.py <folder_path> [-pp]
 
-or if you want to annotate just a sentence, than use the following command:
+the option -pp uses the post-processing pipeline on top of the CRFs model.
+
+You can also annotate just a sentence using the following command:
 
     $ echo "<sentence>" | python annotate_sentence.py
 
