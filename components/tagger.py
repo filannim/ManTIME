@@ -60,7 +60,6 @@ class Tagger(object):
 		else:
 			command = self.crf_path + 'crf_test -m ' + self.crf_timex_model + ' ' + file_name
 		predictions = commands.getoutput(command)
-		print predictions
 		annotated_tokens = [(escape(line.split('\t')[0]), line.split('\t')[-1]) for line in predictions.split('\n')]
 		if debug: print 'ANNOTATIONS:', annotated_tokens
 		to_annotate = []
@@ -78,7 +77,6 @@ class Tagger(object):
 			sentence_character_pointer += len(token) + (start-sentence_character_pointer)
 			if debug: print to_annotate, token, prediction, sentence_character_pointer
 		os.remove(file_name)
-		print to_annotate
 		return to_annotate
 
 	def tag(self, sentence, IOB, utterance, start_id=0, withPipeline=True, debug=False):

@@ -33,7 +33,7 @@ from components.tagger import Tagger
 from components.normalisers.general_timex_normaliser import normalise as generally_normalise
 
 
-def pipeline(file_set, debug=False):
+def pipeline(file_set, post_processing, debug=False):
 	te = TextExtractor();
 	ff = FeatureFactory();
 	tagger = Tagger();
@@ -64,29 +64,38 @@ def main():
 		original_path = abspath(sys.argv[1])
 	except:
 		print '\033[1m'+'SYNOPSIS:'+'\033[0m'
-		print '>> python ' + sys.argv[0] + ' <source_directory>'
-		print 'Where\'s the source_directory?!?'
+		print '>> python ' + sys.argv[0] + ' <source_directory> [-pp]'
+		print
+		print '\033[1m'+'DESCRIPTION:'+'\033[0m'
+		print 'It scans the content of <source_directory> and annotates all the .TE3input files in it. The annotated documents are saved as .tml and stored in a new sub-folder (<source_directory>/annoted_output).'
+		print
+		print 'The following options are available:'
+		print
+		print '-pp\tUses the post-processing pipeline on top of the CRF module.'
 		print 
 		return None
+
+	post_processing = True if '-pp' in sys.argv[2,:] else False
+	print post_processing
 
 	os.system('rm -Rf '+original_path+'/annotated_output')
 	os.system('mkdir '+original_path+'/annotated_output')
 	#os.system('mkdir '+original_path+'/splitted')
 
 
-	# processes_num = multiprocessing.cpu_count()*2
-	# files = [str(original_path+'/'+f) for f in listdir(original_path) if f.endswith('.tml.TE3input')]
-	# chunk_dim = int(len(files)/(processes_num))
-	# if chunk_dim<1: chunk_dim = 1
-	# file_chunks = [files[i:i+chunk_dim] for i in range(0, len(files), chunk_dim)]
+	processes_num = multiprocessing.cpu_count()*2
+	files = [str(original_path+'/'+f) for f in listdir(original_path) if f.endswith('.tml.TE3input')]
+	chunk_dim = int(len(files)/(processes_num))
+	if chunk_dim<1: chunk_dim = 1
+	file_chunks = [files[i:i+chunk_dim] for i in range(0, len(files), chunk_dim)]
 	#print file_chunks
 
-	# pool = Pool(processes=processes_num)
-	# result = pool.map(pipeline, file_chunks)
+	pool = Pool(processes=processes_num)
+	result = pool.map(pipeline, file_chunks)
 	#print result.get(timeout=1)
 
 	# TEST
-	pipeline(['/Users/michele/Dropbox/Workspace/ManTIME/data/test/test.tml.TE3input'], debug=False)
+	# pipeline(['/Users/michele/Dropbox/Workspace/ManTIME/data/test/test.tml.TE3input'], post_processing, debug=False)
 
 
 if __name__ == '__main__':
