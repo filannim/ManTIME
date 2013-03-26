@@ -58,10 +58,11 @@ class FeatureFactory(object):
 		self.nationalities = pickle.load(open('gazetteer/nationalities.pickle'))
 		self.festivities = pickle.load(open('gazetteer/festivities.pickle'))
 
-	def getFeaturedSentence(self, sentence, tag, print_header=True):
+	def getFeaturedSentence(self, sentence, tag, print_header=True, debug=False):
 		iob_format = ''
 		gold_predictions = sentence[1]
 		words = self.computeSentenceFeatures(sentence[0], gold_predictions)
+		if debug: print 'WORDS:', words
 		indexes = sorted([e for e in words[0].keys() if e.islower()]) + [e for e in words[0].keys() if e.isupper() and e==tag]
 		for word in words:
 			if print_header:
@@ -83,6 +84,9 @@ class FeatureFactory(object):
 		sentence_as_echo_input = '"' + '\n'.join(tokens) + '"'
 		command = 'echo ' + sentence_as_echo_input + ' | ' + treetagger_path
 		sentence_tokenised = commands.getoutput(command)
+		print sentence_tokenised
+		print
+		print
 		tokensTT = [line.split('\t') for line in sentence_tokenised.split('\n')]
 		# Use gazetteers at sentence level
 		gazetteers = {}

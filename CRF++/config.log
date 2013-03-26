@@ -30,8 +30,8 @@ Kernel configured for up to 4 processors.
 Processor type: i486 (Intel 80486)
 Processors active: 0 1 2 3
 Primary memory available: 8.00 gigabytes
-Default processor set: 126 tasks, 666 threads, 4 processors
-Load average: 1.76, Mach factor: 2.56
+Default processor set: 120 tasks, 631 threads, 4 processors
+Load average: 2.39, Mach factor: 2.12
 /bin/machine           = unknown
 /usr/bin/oslevel       = unknown
 /bin/universe          = unknown
@@ -232,7 +232,7 @@ configure:5412: checking the name lister (/usr/bin/nm) interface
 configure:5419: g++ -c -g -O2  conftest.cpp >&5
 configure:5422: /usr/bin/nm "conftest.o"
 configure:5425: output
-00000000000001d4 S _some_variable
+00000000000001ac S _some_variable
 configure:5432: result: BSD nm
 configure:5435: checking whether ln -s works
 configure:5439: result: yes
@@ -960,15 +960,15 @@ lt_cv_to_tool_file_cmd=func_convert_file_noop
 ## Output variables. ##
 ## ----------------- ##
 
-ACLOCAL='${SHELL} /Users/michele/Dropbox/Workspace/ManTIME/CRF++/compiled/osx10.8.3/missing --run aclocal-1.11'
+ACLOCAL='${SHELL} /Users/michele/Dropbox/Workspace/ManTIME/CRF++/missing --run aclocal-1.11'
 AMDEPBACKSLASH='\'
 AMDEP_FALSE='#'
 AMDEP_TRUE=''
 AMTAR='$${TAR-tar}'
 AR='ar'
-AUTOCONF='${SHELL} /Users/michele/Dropbox/Workspace/ManTIME/CRF++/compiled/osx10.8.3/missing --run autoconf'
-AUTOHEADER='${SHELL} /Users/michele/Dropbox/Workspace/ManTIME/CRF++/compiled/osx10.8.3/missing --run autoheader'
-AUTOMAKE='${SHELL} /Users/michele/Dropbox/Workspace/ManTIME/CRF++/compiled/osx10.8.3/missing --run automake-1.11'
+AUTOCONF='${SHELL} /Users/michele/Dropbox/Workspace/ManTIME/CRF++/missing --run autoconf'
+AUTOHEADER='${SHELL} /Users/michele/Dropbox/Workspace/ManTIME/CRF++/missing --run autoheader'
+AUTOMAKE='${SHELL} /Users/michele/Dropbox/Workspace/ManTIME/CRF++/missing --run automake-1.11'
 AWK='awk'
 CC='gcc'
 CCDEPMODE='depmode=gcc3'
@@ -1004,7 +1004,7 @@ LIBTOOL='$(SHELL) $(top_builddir)/libtool'
 LIPO='lipo'
 LN_S='ln -s'
 LTLIBOBJS=''
-MAKEINFO='${SHELL} /Users/michele/Dropbox/Workspace/ManTIME/CRF++/compiled/osx10.8.3/missing --run makeinfo'
+MAKEINFO='${SHELL} /Users/michele/Dropbox/Workspace/ManTIME/CRF++/missing --run makeinfo'
 MANIFEST_TOOL=':'
 MKDIR_P='./install-sh -c -d'
 NM='/usr/bin/nm'
@@ -1063,7 +1063,7 @@ host_vendor='apple'
 htmldir='${docdir}'
 includedir='${prefix}/include'
 infodir='${datarootdir}/info'
-install_sh='${SHELL} /Users/michele/Dropbox/Workspace/ManTIME/CRF++/compiled/osx10.8.3/install-sh'
+install_sh='${SHELL} /Users/michele/Dropbox/Workspace/ManTIME/CRF++/install-sh'
 libdir='${exec_prefix}/lib'
 libexecdir='${exec_prefix}/libexec'
 localedir='${datarootdir}/locale'

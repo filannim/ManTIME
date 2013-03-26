@@ -46,11 +46,11 @@ def pipeline(file_set, debug=False):
 		utterance = te.get_utterance(original_file)
 		save_file = open(annotated_file,'w')
 		save_file_content = open(original_file,'r').read()
-		for sentence, offsets in te.read(original_file, ['TIMEX3','EVENT','SIGNAL']):
+		for sentence, offsets in te.read(original_file, ['TIMEX3','EVENT','SIGNAL'], debug=False):
 			sentence = sentence.replace('__space__', ' ').strip()
 			if debug: print 'SENTENCE:', sentence
-			sentence_iob = ff.getFeaturedSentence([sentence, offsets], 'TIMEX3', True)
-			tagged = tagger.tag(sentence, sentence_iob, utterance, start_id)
+			sentence_iob = ff.getFeaturedSentence([sentence, offsets], 'TIMEX3', True, debug=False)
+			tagged = tagger.tag(sentence, sentence_iob, utterance, start_id, debug=False)
 			if debug: print 'TAGGED:', tagged
 			save_file_content = save_file_content.replace(sentence.replace("&", "&amp;"), tagged['sentence'])
 			start_id = tagged['start_id']
@@ -74,19 +74,19 @@ def main():
 	#os.system('mkdir '+original_path+'/splitted')
 
 
-	processes_num = multiprocessing.cpu_count()*2
-	files = [str(original_path+'/'+f) for f in listdir(original_path) if f.endswith('.tml.TE3input')]
-	chunk_dim = int(len(files)/(processes_num))
-	if chunk_dim<1: chunk_dim = 1
-	file_chunks = [files[i:i+chunk_dim] for i in range(0, len(files), chunk_dim)]
+	# processes_num = multiprocessing.cpu_count()*2
+	# files = [str(original_path+'/'+f) for f in listdir(original_path) if f.endswith('.tml.TE3input')]
+	# chunk_dim = int(len(files)/(processes_num))
+	# if chunk_dim<1: chunk_dim = 1
+	# file_chunks = [files[i:i+chunk_dim] for i in range(0, len(files), chunk_dim)]
 	#print file_chunks
 
-	pool = Pool(processes=processes_num)
-	result = pool.map(pipeline, file_chunks)
+	# pool = Pool(processes=processes_num)
+	# result = pool.map(pipeline, file_chunks)
 	#print result.get(timeout=1)
 
 	# TEST
-	# pipeline(['/home/filannim/Dropbox/Workspace/TempEval-3/data/test_pipeline/APW19980213.1310.tml'], debug=True)
+	pipeline(['/Users/michele/Dropbox/Workspace/ManTIME/data/test/CNN_20130322_248.tml.TE3input'], debug=True)
 
 
 if __name__ == '__main__':

@@ -28,7 +28,7 @@ class TextExtractor(object):
 		self.corpus = []
 		self.tokeniser = TreeTaggerTokeniser()
 
-	def read(self, file_name, tags_to_spot):
+	def read(self, file_name, tags_to_spot, debug=False):
 		"""Extracts the text from all the TML documents existing in a given 
 		directory and returns a list of strings along with timex and event
 		offsets"""
@@ -43,6 +43,8 @@ class TextExtractor(object):
 		xml_form = [x for x in xml_form if x != '']	# filter out empy elements
 		txt_form = [fromstring(x).text_content().replace(' __space__ ', ' ') for x in xml_form]
 		
+		if debug: print 'TXTFORM:', txt_form
+
 		# For each sentence I save the timex and event offsets
 		for i, sentence in enumerate(txt_form):
 			# offsets = self.get_offsets(xml_form[i],['TIMEX3','EVENT'])

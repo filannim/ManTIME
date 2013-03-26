@@ -64,6 +64,7 @@ class Tagger(object):
 		sentence_character_pointer = 0
 		if debug: print 'SENTENCE:', sentence
 		for token, prediction in annotated_tokens:
+			print token, sentence
 			start = sentence.index(token, sentence_character_pointer)
 			if prediction.startswith('B'):
 				to_annotate.append([start,start+len(token),header.split('\t')[-1]])
