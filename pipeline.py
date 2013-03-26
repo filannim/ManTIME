@@ -50,7 +50,7 @@ def pipeline(file_set, debug=False):
 			sentence = sentence.replace('__space__', ' ').strip()
 			if debug: print 'SENTENCE:', sentence
 			sentence_iob = ff.getFeaturedSentence([sentence, offsets], 'TIMEX3', True, debug=False)
-			tagged = tagger.tag(sentence, sentence_iob, utterance, start_id, debug=False)
+			tagged = tagger.tag(sentence, sentence_iob, utterance, start_id, withPipeline=True, debug=False)
 			if debug: print 'TAGGED:', tagged
 			save_file_content = save_file_content.replace(sentence.replace("&", "&amp;"), tagged['sentence'])
 			start_id = tagged['start_id']
@@ -86,7 +86,7 @@ def main():
 	#print result.get(timeout=1)
 
 	# TEST
-	pipeline(['/Users/michele/Dropbox/Workspace/ManTIME/data/test/CNN_20130322_248.tml.TE3input'], debug=True)
+	pipeline(['/Users/michele/Dropbox/Workspace/ManTIME/data/test/test.tml.TE3input'], debug=False)
 
 
 if __name__ == '__main__':

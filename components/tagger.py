@@ -41,7 +41,7 @@ class Tagger(object):
 		self.crf_consistency_module = paths['path_consistency_module']
 		self.crf_adjustment_module = paths['path_adjustment_module']
 
-	def identify(self, sentence, IOB, debug=False):
+	def identify(self, sentence, IOB, withPipeline=True, debug=False):
 		file_name = '/tmp/sentence_' + str(random.randint(0,9999999999)) + '.tmp'
 		IOB_saved = open(file_name,'w')
 		# Writing the IOB without header
@@ -50,21 +50,23 @@ class Tagger(object):
 		IOB_saved.write(content)
 		IOB_saved.close()
 		#Lets call CRF++
-		command = self.crf_path + 'crf_test -m ' + self.crf_timex_model + ' ' + file_name
-		#command = self.crf_path + 'crf_test -v2 -m ' + self.crf_timex_model + ' ' + file_name + ' | '
-		#command += 'python ' + self.crf_adjustment_module + ' 0.5 "perturbate" | '
-		#command += 'python ' + self.crf_consistency_module + ' "OI,BB,IB" | '
-		#command += 'python ' + self.crf_adjustment_module + ' 0.87 "threshold_adjustment" | '
-		#command += 'python ' + self.crf_consistency_module + ' "OI,BB,IB" | '
-		#command += 'python ' + self.crf_consistency_module + ' "OI,BB,IB"'
+		if withPipeline:
+			command = self.crf_path + 'crf_test -v2 -m ' + self.crf_timex_model + ' ' + file_name + ' | '
+			command += 'python ' + self.crf_adjustment_module + ' 0.5 "perturbate" | '
+			command += 'python ' + self.crf_consistency_module + ' "OI,BB,IB" | '
+			command += 'python ' + self.crf_adjustment_module + ' 0.87 "threshold_adjustment" | '
+			command += 'python ' + self.crf_consistency_module + ' "OI,BB,IB" | '
+			command += 'python ' + self.crf_consistency_module + ' "OI,BB,IB"'
+		else:
+			command = self.crf_path + 'crf_test -m ' + self.crf_timex_model + ' ' + file_name
 		predictions = commands.getoutput(command)
+		print predictions
 		annotated_tokens = [(escape(line.split('\t')[0]), line.split('\t')[-1]) for line in predictions.split('\n')]
 		if debug: print 'ANNOTATIONS:', annotated_tokens
 		to_annotate = []
 		sentence_character_pointer = 0
 		if debug: print 'SENTENCE:', sentence
 		for token, prediction in annotated_tokens:
-			print token, sentence
 			start = sentence.index(token, sentence_character_pointer)
 			if prediction.startswith('B'):
 				to_annotate.append([start,start+len(token),header.split('\t')[-1]])
@@ -76,11 +78,12 @@ class Tagger(object):
 			sentence_character_pointer += len(token) + (start-sentence_character_pointer)
 			if debug: print to_annotate, token, prediction, sentence_character_pointer
 		os.remove(file_name)
+		print to_annotate
 		return to_annotate
 
-	def tag(self, sentence, IOB, utterance, start_id=0, debug=False):
+	def tag(self, sentence, IOB, utterance, start_id=0, withPipeline=True, debug=False):
 		sentence = escape(sentence)
-		offsets = self.identify(sentence, IOB, debug=debug)
+		offsets = self.identify(sentence, IOB, withPipeline=withPipeline, debug=debug)
 		annotated_sentence = list(sentence)
 		displacement = 0
 		for start, end, tag in offsets:

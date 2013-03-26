@@ -84,9 +84,6 @@ class FeatureFactory(object):
 		sentence_as_echo_input = '"' + '\n'.join(tokens) + '"'
 		command = 'echo ' + sentence_as_echo_input + ' | ' + treetagger_path
 		sentence_tokenised = commands.getoutput(command)
-		print sentence_tokenised
-		print
-		print
 		tokensTT = [line.split('\t') for line in sentence_tokenised.split('\n')]
 		# Use gazetteers at sentence level
 		gazetteers = {}
