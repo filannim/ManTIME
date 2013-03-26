@@ -12,3 +12,5 @@ data/.DS_Store
 CRF++/compiled/.DS_Store
 
 data/test/.DS_Store
+
+components/crf_models/both_m1.crf

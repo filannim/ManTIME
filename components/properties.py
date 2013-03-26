@@ -17,7 +17,7 @@ installation_path = '/Users/michele/Dropbox/Workspace/ManTIME'
 property = {}
 
 property['path_crf++'] = installation_path + '/CRF++/'
-property['path_crf++_model'] = installation_path + '/components/crf_modules/both_m1.crf'
+property['path_crf++_model'] = installation_path + '/components/crf_models/both_m1.crf'
 property['path_consistency_module'] = installation_path + '/components/make_consistent.py'
 property['path_adjustment_module'] = installation_path + '/components/make_adjusted.py'
 property['path_treetagger'] = installation_path + '/components/tree-tagger-bundle'
