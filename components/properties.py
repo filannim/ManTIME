@@ -16,7 +16,7 @@ installation_path = '/Users/michele/Dropbox/Workspace/ManTIME'
 
 property = {}
 
-property['path_crf++'] = installation_path + '/CRF++/compiled/osx10.8.3/'
+property['path_crf++'] = installation_path + '/CRF++/'
 property['path_crf++_model'] = installation_path + '/components/crf_modules/both_m1.crf'
 property['path_consistency_module'] = installation_path + '/components/make_consistent.py'
 property['path_adjustment_module'] = installation_path + '/components/make_adjusted.py'
