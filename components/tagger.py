@@ -86,6 +86,7 @@ class Tagger(object):
 		displacement = 0
 		for start, end, tag in offsets:
 			timex_text = annotated_sentence[int(int(start)+displacement):int(int(end)+displacement)]
+			if debug: print "NORMALISATION PARAMETERS:", ''.join(timex_text), utterance.replace('-','')
 			try:
 				_, timex_type, timex_value, _ = generally_normalise(''.join(timex_text), utterance.replace('-',''))
 				if timex_type == 'NONE': timex_type = 'DATE'
