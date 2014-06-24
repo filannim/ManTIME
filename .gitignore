@@ -1,16 +1,15 @@
-
+# Mac OSX's metadata
 .DS_Store
 
-.DS_Store
+# Machine learning models (for size reasons)
+# [you can download them at http://cs.man.ac.uk/~filannim/projects/tempeval-3]
+*.crf
 
-.DS_Store
+# Python bytecode files
+*.pyc
 
-data/.DS_Store
+# files I don't wanna touch right now
+pipeline.py
 
-data/.DS_Store
-
-CRF++/compiled/.DS_Store
-
-data/test/.DS_Store
-
-components/crf_models/both_m1.crf
+# folders outside the scope of this project
+temporal_location/*
