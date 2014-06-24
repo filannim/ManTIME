@@ -56,7 +56,7 @@ def get_scale_factors(file_name):
 			times[curr_word] += 1.0
 
 	returned_factors = dict()
-	for a in frequency.keys():
+	for a in frequency.iterkeys():
 		for b in frequency[a].keys():
 			if frequency[a]['I-TIMEX3']+frequency[a]['B-TIMEX3'] >= 2.0:
 				returned_factors.setdefault(a, defaultdict(float))

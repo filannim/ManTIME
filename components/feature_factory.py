@@ -22,6 +22,7 @@ import KMP
 import nlp_functions
 from nlp_functions import NLP
 from nlp_functions import TreeTaggerTokeniser
+from nlp_functions import TreeTaggerPOS
 # from nlp_functions import Parser
 from properties import property as paths
 
@@ -44,6 +45,7 @@ class FeatureFactory(object):
 		self.lancasterstemmer = Memoize(nltk.LancasterStemmer().stem)
 		self.wordnetlemmatiser = Memoize(nltk.WordNetLemmatizer().lemmatize)
 		self.tokeniser = TreeTaggerTokeniser()
+		self.POStagger = TreeTaggerPOS()
 		self.parser = None	# Parser()
 		self.phonemedictionary = nltk.corpus.cmudict.dict()
 		self.wordnet = nltk.corpus.wordnet
@@ -73,18 +75,11 @@ class FeatureFactory(object):
 
 	def computeSentenceFeatures(self, sentence, gold_predictions):
 		"""For each token in the sentence the compute feature vector"""
-		sentence = sentence.replace('`','\\`')
 		featuretable = []
-		treetagger_path = paths['path_treetagger']
 		# Tokenise
 		tokens = self.tokeniser.tokenize(sentence)
-		tokens = [t.replace('"','\\"') for t in tokens]	# " character escape
-		tokens = [t.replace('`','\\`') for t in tokens]	# " character escape
 		# POS-tagging (Tree-Tagger)
-		sentence_as_echo_input = '"' + '\n'.join(tokens) + '"'
-		command = 'echo ' + sentence_as_echo_input + ' | ' + treetagger_path
-		sentence_tokenised = commands.getoutput(command)
-		tokensTT = [line.split('\t') for line in sentence_tokenised.split('\n')]
+		tokensTT = self.POStagger.tag(tokens)
 		# Use gazetteers at sentence level
 		gazetteers = {}
 		gazetteers['male_names'] = self.spotfromgazetteer(self.malenames, tokens)
@@ -102,6 +97,7 @@ class FeatureFactory(object):
 		# For each token, compute the word level features
 		features = {}
 		for index, token in enumerate(tokensTT):
+			#print index, token
 			pos_lemma = [token[1],token[2]]
 			features = self.computeWordFeatures(index, token[0], pos_lemma, gazetteers, parsing, gold_predictions)
 			featuretable.append(features)
@@ -130,6 +126,7 @@ class FeatureFactory(object):
 		nlp = self.NLP.get(word)
 
 		features['_word'] = word
+		#features['_word_preprocessed'] = nlp.preprocessed_word()
 
 		# LEXICAL
 		features['lex_lemma'] = self.wordnetlemmatiser(word)
@@ -242,7 +239,7 @@ class FeatureFactory(object):
 
 		# GAZETTEERs
 		features['gaz_stopword'] = True if word.lower() in self.stopwords else False
-		for gazetteer_name, offsets in gazetteer_offsets.items():
+		for gazetteer_name, offsets in gazetteer_offsets.iteritems():
 			#IOB format is better!
 			features['gaz_'+gazetteer_name] = 'O-'+gazetteer_name
 			for offset in offsets:
@@ -252,7 +249,7 @@ class FeatureFactory(object):
 					features['gaz_'+gazetteer_name] = 'I-'+gazetteer_name
 
 		# GOLD PREDICTIONs
-		for gold_annotations, offsets in gold_predictions.items():
+		for gold_annotations, offsets in gold_predictions.iteritems():
 			#IOB format is better!
 			features[gold_annotations.upper()] = 'O-' + gold_annotations.upper()
 			for offset in offsets:

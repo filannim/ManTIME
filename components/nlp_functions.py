@@ -16,6 +16,9 @@ from __future__ import division
 import commands
 import pickle
 import nltk
+import re
+import subprocess
+from subprocess import Popen, PIPE, STDOUT
 
 # import MBSP
 
@@ -106,34 +109,40 @@ class Word:
 		self._entailments = None
 		self._antonyms = None
 		self._hyponyms = None
+		self._preprocessedword = None
+
+	def preprocessed_word(self):
+		if not self._preprocessedword:
+			self._preprocessedword = re.sub('[0-9]', '@', self.word)
+		return self._preprocessedword
 
 	def no_letters(self):
-		if self._no_letters == None:
+		if not self._no_letters:
 			self._no_letters = ''.join([c for c in self.word if not c.isalpha()])
 		return self._no_letters
 
 	def no_letters_and_numbers(self):
-		if self._no_letters_and_numbers == None:
+		if not self._no_letters_and_numbers:
 			self._no_letters_and_numbers = ''.join([c for c in self.word if not (c.isalpha() or c.isdigit())])
 		return self._no_letters_and_numbers
 
 	def is_all_caps_and_dots(self):
-		if self._is_all_caps_dots == None:
+		if not self._is_all_caps_dots:
 			self._is_all_caps_dots = all([(c.isupper() or c=='.') for c in self.word])
 		return self._is_all_caps_dots
 
 	def is_all_digits_and_dots(self):
-		if self._is_all_digits_dots == None:
+		if not self._is_all_digits_dots:
 			self._is_all_digits_dots = all([(c.isdigit() or c=='.') for c in self.word])
 		return self._is_all_digits_dots
 
 	def unusual(self):
-		if self._unusual == None:
+		if not self._unusual:
 			self._unusual = not self.word.lower() in self.common_words
 		return self._unusual
 
 	def pattern(self):
-		if self._pattern == None:
+		if not self._pattern:
 			pattern = ''
 			for char in self.word:
 				if char.isupper():
@@ -155,7 +164,7 @@ class Word:
 		return self._pattern
 
 	def extended_pattern(self):
-		if self._extended_pattern == None:
+		if not self._extended_pattern:
 			pattern = ''
 			for char in self.word:
 				if char.isupper():
@@ -172,7 +181,7 @@ class Word:
 		return self._extended_pattern
 
 	def vocal_pattern(self):
-		if self._vocal_pattern == None:
+		if not self._vocal_pattern:
 			pattern = ''
 			for char in self.word:
 				if char in ['a','e','i','o','u']:
@@ -194,7 +203,7 @@ class Word:
 		return self._vocal_pattern
 
 	def has_digit(self):
-		if self._has_digit == None:
+		if not self._has_digit:
 			for char in self.word:
 				if char.isdigit():
 					self._has_digit = True
@@ -206,7 +215,7 @@ class Word:
 			return self._has_digit
 
 	def has_symbols(self):
-		if self._has_symbols == None:
+		if not self._has_symbols:
 			for char in self.word:
 				if not (char.isdigit() or char.isalpha()):
 					self._has_symbols = True
@@ -252,17 +261,40 @@ class TreeTaggerTokeniser():
 
 	It runs tokenize.pl script through the command line and parse the result.
 	"""
-
 	path = paths['path_treetagger_tokenizer']
 
 	@classmethod
 	def tokenize(cls, sentence):
-		sentence = '"' + sentence.replace('"','\\"')  + '"'
-		command = 'echo ' + sentence + ' | ' + cls.path
-		sentence_tokenised = commands.getoutput(command)
+		p = subprocess.Popen([cls.path],stdout=subprocess.PIPE,stdin=subprocess.PIPE)
+		p.stdin.write(sentence)
+		sentence_tokenised = p.communicate()[0].strip().split('\n')
+		p.stdin.close()
 		tokens = [token.strip() for token 
-		          in sentence_tokenised.split('\n') if token.strip() != '']
+		          in sentence_tokenised if token.strip() != '']
 		return tokens
+
+	@classmethod
+	def set_path(cls, path):
+		"""Sets the tokeniser path."""
+		cls.path = path
+
+class TreeTaggerPOS():
+	"""TreeTagger tokeniser interface class
+
+	It runs tokenize.pl script through the command line and parse the result.
+	"""
+	path = paths['path_treetagger']
+
+	@classmethod
+	def tag(cls, tokens):
+		tokens = '\n'.join(tokens)
+		p = subprocess.Popen([cls.path],stdout=subprocess.PIPE,stdin=subprocess.PIPE)
+		p.stdin.write(tokens)
+		sentence_tokenised = p.communicate()[0].strip().split('\n')
+		p.stdin.close()
+		for line in sentence_tokenised:
+			yield line.split('\t')
+		#return [line.split('\t') for line in sentence_tokenised.split('\n')]
 
 	@classmethod
 	def set_path(cls, path):

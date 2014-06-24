@@ -59,7 +59,7 @@ class TextExtractor(object):
 			print d2
 			print
 			return
-		for key in d1.keys():
+		for key in d1.iterkeys():
 			if len(d1[key])!=len(d2[key]):
 				print "ERR: ", sentence
 				print "ERR: different offsets lists!", str(len(d1[key])), 'vs', str(len(d2[key]))

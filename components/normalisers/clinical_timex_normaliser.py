@@ -2547,20 +2547,20 @@ def main():
 	raw_word2 = sys.argv[2]
 	print normalise(raw_word1, raw_word2)
 	
-def normalise(raw_word, raw_date=None, bufferised=False):
+def normalise(raw_word, raw_date=None, buffer_file=None):
 	if raw_date == "ERROR":
 		raw_date = None
-	if not bufferised:
-		try: os.remove('normaliser_buffer.dat')
-		except: pass
+	#if not bufferised:
+	#	try: os.remove('normaliser_buffer.dat')
+	#	except: pass
 	raw_time = ''
 	today = datex.today().isoformat().replace("-","")
 	utterance_date = today
 	result = ''
 	
 	#if re.search('^(that afternoon|that morning|that night|that evening|the utterance_date|that point|this afternoon|the afternoon|this am|am|this morning|the morning|this point|night|the night|this night|now|day|the day|that day|the time|that time|this time|which time|the same time|the present time|)$',raw_word.strip().lower()):
-	if re.search('^(that [a-z]+|the time)$',raw_word.strip().lower()) and bufferised:
-		file = open('normaliser_buffer.dat','r')
+	if re.search('^(that [a-z]+|the time)$',raw_word.strip().lower()) and buffer_file:
+		file = open(buffer_file,'r')
 		last_normalised_date = file.read()
 		file.close() 
 		#print last_normalised_date, "rather than", raw_date
@@ -2580,8 +2580,8 @@ def normalise(raw_word, raw_date=None, bufferised=False):
 		#print 'This script still contains bloody bugs!'
 		raise
 	result = check_mod(result)
-	if result[1]=='DATE' and len(result[2])==10 and bufferised:
-		file = open('normaliser_buffer.dat','w')
+	if result[1]=='DATE' and len(result[2])==10 and buffer_file:
+		file = open(buffer_file,'w')
 		file.write(result[2].replace('-',''))
 		file.close()
 	return result

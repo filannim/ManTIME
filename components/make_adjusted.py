@@ -41,7 +41,7 @@ def predictions(line):
 	probs = [a.split('/') for a in probs]
 	probs = list(itertools.chain(*probs))
 	probs = dict(zip(probs[0::2], probs[1::2]))
-	for key in probs.keys():
+	for key in probs.iterkeys():
 		probs[key] = float(probs[key])
 	return probs
 
@@ -58,7 +58,7 @@ def threshold_adjustment():
 		print 
 		return None
 	
-	factors = pickle.load(open('stats/factors.pickle'))
+	factors = pickle.load(open('stats/factors_new.pickle'))
 	lines = []
 	for line in sys.stdin:
 		lines.append(line)
@@ -94,7 +94,7 @@ def perturbate_crf(debug=False):
 		print 
 		return None
 
-	factors = pickle.load(open('stats/factors.pickle'))
+	factors = pickle.load(open('stats/factors_new.pickle'))
 	lines = []
 	for line in sys.stdin:
 		lines.append(line)

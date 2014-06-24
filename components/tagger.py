@@ -23,6 +23,7 @@ import pickle
 import random
 import re
 from StringIO import StringIO
+import subprocess
 import sys
 
 import nlp_functions
@@ -59,13 +60,16 @@ class Tagger(object):
 			command += 'python ' + self.crf_consistency_module + ' "OI,BB,IB"'
 		else:
 			command = self.crf_path + 'crf_test -m ' + self.crf_timex_model + ' ' + file_name
-		predictions = commands.getoutput(command)
-		annotated_tokens = [(escape(line.split('\t')[0]), line.split('\t')[-1]) for line in predictions.split('\n')]
-		if debug: print 'ANNOTATIONS:', annotated_tokens
+		predictions = subprocess.Popen([command], shell=True, stdout=subprocess.PIPE)
+		
+		#annotated_tokens = [(escape(line.split('\t')[0]), line.split('\t')[-1]) for line in predictions.split('\n')]
+		#if debug: print 'ANNOTATIONS:', annotated_tokens
 		to_annotate = []
 		sentence_character_pointer = 0
 		if debug: print 'SENTENCE:', sentence
-		for token, prediction in annotated_tokens:
+		for line in iter(predictions.stdout.readline, ''):
+			token, prediction = (escape(line.split('\t')[0]), line.split('\t')[-1])
+		#for token, prediction in annotated_tokens:
 			start = sentence.index(token, sentence_character_pointer)
 			if prediction.startswith('B'):
 				to_annotate.append([start,start+len(token),header.split('\t')[-1]])
@@ -79,7 +83,8 @@ class Tagger(object):
 		os.remove(file_name)
 		return to_annotate
 
-	def tag(self, sentence, IOB, utterance, start_id=0, withPipeline=True, debug=False):
+	def tag(self, sentence, IOB, utterance, start_id=0, buffer=None, withPipeline=True, debug=False):
+		tags = []
 		sentence = escape(sentence)
 		offsets = self.identify(sentence, IOB, withPipeline=withPipeline, debug=debug)
 		annotated_sentence = list(sentence)
@@ -88,7 +93,7 @@ class Tagger(object):
 			timex_text = annotated_sentence[int(int(start)+displacement):int(int(end)+displacement)]
 			if debug: print "NORMALISATION PARAMETERS:", ''.join(timex_text), utterance.replace('-','')
 			try:
-				_, timex_type, timex_value, _ = generally_normalise(''.join(timex_text), utterance.replace('-',''))
+				_, timex_type, timex_value, _ = generally_normalise(''.join(timex_text), utterance.replace('-',''), buffer_file=buffer)
 				if timex_type == 'NONE': timex_type = 'DATE'
 				if timex_value == 'NONE': timex_value = 'X'
 			except:
@@ -97,8 +102,9 @@ class Tagger(object):
 			#Complete annotation:	opening_tag = '<%s tid="t%d" type="%s" functionInDocument="%s" temporalFunction="%s" value="%s">' % (tag, start_id, timex_type, 'NONE', 'false', timex_value)
 			opening_tag = '<%s tid="t%d" type="%s" value="%s">' % (tag, start_id, timex_type, timex_value)
 			closing_tag = '</%s>' % (tag) 
+			tags.append((start_id, timex_type, timex_value))
 			annotated_sentence.insert(int(start)+displacement, opening_tag)
 			annotated_sentence.insert(int(end)+1+displacement, closing_tag)
 			start_id += 1
 			displacement += 2
-		return {'sentence':''.join(annotated_sentence), 'start_id':start_id, 'tagged':bool(len(offsets))}
+		return {'sentence':''.join(annotated_sentence), 'start_id':start_id, 'tagged':bool(len(offsets)), 'tags':tags}
