@@ -15,6 +15,7 @@
 from __future__ import division
 import multiprocessing
 from multiprocessing import Pool
+from functools import partial
 import os
 from os import listdir
 from os.path import abspath
@@ -33,7 +34,7 @@ from components.tagger import Tagger
 from components.normalisers.general_timex_normaliser import normalise as generally_normalise
 
 
-def pipeline(file_set, post_processing, debug=False):
+def pipeline(file_set, post_processing=False, debug=False):
 	te = TextExtractor();
 	ff = FeatureFactory();
 	tagger = Tagger();
@@ -75,12 +76,11 @@ def main():
 		print 
 		return None
 
-	post_processing = True if '-pp' in sys.argv[2,:] else False
-	print post_processing
+	post_processing = True if '-pp' in sys.argv[2:] else False
+	call_pipeline = partial(pipeline, post_processing=post_processing)
 
 	os.system('rm -Rf '+original_path+'/annotated_output')
 	os.system('mkdir '+original_path+'/annotated_output')
-	#os.system('mkdir '+original_path+'/splitted')
 
 
 	processes_num = multiprocessing.cpu_count()*2
@@ -91,8 +91,7 @@ def main():
 	#print file_chunks
 
 	pool = Pool(processes=processes_num)
-	result = pool.map(pipeline, file_chunks)
-	#print result.get(timeout=1)
+	result = pool.map(call_pipeline, file_chunks)
 
 	# TEST
 	# pipeline(['/Users/michele/Dropbox/Workspace/ManTIME/data/test/test.tml.TE3input'], post_processing, debug=False)
