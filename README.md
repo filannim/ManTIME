@@ -14,7 +14,7 @@ You should have installed the following softwares:
 
 ##Installation
 
-Edit the file components/properties.py and update the paths according to your configuration.
+The easiest way to install ManTIME on Debian-based operating systems is by using the [install-mantime.sh](http://www.cs.man.ac.uk/~filannim/public/install-mantime.sh) script. Thanks to [Prof. Roberts](http://www.dcs.shef.ac.uk/~angus/) (University of Sheffield) for it!
 
 ##How to use it
 
