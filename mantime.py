@@ -48,7 +48,8 @@ class ManTIME(object):
         chunk_size = math.ceil(len(files)/(self.processes))
         chunks = [files[i:i+chunk_size] for i in range(0, len(files), chunk_size)]
         pool = Pool(processes=self.processes)
-        pool.map(partial(self.__pipeline, pp_pipeline=self.post_processing_pipeline), chunks)
+        pool.map(partial(self.__pipeline,
+                 pp_pipeline=self.post_processing_pipeline), chunks)
 
     def extract_from_file(self, file_path, use_post_processing_pipeline=True):
         pass

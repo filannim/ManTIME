@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="Author" content="Michele Filannino" />
+        <link href="http://www.cs.man.ac.uk/~filannim/css/bootstrap.css" rel="stylesheet">
+        <link href="http://www.cs.man.ac.uk/~filannim/css/bootstrap-responsive.css" rel="stylesheet">
+        <link href="http://www.cs.man.ac.uk/~filannim/css/docs.css" rel="stylesheet">
+        <link rel="stylesheet" href="http://www.cs.man.ac.uk/~filannim/css/font-awesome.min.css">
+        <!--[if IE 7]>
+            <link rel="stylesheet" href="../../css/font-awesome-ie7.min.css">
+        <![endif]-->
+        <link href="http://www.cs.man.ac.uk/~filannim/style.css" rel="stylesheet" type="text/css" media="screen" />
+        <title>ManTIME annotation results</title>
+        <script type="text/javascript" src="https://www.google.com/jsapi?autoload={'modules':[{'name':'visualization',
+       'version':'1','packages':['timeline']}]}"></script>
+        <script type="text/javascript">
+        google.setOnLoadCallback(drawChart);
+
+        function drawChart() {
+          var container = document.getElementById('temporal_visualisation');
+
+          var chart = new google.visualization.Timeline(container);
+
+          var dataTable = new google.visualization.DataTable();
+
+          dataTable.addColumn({ type: 'string', id: 'TIMEX3' });
+          dataTable.addColumn({ type: 'date', id: 'Start' });
+          dataTable.addColumn({ type: 'date', id: 'End' });
+
+          dataTable.addRows([{{tags|safe}}]);
+
+          //[['T1', new Date(2014, 1, 2), new Date(2014, 2, 3)],['T2', new Date(2014, 2, 3), new Date(2014, 2, 3)],['T3', new Date(2014, 2, 3), new Date(2014, 2, 3) ]]);
+          
+          var options = {
+            timeline: { showRowLabels: false }
+          };
+
+          chart.draw(dataTable);
+        }
+        </script>
+        <script type="text/javascript">
+            var _gaq = _gaq || [];
+            _gaq.push(['_setAccount', 'UA-16136788-3']);
+            _gaq.push(['_trackPageview']);
+            (function() {
+                var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+                ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+                var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+            })();
+        </script>
+    	<style>
+        TIMEX3 {
+            display: inline-block;
+            padding: 2px 4px;
+            font-weight: bold;
+            line-height: 14px;
+            color: #ffffff;
+            text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+            white-space: nowrap;
+            vertical-align: baseline;
+            -webkit-border-radius: 3px;
+            -moz-border-radius: 3px;
+            border-radius: 3px;
+        }
+
+        TIMEX3[type=TIME] {
+            background-color: #468847;
+        }
+
+        TIMEX3[type=DATE] {
+            background-color: #3a87ad;
+        }
+
+        TIMEX3[type=DURATION] {
+            background-color: #f89406;
+        }
+
+        TIMEX3[type=SET] {
+            background-color: #b94a48;
+        }
+        
+        #result TIMEX3:after[value], #result TIMEX3:after {
+            content: " (" attr(value) ") ";
+            font-size: xx-small;
+            vertical-align: top;
+        }
+        </style>
+    </head>
+
+    <body>
+        <div class="content">
+
+            <h1>ManTIME</h1>
+            
+            <div class="row">
+                <div id="result" class="span9">
+                    <h3>Result</h3>
+                    <blockquote>
+                        <p>{{result|safe}}</p>
+                        <small>{{utterance}}, <cite title="Source Title">ManTIME</cite></small>
+                    </blockquote>
+                    <h3>Visualisation</h3>
+                    <blockquote>
+                        <div id="temporal_visualisation" style="width: 100%; height: {{height}}px"></div>
+                        <!--<small>work in progress...</small>-->
+                    </blockquote>
+                </div>
+
+                <div id="legend" class="span3">
+                    <h3>The annotation is…</h3>
+                    <p>
+                        <form action="http://130.88.192.69:4001/send_feedback" method="post" style="display:inline">
+                            <input type="hidden" value="{{sentence}}" name="sentence" id="sentence" />
+                            <input type="hidden" value="{{result}}" name="result" id="result" />
+                            <input type="hidden" value="{{utterance}}" name="utterance" id="utterance" />
+                            <input type="hidden" value="positive" name="feedback" id="feedback" />
+                            <button class="btn btn-success" type="submit">correct <i class="icon-thumbs-up"></i></button>
+                        </form>
+
+                        <form action="http://130.88.192.69:4001/send_feedback" method="post" style="display:inline">
+                            <input type="hidden" value="{{sentence}}" name="sentence" id="sentence" />
+                            <input type="hidden" value="{{result}}" name="result" id="result" />
+                            <input type="hidden" value="{{utterance}}" name="utterance" id="utterance" />
+                            <input type="hidden" value="negative" name="feedback" id="feedback" />
+                            <button class="btn btn-danger" type="submit">wrong <i class="icon-thumbs-down"></i></button>
+                        </form>
+                    </p>
+                </div>
+
+                
+            </div>
+
+            <h3>Legend</h3>
+            <TIMEX3 type="DATE">date</TIMEX3>, <TIMEX3 type="TIME">time</TIMEX3>, <TIMEX3 type="DURATION">duration</TIMEX3>, <TIMEX3 type="SET">set</TIMEX3>.
+
+            <h4>Notes</h4>
+            <p>This demo is using the model trained on <span class="text-error">human-annotated data</span> (gold only) and <span class="text-error">today's date</span> as utterance.<br/>A sentence splitter module is not integrated yet, if you typed more than one sentence, performance could be bad.</p>
+            
+            <h4>Source code</h4>
+            <p>ManTIME source code is hosted by <a href="https://github.com/filannim/ManTIME">GitHub</a>.
+        
+        </div> 
+    	<script src="http://www.cs.man.ac.uk/~filannim/js/jquery.js"></script>
+        <script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap-transition.js"></script>
+        <script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap-alert.js"></script>
+        <script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap-modal.js"></script>
+        <script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap-dropdown.js"></script>
+        <script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap-scrollspy.js"></script>
+        <script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap-tab.js"></script>
+        <script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap-tooltip.js"></script>
+        <script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap-popover.js"></script>
+        <script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap-button.js"></script>
+        <script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap-collapse.js"></script>
+        <script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap-carousel.js"></script>
+        <script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap-typeahead.js"></script>
+        <script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap-affix.js"></script>
+        <script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap.min.js"></script>
+
+        <script src="http://www.cs.man.ac.uk/~filannim/js/holder/holder.js"></script>
+        <script src="http://www.cs.man.ac.uk/~filannim/js/google-code-prettify/prettify.js"></script>
+
+        <script src="http://www.cs.man.ac.uk/~filannim/js/application.js"></script>
+    </body>
+</html>

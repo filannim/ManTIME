@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#   Copyright 2012 Michele Filannino
+#   Copyright 2014 Michele Filannino
 #
 #   gnTEAM, School of Computer Science, University of Manchester.
 #   All rights reserved. This program and the accompanying materials

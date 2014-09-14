@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="Author" content="Michele Filannino" />
+        <link href="http://www.cs.man.ac.uk/~filannim/css/bootstrap.css" rel="stylesheet">
+        <link href="http://www.cs.man.ac.uk/~filannim/css/bootstrap-responsive.css" rel="stylesheet">
+        <link href="http://www.cs.man.ac.uk/~filannim/css/docs.css" rel="stylesheet">
+        <link rel="stylesheet" href="http://www.cs.man.ac.uk/~filannim/css/font-awesome.min.css">
+        <!--[if IE 7]>
+            <link rel="stylesheet" href="../../css/font-awesome-ie7.min.css">
+        <![endif]-->
+        <link href="http://www.cs.man.ac.uk/~filannim/style.css" rel="stylesheet" type="text/css" media="screen" />
+        <title>Wikipedia Temporal Footprint results</title>
+        <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+        <script type="text/javascript">
+          google.load("visualization", "1", {packages:["corechart"]});
+          google.setOnLoadCallback(drawChart);
+          function drawChart() {
+            var data = new google.visualization.DataTable();
+            data.addColumn('string', 'Year');
+            data.addColumn({type: 'string', role: 'annotation'});
+            data.addColumn({type: 'string', role: 'annotationText'});
+            data.addColumn('number', 'Mentions');
+            data.addColumn('number', 'Gaussian approx.');
+            {% for datum in data %}
+            data.addRow(["{{datum[0]|safe}}", {{datum[1]|safe}}, {{datum[2]|safe}}, {{datum[3]|safe}}, {{datum[4]|safe}}])
+            {% endfor %}
+
+            var options = {title: '',
+                            'width': 1000,
+                            'height': 400,
+                            'chartArea': {'width': '90%', 'height': '75%'},
+                            'legend': {'position': 'bottom'},
+                            'annotations': {'style': 'line'}};
+            var chart = new google.visualization.LineChart(document.getElementById('temporal_histogram'));
+            chart.draw(data, options);
+          }
+        </script>
+        <script type="text/javascript">
+            var _gaq = _gaq || [];
+            _gaq.push(['_setAccount', 'UA-16136788-3']);
+            _gaq.push(['_trackPageview']);
+            (function() {
+                var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+                ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+                var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+            })();
+        </script>
+    </head>
+
+    <body>
+		<div class="content">
+
+            <h1>{{title|safe}}</h1>
+            
+            <div class="row">
+                <div id="result" class="span12">
+                    <h3>Error message</h3>
+                    <p>{{message|safe}}</p>
+                </div>                
+            </div>
+        
+        </div> 
+
+		<script src="http://www.cs.man.ac.uk/~filannim/js/jquery.js"></script>
+		<script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap-transition.js"></script>
+		<script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap-alert.js"></script>
+		<script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap-modal.js"></script>
+		<script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap-dropdown.js"></script>
+		<script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap-scrollspy.js"></script>
+		<script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap-tab.js"></script>
+		<script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap-tooltip.js"></script>
+		<script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap-popover.js"></script>
+		<script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap-button.js"></script>
+		<script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap-collapse.js"></script>
+		<script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap-carousel.js"></script>
+		<script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap-typeahead.js"></script>
+		<script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap-affix.js"></script>
+		<script src="http://www.cs.man.ac.uk/~filannim/js/bootstrap.min.js"></script>
+
+		<script src="http://www.cs.man.ac.uk/~filannim/js/holder/holder.js"></script>
+		<script src="http://www.cs.man.ac.uk/~filannim/js/google-code-prettify/prettify.js"></script>
+
+		<script src="http://www.cs.man.ac.uk/~filannim/js/application.js"></script>
+	</body>
+</html>

@@ -57,7 +57,6 @@ class TempEval_3_FileReader(FileReader):
         self.corpus = []
         self.tokeniser = TreeTaggerTokeniser()
         self.tags = {'TIMEX3', 'EVENT', 'SIGNAL'}
-        self.utterance = None
 
     @property
     def extensions(self):
@@ -68,18 +67,19 @@ class TempEval_3_FileReader(FileReader):
         with timexes and events' offsets.
         '''
         document = etree.parse(file_path)
-        self.utterance = self.__get_utterance(document)
-        main_node = document.xpath("//TEXT")[0]
-        xml_form = etree.tostring(main_node).strip()
+        utterance = self.__get_utterance(document)
+        text = etree.tostring(document.xpath("//TEXT")[0], encoding='utf-8', method='text')
         xml_form = re.findall('<TEXT[^>]*?>([\w\W]*)</TEXT>', xml_form)[0]
         xml_form = xml_form.replace(' ', ' __space__ ').split('\n\n')
         xml_form = [x for x in xml_form if x != '']
         txt_form = [fromstring(x).text_content().replace(' __space__ ', ' ')
                     for x in xml_form]
+        result = []
         for i, sentence in enumerate(txt_form):
             offsets = self.__get_offsets_tokens(
                 sentence, xml_form[i].replace(' __space__ ', ' '), self.tags)
-            yield (sentence, offsets)
+            result.append((sentence, offsets))
+        return utterance, result
 
     def __get_offsets_tokens(self, sentence, xml_sentence, tagnames):
         sentence = sentence.replace('`', '\`')

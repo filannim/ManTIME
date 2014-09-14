@@ -27,28 +27,24 @@ class TextExtractor(object):
         self.corpus = []
         self.tokeniser = TreeTaggerTokeniser()
 
-    def read(self, file_name, tags_to_spot, debug=False):
-        """Extracts the text from all the TML documents existing in a given 
+    def read(self, file_name, tags_to_spot):
+        '''Extracts the text from all the TML documents existing in a given
         directory and returns a list of strings along with timex and event
-        offsets"""
-        
+        offsets.
+        '''
         utterance = self.get_utterance(file_name)
         # I extract all the text in the TEXT element (ignoring tags)
         doc = etree.parse(file_name)
         main_node = doc.xpath("//TEXT")[0]
         xml_form = etree.tostring(main_node).strip()
         xml_form = re.findall('<TEXT[^>]*?>([\w\W]*)</TEXT>', xml_form)[0]
-        xml_form = xml_form.replace(' ',' __space__ ').split('\n\n')
+        xml_form = xml_form.replace(' ', ' __space__ ').split('\n\n')
         xml_form = [x for x in xml_form if x != ''] # filter out empy elements
         txt_form = [fromstring(x).text_content().replace(' __space__ ', ' ') for x in xml_form]
-        
-        if debug: print 'TXTFORM:', txt_form
-
         # For each sentence I save the timex and event offsets
         for i, sentence in enumerate(txt_form):
             # offsets = self.get_offsets(xml_form[i],['TIMEX3','EVENT'])
-            offsets = self.get_offsets_tokens(sentence,xml_form[i].replace(' __space__ ', ' '),tags_to_spot)
-            # self.compare_offsets(offsets, offsets_tokens, xml_form[i])
+            offsets = self.get_offsets_tokens(sentence,xml_form[i].replace(' __space__ ', ' '), tags_to_spot)
             yield [sentence, offsets]
 
     def compare_offsets(self, d1, d2, sentence):
