@@ -14,19 +14,22 @@
 '''It contains all the readers for ManTIME.'''
 
 from abc import ABCMeta, abstractmethod, abstractproperty
-import re
+from StringIO import StringIO
+import xml.etree.cElementTree as etree
 
-from lxml import etree
-from lxml.html import fromstring
+from nltk import TreebankWordTokenizer
 
-from nlp_functions import TreeTaggerTokeniser
+from model import Document
+from model import Sentence
+from model import Token
+from model import Gap
 
 class Reader(object):
     '''This class is an abstract reader for ManTIME.'''
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def read(self, text):
+    def parse(self, text):
         '''It reads an input text.'''
         pass
 
@@ -44,7 +47,7 @@ class FileReader(Reader):
         pass
 
     @abstractmethod
-    def read(self, file_path):
+    def parse(self, file_path):
         pass
 
 
@@ -54,84 +57,88 @@ class TempEval_3_FileReader(FileReader):
     def __init__(self):
         super(TempEval_3_FileReader, self).__init__()
         self._extensions = {'TE3input'}
-        self.corpus = []
-        self.tokeniser = TreeTaggerTokeniser()
-        self.tags = {'TIMEX3', 'EVENT', 'SIGNAL'}
+        self.tags_to_spot = {'TIMEX3', 'EVENT', 'SIGNAL'}
+        self.text = None
+        self.dct = None
+        self.annotations = None
+        self.tree = None
 
     @property
     def extensions(self):
         return self._extensions
 
-    def read(self, file_path):
-        '''Extracts the text from a file and returns a list of sentences along
-        with timexes and events' offsets.
-        '''
+    def parse(self, file_path):
+        '''Extracts relevant information from a TempEval-3 annotated file.'''
         document = etree.parse(file_path)
-        utterance = self.__get_utterance(document)
-        text = etree.tostring(document.xpath("//TEXT")[0], encoding='utf-8', method='text')
-        xml_form = re.findall('<TEXT[^>]*?>([\w\W]*)</TEXT>', xml_form)[0]
-        xml_form = xml_form.replace(' ', ' __space__ ').split('\n\n')
-        xml_form = [x for x in xml_form if x != '']
-        txt_form = [fromstring(x).text_content().replace(' __space__ ', ' ')
-                    for x in xml_form]
-        result = []
-        for i, sentence in enumerate(txt_form):
-            offsets = self.__get_offsets_tokens(
-                sentence, xml_form[i].replace(' __space__ ', ' '), self.tags)
-            result.append((sentence, offsets))
-        return utterance, result
+        text_node = document.findall(".//TEXT")[0]
+        xpath_dct = ".//TIMEX3[@functionInDocument='CREATION_TIME']"
+        self.dct = document.findall(xpath_dct)[0].attrib['value']
+        self.text = etree.tostring(text_node, method='text')
+        self.annotations = self.__offsets(etree.tostring(text_node))
+        self.tree = self.__build_tree(file_path)
+        return self.tree
 
-    def __get_offsets_tokens(self, sentence, xml_sentence, tagnames):
-        sentence = sentence.replace('`', '\`')
-        xml_sentence = xml_sentence.replace('`', '\`')
-        tags = '|'.join(tagnames)
-        sentence_tokenised = self.tokeniser.tokenize(sentence)
-        xml_tokenised = self.tokeniser.tokenize(xml_sentence)
-        regEx = '(<('+tags+')[^>]*?>(.*?)</(?:'+tags+')>)'
-        tags_full_tag_content = [[self.tokeniser.tokenize(full),tag,self.tokeniser.tokenize(' O '+content+' O ')[1:-1]] for full,tag,content in re.findall(regEx, xml_sentence)]
-        offsets_full_tag_content = [[list(KMP.KMP(xml_tokenised,full_tokenised,True))[0],list(KMP.KMP(full_tokenised,content_tokenised,True))[-1],tag] for full_tokenised,tag,content_tokenised in tags_full_tag_content]
-        displacement = 0
-        offsets = {}; [offsets.setdefault(tag,[]) for tag in tagnames]
-        for annotation in offsets_full_tag_content:
-            updt_start = annotation[0][0] - displacement
-            updt_end = updt_start + (annotation[1][1]-annotation[1][0])
-            displacement += (annotation[0][1]-annotation[0][0])-(annotation[1][1]-annotation[1][0])
-            offsets[annotation[2]].append([updt_start,updt_end])
-        return offsets
-
-    def __get_offsets(self, input, tagnames):
-        tags = '|'.join(tagnames)
-        regEx = '<('+tags+')[^>]*?>(.*?)</(?:'+tags+')>'
-        full_offsets = [[c.start(), c.end()] for c in re.finditer(regEx, input)]
-        content_offsets = [[c,len(c[1])] for c in re.findall(regEx, input)]
-        offsets = {}; [offsets.setdefault(tag,[]) for tag in tagnames]
-        displacement = 0
-        for i, chunk in enumerate(full_offsets):
-            updt_start = chunk[0] - displacement
-            updt_end = updt_start + content_offsets[i][1]
-            displacement += (chunk[1]-chunk[0])-content_offsets[i][1]
-            offsets[content_offsets[i][0][0]].append([updt_start, updt_end])
-        return offsets
-
-    def __extract_sentences(self, source, tags_to_spot):
-        """Calls the read function"""
-        self.read(source, tags_to_spot)
-
-    def __get_utterance(self, doc):
-        utterance = doc.xpath("//TIMEX3[@functionInDocument='CREATION_TIME']")
-        return utterance[0].attrib['value'].replace('-', '')
-
-    def __get_header(self, file_name):
-        header = ''
-        for line in open(file_name, 'r').xreadlines():
-            if line.startswith('<TEXT>'):
-                return header + '<TEXT>'
+    def __build_tree(self, file_path):
+        '''It builds the tree representation of document.'''
+        sentence_splitter = lambda text: text.replace(
+            '\n\n', '\\sentence\n\n\\sentence').split('\\sentence')
+        revise = lambda token: token
+        tokenizer = TreebankWordTokenizer()
+        start_counter = 0
+        document = Document(file_path, dct=self.dct)
+        for line in sentence_splitter(self.text):
+            if line == '\n\n':
+                document.add_child(Gap(line, start_counter, 2+start_counter))
+                start_counter += 2
+                line = line[2:]
             else:
-                header += line
-        return header + '<TEXT>'
+                line_length = len(line)
+                sentence_node = Sentence(start_counter, line_length+start_counter)
+                start_token = start_counter
+                tokens = map(revise, tokenizer.tokenize(line))
+                while line:
+                    node = None
+                    if tokens:
+                        word = tokens[0]
+                        if line[:len(word)] == word:
+                            node = Token(tokens.pop(0), start_token, len(word)+start_token)
+                        else:
+                            node = Gap(line[0], start_token, 1+start_token)
+                    else:
+                        node = Gap(line[0], start_token, 1+start_token)
+                    sentence_node.add_child(node)
+                    start_token += len(node)
+                    line = line[len(node):]
+                document.add_child(sentence_node)
+                start_counter += line_length
+                assert line_length == sum(len(node) for node in sentence_node.children)
+            assert not(line)
+        assert not(tokens)
+        return document
 
-    def __get_footer(self, file_name):
-        return '</TEXT>\n</TimeML>'
+
+    def __offsets(self, source, start_offset=0):
+        '''It yields the annotations found in the document.'''
+        for event, element in etree.iterparse(
+                StringIO(source), events=('start', 'end')):
+            if event == 'start':
+                if element.tag in self.tags_to_spot:
+                    yield (element.tag, element.attrib,
+                           (start_offset, start_offset + len(element.text)))
+                start_offset += len(element.text)
+            elif event == 'end':
+                if element.text is not None and element.tail is not None:
+                    start_offset += len(element.tail)
 
 Reader.register(FileReader)
 FileReader.register(TempEval_3_FileReader)
+
+def main():
+    import sys
+    file_reader = TempEval_3_FileReader()
+    file_reader.parse(sys.argv[1])
+    print file_reader.__dict__.items()
+
+
+if __name__ == '__main__':
+    main()

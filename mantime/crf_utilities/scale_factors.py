@@ -17,9 +17,9 @@ from __future__ import division
 import csv
 from collections import Counter
 import pickle
-import sys
 from os.path import abspath
 from os.path import isfile
+import argparse
 
 
 def get_scale_factors(file_path):
@@ -52,8 +52,14 @@ def get_scale_factors(file_path):
 
 def main():
     '''It computes and save the scale factors on the disk.'''
-    scale_factors = get_scale_factors(abspath(sys.argv[1]))
-    pickle.dump(scale_factors, open(abspath(sys.argv[2]), 'w'))
+    parser = argparse.ArgumentParser(
+        description='ManTIME: store the sequence rescaling factors.')
+    parser.add_argument('input_file', help='training set file.')
+    parser.add_argument('output_file', help='output file.')
+    args = parser.parse_args()
+
+    scale_factors = get_scale_factors(abspath(args.input_file))
+    pickle.dump(scale_factors, open(abspath(args.output_file), 'w'))
 
 if __name__ == '__main__':
     main()
