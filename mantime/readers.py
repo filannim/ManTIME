@@ -19,10 +19,7 @@ import xml.etree.cElementTree as etree
 
 from nltk import TreebankWordTokenizer
 
-from model import Document
-from model import Sentence
-from model import Token
-from model import Gap
+from model import Document, Sentence, Token, Gap
 
 class Reader(object):
     '''This class is an abstract reader for ManTIME.'''
@@ -93,17 +90,23 @@ class TempEval_3_FileReader(FileReader):
                 line = line[2:]
             else:
                 line_length = len(line)
-                sentence_node = Sentence(start_counter, line_length+start_counter)
+                sentence_node = Sentence(start_counter,
+                                         line_length+start_counter)
                 start_token = start_counter
-                tokens = map(revise, tokenizer.tokenize(line))
+                tokens = [revise(token) for token in tokenizer.tokenize(line)]
                 while line:
                     node = None
                     if tokens:
                         word = tokens[0]
+                        end_token = start_token + len(word)
                         if line[:len(word)] == word:
-                            node = Token(tokens.pop(0), start_token, len(word)+start_token)
+                            labels = self.__match_annotations(start_token,
+                                                              end_token)
+                            node = Token(tokens.pop(0), start_token, end_token,
+                                         labels)
                         else:
-                            node = Gap(line[0], start_token, 1+start_token)
+                            node = Gap(line[0], start_token,
+                                       len(word)+start_token)
                     else:
                         node = Gap(line[0], start_token, 1+start_token)
                     sentence_node.add_child(node)
@@ -111,11 +114,11 @@ class TempEval_3_FileReader(FileReader):
                     line = line[len(node):]
                 document.add_child(sentence_node)
                 start_counter += line_length
-                assert line_length == sum(len(node) for node in sentence_node.children)
-            assert not(line)
-        assert not(tokens)
+                assert line_length == sum(len(node) for node
+                                          in sentence_node.children)
+            assert not line
+        assert not tokens
         return document
-
 
     def __offsets(self, source, start_offset=0):
         '''It yields the annotations found in the document.'''
@@ -130,10 +133,18 @@ class TempEval_3_FileReader(FileReader):
                 if element.text is not None and element.tail is not None:
                     start_offset += len(element.tail)
 
+    def __match_annotations(self, start_token, end_token, model='IOB'):
+        '''It returns the correct sequence class for the given token.'''
+       assert model in ('IO', 'IOB', 'IOBW', 'IOBEW'), \
+                        'Wrong sequence representation format.'
+ 
+
 Reader.register(FileReader)
 FileReader.register(TempEval_3_FileReader)
 
+
 def main():
+    '''Simple ugly test.'''
     import sys
     file_reader = TempEval_3_FileReader()
     file_reader.parse(sys.argv[1])

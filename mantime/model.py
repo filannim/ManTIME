@@ -21,6 +21,7 @@ class Document(object):
         self.name = name
         self.dct = None
         self.children = []
+        self.attributes = dict()
 
     def add_child(self, child):
         '''It adds a *child* to a document node.'''
@@ -88,6 +89,7 @@ class Token(DocumentNode):
         super(Token, self).__init__(start, end)
         self.text = text
         self.children = None
+        self.labels = []
 
     def __str__(self):
         return str(self.text)
