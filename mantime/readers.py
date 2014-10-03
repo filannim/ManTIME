@@ -16,6 +16,7 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
 from StringIO import StringIO
 import xml.etree.cElementTree as etree
+import re
 
 from nltk import TreebankWordTokenizer
 
@@ -51,7 +52,10 @@ class FileReader(Reader):
 class TempEval_3_FileReader(FileReader):
     '''This class is a reader for TempEval-3 files.'''
 
-    def __init__(self):
+    def __init__(self, model='IO'):
+        assert re.match('[IOBEW]+', model), 'Wrong sequence format.'
+        assert 'I' in model and 'O' in model, 'Wrong sequence format.'
+
         super(TempEval_3_FileReader, self).__init__()
         self._extensions = {'TE3input'}
         self.tags_to_spot = {'TIMEX3', 'EVENT', 'SIGNAL'}
@@ -59,6 +63,7 @@ class TempEval_3_FileReader(FileReader):
         self.dct = None
         self.annotations = None
         self.tree = None
+        self.model = model
 
     @property
     def extensions(self):
@@ -71,19 +76,19 @@ class TempEval_3_FileReader(FileReader):
         xpath_dct = ".//TIMEX3[@functionInDocument='CREATION_TIME']"
         self.dct = document.findall(xpath_dct)[0].attrib['value']
         self.text = etree.tostring(text_node, method='text')
-        self.annotations = self.__offsets(etree.tostring(text_node))
+        self.annotations = self.__get_annotations(etree.tostring(text_node))
         self.tree = self.__build_tree(file_path)
         return self.tree
 
     def __build_tree(self, file_path):
-        '''It builds the tree representation of document.'''
+        '''It builds a document tree representation.'''
         sentence_splitter = lambda text: text.replace(
             '\n\n', '\\sentence\n\n\\sentence').split('\\sentence')
         revise = lambda token: token
         tokenizer = TreebankWordTokenizer()
         start_counter = 0
         document = Document(file_path, dct=self.dct)
-        for line in sentence_splitter(self.text):
+        for num, line in enumerate(sentence_splitter(self.text)):
             if line == '\n\n':
                 document.add_child(Gap(line, start_counter, 2+start_counter))
                 start_counter += 2
@@ -100,55 +105,84 @@ class TempEval_3_FileReader(FileReader):
                         word = tokens[0]
                         end_token = start_token + len(word)
                         if line[:len(word)] == word:
-                            labels = self.__match_annotations(start_token,
-                                                              end_token)
+                            label = self.__get_label(start_token, end_token)
                             node = Token(tokens.pop(0), start_token, end_token,
-                                         labels)
+                                         label)
                         else:
                             node = Gap(line[0], start_token,
                                        len(word)+start_token)
                     else:
                         node = Gap(line[0], start_token, 1+start_token)
                     sentence_node.add_child(node)
-                    start_token += len(node)
-                    line = line[len(node):]
+                    start_token += len(node.text)
+                    line = line[len(node.text):]
                 document.add_child(sentence_node)
                 start_counter += line_length
-                assert line_length == sum(len(node) for node
+                assert line_length == sum(len(node.text) for node
                                           in sentence_node.children)
             assert not line
         assert not tokens
         return document
 
-    def __offsets(self, source, start_offset=0):
-        '''It yields the annotations found in the document.'''
+    def __get_annotations(self, source, start_offset=0):
+        '''It returns the annotations found in the document in the following
+           format:
+           [
+            ('TAG', {ATTRIBUTES}, (start_offset, end_offset)),
+            ('TAG', {ATTRIBUTES}, (start_offset, end_offset)),
+            ...
+            ('TAG', {ATTRIBUTES}, (start_offset, end_offset))
+           ]
+        '''
+        annotations = []
         for event, element in etree.iterparse(
                 StringIO(source), events=('start', 'end')):
             if event == 'start':
                 if element.tag in self.tags_to_spot:
-                    yield (element.tag, element.attrib,
-                           (start_offset, start_offset + len(element.text)))
+                    end_offset = start_offset + len(element.text)
+                    annotations.append((element.tag, element.attrib,
+                                        (start_offset, end_offset)))
                 start_offset += len(element.text)
             elif event == 'end':
                 if element.text is not None and element.tail is not None:
                     start_offset += len(element.tail)
+        return annotations
 
-    def __match_annotations(self, start_token, end_token, model='IOB'):
-        '''It returns the correct sequence class for the given token.'''
-       assert model in ('IO', 'IOB', 'IOBW', 'IOBEW'), \
-                        'Wrong sequence representation format.'
- 
+    def __get_label(self, start_token, end_token):
+        '''It returns the correct sequence class label for the given token.'''
+        sequence_label = None
+        for _, _, (start_offset, end_offset) in self.annotations:
+            if (start_offset, end_offset) == (start_token, end_token):
+                sequence_label = 'W'
+                break
+            elif end_offset == end_token:
+                sequence_label = 'E'
+                break
+            elif start_offset == start_token:
+                sequence_label = 'B'
+                break
+            elif start_offset < start_token and end_offset > end_token:
+                sequence_label = 'I'
+                break
+            else:
+                sequence_label = 'O'
+        if sequence_label not in list(self.model):
+            return 'I'
+        else:
+            return sequence_label
 
 Reader.register(FileReader)
 FileReader.register(TempEval_3_FileReader)
 
 
 def main():
-    '''Simple ugly test.'''
+    '''Simple ugly non-elegant test.'''
     import sys
-    file_reader = TempEval_3_FileReader()
+    file_reader = TempEval_3_FileReader(model='IOBEW')
     file_reader.parse(sys.argv[1])
     print file_reader.__dict__.items()
+    for leaf in file_reader.tree.leaves():
+        print repr(leaf)
 
 
 if __name__ == '__main__':

@@ -68,7 +68,7 @@ class DocumentNode(Document):
 
     def __repr__(self):
         return '<node_{} lenght:{}>'.format(str(type(self)).lower(),
-                                            len(list(self.leaves)))
+                                            len(list(self.leaves())))
 
 
 class Section(DocumentNode):
@@ -85,17 +85,20 @@ class Sentence(DocumentNode):
 
 class Token(DocumentNode):
     '''It represents a single token of a parsed document.'''
-    def __init__(self, text, start, end):
+    def __init__(self, text, start, end, label):
         super(Token, self).__init__(start, end)
         self.text = text
         self.children = None
         self.labels = []
+        if label:
+            self.labels.append(label)
 
     def __str__(self):
         return str(self.text)
 
     def __repr__(self):
-        return '<token {}>'.format(repr(self.text))
+        return '<token {}, labels:{}>'.format(repr(self.text), 
+                                              str(self.labels))
 
 
 class Gap(DocumentNode):
