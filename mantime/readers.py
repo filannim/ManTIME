@@ -84,11 +84,11 @@ class TempEval_3_FileReader(FileReader):
         '''It builds a document tree representation.'''
         sentence_splitter = lambda text: text.replace(
             '\n\n', '\\sentence\n\n\\sentence').split('\\sentence')
-        revise = lambda token: token
+        revise = lambda token: token.replace('``', '"').replace('\'\'', '"')
         tokenizer = TreebankWordTokenizer()
         start_counter = 0
         document = Document(file_path, dct=self.dct)
-        for num, line in enumerate(sentence_splitter(self.text)):
+        for line in sentence_splitter(self.text):
             if line == '\n\n':
                 document.add_child(Gap(line, start_counter, 2+start_counter))
                 start_counter += 2
@@ -151,7 +151,9 @@ class TempEval_3_FileReader(FileReader):
     def __get_label(self, start_token, end_token):
         '''It returns the correct sequence class label for the given token.'''
         sequence_label = None
-        for _, _, (start_offset, end_offset) in self.annotations:
+        tag_fired = ''
+        for tag, _, (start_offset, end_offset) in self.annotations:
+            tag_fired = tag
             if (start_offset, end_offset) == (start_token, end_token):
                 sequence_label = 'W'
                 break
@@ -167,9 +169,11 @@ class TempEval_3_FileReader(FileReader):
             else:
                 sequence_label = 'O'
         if sequence_label not in list(self.model):
-            return 'I'
-        else:
+            sequence_label = 'I'
+        if sequence_label == 'O':
             return sequence_label
+        else:
+            return sequence_label + '-' + tag_fired
 
 Reader.register(FileReader)
 FileReader.register(TempEval_3_FileReader)
@@ -178,7 +182,7 @@ FileReader.register(TempEval_3_FileReader)
 def main():
     '''Simple ugly non-elegant test.'''
     import sys
-    file_reader = TempEval_3_FileReader(model='IOBEW')
+    file_reader = TempEval_3_FileReader(model='IOB')
     file_reader.parse(sys.argv[1])
     print file_reader.__dict__.items()
     for leaf in file_reader.tree.leaves():
