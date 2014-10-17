@@ -23,12 +23,13 @@ from os.path import abspath
 from os.path import basename
 from os.path import dirname
 import argparse
+import sys
 
-
-import mantime.nlp_functions
-from mantime.feature_factory import FeatureFactory
-from mantime.text_extractor import TextExtractor
-from mantime.tagger import Tagger
+from distutils.version import StrictVersion
+# import mantime.nlp_functions
+# from mantime.feature_factory import FeatureFactory
+# from mantime.text_extractor import TextExtractor
+# from mantime.tagger import Tagger
 
 
 class ManTIME(object):
@@ -80,6 +81,31 @@ class ManTIME(object):
 
 def main():
     '''It annotates documents in a specific folder.'''
+
+    # Lets ensure the python modules requirements are met.
+    requirements = [tuple(requirement.strip().split('==')) for requirement
+                    in open('requirements.txt', 'r').xreadlines()]
+    for requested_module, requested_version in requirements:
+        try:
+            locals()[requested_module] = __import__(requested_module)
+            current_version = locals()[requested_module].__version__
+            if StrictVersion(current_version) < \
+               StrictVersion(requested_version):
+                sys.stderr.write(("WARNING: ManTIME requires {} {}, " +
+                                  "an older version ({}) is installed.\n")
+                                 .format(requested_module,
+                                         requested_version,
+                                         current_version))
+        except ImportError:
+            sys.stderr.write("ERROR: {} module not found.\n"
+                             .format(requested_module))
+            sys.exit(2)
+        except AttributeError:
+            sys.stderr.write(("WARNING: I can't verify {}'s version. " +
+                              "Make sure it's {} (or newer).\n")
+                             .format(requested_module, requested_version))
+
+    # Parse input
     parser = argparse.ArgumentParser(
         description='ManTIME: temporal information extraction')
     parser.add_argument(dest='folder', metavar='input folder', nargs='*')
@@ -88,6 +114,7 @@ def main():
                         help='it uses the post processing pipeline.')
     args = parser.parse_args()
 
+    # Expected usage of ManTIME
     mantime = ManTIME()
     mantime.processes = 3
     mantime.post_processing_pipeline = True

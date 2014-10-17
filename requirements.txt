@@ -1,0 +1,3 @@
+nltk==2.0b9
+MBSP==1.4
+corenlp==3.4.1-0

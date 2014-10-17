@@ -14,39 +14,63 @@
 '''It contains the classes for the document data model of ManTIME.'''
 
 
+def format_annotation(start_token, end_token, annotations, annotation_format):
+    '''It returns the correct sequence class label for the given token.'''
+    sequence_label = None
+    tag_fired = ''
+    for tag, _, (start_offset, end_offset) in annotations:
+        tag_fired = tag
+        if (start_offset, end_offset) == (start_token, end_token):
+            sequence_label = 'W'
+            break
+        elif end_offset == end_token:
+            sequence_label = 'E'
+            break
+        elif start_offset == start_token:
+            sequence_label = 'B'
+            break
+        elif start_offset < start_token and end_offset > end_token:
+            sequence_label = 'I'
+            break
+        else:
+            sequence_label = 'O'
+    if sequence_label not in list(annotation_format):
+        sequence_label = 'I'
+    if sequence_label == 'O':
+        return sequence_label
+    else:
+        return sequence_label + '-' + tag_fired
+
 class Document(object):
     '''It represents the root of a parsed document.'''
 
     def __init__(self, name, dct=None):
         self.name = name
-        self.dct = None
+        self.dct = dct
+        self.annotations = []
         self.children = []
+        self.stanford_tree = {}
         self.attributes = dict()
 
-    def add_child(self, child):
-        '''It adds a *child* to a document node.'''
-        assert isinstance(child, DocumentNode)
-        self.children.append(child)
-
-    def remove_child(self, child):
-        '''It removes a *child* to a document node.'''
-        self.children.pop(self.children.index(child))
-
-    def leaves(self, leaf_type=object):
-        '''It returns the very last element in the document hirearchy.'''
-        for child in self.children:
-            if child.children:
-                for nephew in child.leaves(leaf_type=leaf_type):
-                    yield nephew
-            else:
-                if isinstance(child, leaf_type):
-                    yield child
+    def push_classes(self, annotation_format):
+        """Enriching the Stanford Parser output with annotations."""
+        import copy
+        tree = self.stanford_tree
+        for num_sentence, sentence in enumerate(tree['sentences']):
+            new_sentence = copy.deepcopy(sentence)
+            for num_word, (_, attributes) in enumerate(new_sentence['words']):
+                new_sentence['words'][num_word][1]['CLASS'] = format_annotation(
+                    int(attributes['CharacterOffsetBegin']),
+                    int(attributes['CharacterOffsetEnd']),
+                    self.annotations,
+                    annotation_format)
+            tree['sentences'][num_sentence] = new_sentence
 
     def __str__(self):
-        return ''.join([str(leave) for leave in self.leaves()])
+        return self.__dict__
 
     def __repr__(self):
-        return '<document lenght:{}>'.format(len(list(self.leaves())))
+        return repr(self.__dict__)
 
 
 class DocumentNode(Document):
@@ -97,7 +121,7 @@ class Token(DocumentNode):
         return str(self.text)
 
     def __repr__(self):
-        return '<token {}, labels:{}>'.format(repr(self.text), 
+        return '<token {}, labels:{}>'.format(repr(self.text),
                                               str(self.labels))
 
 
