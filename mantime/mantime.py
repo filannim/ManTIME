@@ -42,7 +42,53 @@ class ManTIME(object):
         self.writer = writer
         self.processes = processes
         self.post_processing_pipeline = post_processing_pipeline
+
+        """ HAVE A LOOK HERE IN ORDER TO CRAFT THE MANTIME CLASS AND ITS
+            BEHAVIOUR. THIS SUMS UP SOME IDEAS.
+
+            Take the following as pseudo-code, ignore the rest.
+
+            # check for the dependencies and imports (are all the modules
+              required there? what about the versions?)
+            # inizialise a server for the Stanford Parser
+              hopefully we should be faster with the server and we should be
+              able to easily parallelise the execution (with multiprocessing)
+            # in the init of MANTIME I need to ask for the IOB annotation
+              format. So that using the same MANTIME object I make sure I've
+              got back the same annotation style.
+
+            Please, do these things keeping in mind that we need to use LOG.
+        """
         # start STANFORDCoreNLP
+
+
+    def annotate(self, list_of_files, reader_type):
+        """ If any of the files in the list doesn't exist just shout a WARNING
+            on the LOG.
+
+            I am not sure about the type of reader_type variable. (1) If it's
+            a string then I need a switch to internally create the right object
+            but this is ugly since then I need to update the switch every time
+            I introduce a new reader type. (2) If it's the reader, directly,
+            than I need to create it from the outside. Is this allright?
+
+            return List of <Document>
+        """
+        pass
+
+
+    def train(self, list_of_files, reader_type, save_to):
+        """ The doubts are the same as in the annotate function.
+
+            This method automatically parses the input files, gets the internal
+            representation from them, runs the attribute extractor
+            and train a Wapiti model. It saves the model where save_to says.
+            Attribute topology for CRF should be dealt internally in the
+            classifier module (this should be changed in the future).
+
+            return <Classification_Model>
+        """
+        pass
 
     def extract_from_folder(self, folder_path):
         files = [str(folder_path+'/'+f) for f in listdir(folder_path)

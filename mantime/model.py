@@ -14,7 +14,7 @@
 '''It contains the classes for the document data model of ManTIME.'''
 
 
-def format_annotation(start_token, end_token, annotations, annotation_format):
+def __format_annotation(start_token, end_token, annotations, annotation_format):
     '''It returns the correct sequence class label for the given token.'''
     sequence_label = None
     tag_fired = ''
@@ -41,6 +41,7 @@ def format_annotation(start_token, end_token, annotations, annotation_format):
     else:
         return sequence_label + '-' + tag_fired
 
+
 class Document(object):
     '''It represents the root of a parsed document.'''
 
@@ -48,7 +49,7 @@ class Document(object):
         self.name = name
         self.dct = dct
         self.text = ''
-        self.annotations = []
+        self.gold_annotations = []
         self.children = []
         self.stanford_tree = {}
         self.attributes = dict()
@@ -60,11 +61,12 @@ class Document(object):
         for num_sentence, sentence in enumerate(tree['sentences']):
             new_sentence = copy.deepcopy(sentence)
             for num_word, (_, attributes) in enumerate(new_sentence['words']):
-                new_sentence['words'][num_word][1]['CLASS'] = format_annotation(
-                    int(attributes['CharacterOffsetBegin']),
-                    int(attributes['CharacterOffsetEnd']),
-                    self.annotations,
-                    annotation_format)
+                new_sentence['words'][num_word][1]['CLASS'] = \
+                    __format_annotation(
+                        int(attributes['CharacterOffsetBegin']),
+                        int(attributes['CharacterOffsetEnd']),
+                        self.gold_annotations,
+                        annotation_format)
             tree['sentences'][num_sentence] = new_sentence
 
     def __str__(self):
@@ -74,67 +76,27 @@ class Document(object):
         return repr(self.__dict__)
 
 
-class DocumentNode(Document):
-    '''It represents a generic node of the parsed document.'''
-    def __init__(self, start, end):
-        super(DocumentNode, self).__init__('')
-        self.start = start
-        self.end = end
+class ClassificationModel(object):
+    """It just contains a time stamp of the files involved in the extraction
+       of the attributes and their MD5-sum codes. I would like to be sure that
+       the attribute set is compatible with the trained model. In order to
+       check for it I'll check if the timestamps of the .pyc files are equal.
+       Does something more elegant exists? I don't know.
+    """
 
-    def extract_features(self):
-        '''It returns all the features.'''
+    def __init__(self):
         pass
 
-    def __len__(self):
-        return self.end - self.start
 
-    def __str__(self):
-        return ''.join([str(leave) for leave in self.leaves()])
-
-    def __repr__(self):
-        return '<node_{} lenght:{}>'.format(str(type(self)).lower(),
-                                            len(list(self.leaves())))
+class Classifier(object):
+    """
+    """
+    def __init__(self):
+        pass
 
 
-class Section(DocumentNode):
-    '''It represents a section of a parsed document.'''
-    def __init__(self, start, end):
-        super(Section, self).__init__(start, end)
-
-
-class Sentence(DocumentNode):
-    '''It represents a sequence of a parsed document.'''
-    def __init__(self, start, end):
-        super(Sentence, self).__init__(start, end)
-
-
-class Token(DocumentNode):
-    '''It represents a single token of a parsed document.'''
-    def __init__(self, text, start, end, label):
-        super(Token, self).__init__(start, end)
-        self.text = text
-        self.children = None
-        self.labels = []
-        if label:
-            self.labels.append(label)
-
-    def __str__(self):
-        return str(self.text)
-
-    def __repr__(self):
-        return '<token {}, labels:{}>'.format(repr(self.text),
-                                              str(self.labels))
-
-
-class Gap(DocumentNode):
-    '''It represents a delimiter character among nodes of a parsed document.'''
-    def __init__(self, text, start, end):
-        super(Gap, self).__init__(start, end)
-        self.text = text
-        self.children = None
-
-    def __str__(self):
-        return str(self.text)
-
-    def __repr__(self):
-        return '<gap {}>'.format(repr(self.text))
+class AttributesExtractor(object):
+    """
+    """
+    def __init__(self):
+        pass

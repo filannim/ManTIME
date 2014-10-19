@@ -57,11 +57,12 @@ class FileReader(Reader):
 class TempEval3FileReader(FileReader):
     """This class is a reader for TempEval-3 files."""
 
-    def __init__(self, annotation_format='IO'):
+    def __init__(self, annotation_format='IO', extension_filter='.tml'):
         super(TempEval3FileReader, self).__init__()
         self.tags_to_spot = {'TIMEX3', 'EVENT', 'SIGNAL'}
         self.annotations = []
         self.annotation_format = annotation_format
+        self.extension_filter = extension_filter
 
     def parse(self, file_path):
         """It parses the content of file_path and extracts relevant information
@@ -80,7 +81,7 @@ class TempEval3FileReader(FileReader):
 
         document.dct = xml_document.findall(xpath_dct)[0].attrib['value']
         document.text = text
-        document.annotations = self.__get_annotations(xml, l_strip_chars)
+        document.gold_annotations = self.__get_annotations(xml, l_strip_chars)
         document.stanford_tree = CORENLP.raw_parse(document.text)
         document.push_classes(self.annotation_format)
         return document
