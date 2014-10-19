@@ -50,6 +50,7 @@ class ManTIME(object):
 
             # check for the dependencies and imports (are all the modules
               required there? what about the versions?)
+            # is Wapiti installed in the expected folder?
             # inizialise a server for the Stanford Parser
               hopefully we should be faster with the server and we should be
               able to easily parallelise the execution (with multiprocessing)

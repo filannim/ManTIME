@@ -14,16 +14,50 @@
 '''It uses the external CRFs algorithms to predict the labels.'''
 
 from __future__ import division
+import md5
+from abc import ABCMeta, abstractmethod
 from cgi import escape
 import os
 import subprocess
 from tempfile import NamedTemporaryFile
 
-from normalisers.general_timex_normaliser import normalise
 from properties import PATHS
 
-class Tagger(object):
 
+class Classifier(object):
+    """This class is an abstract classifier for ManTIME."""
+    __metaclass__ = ABCMeta
+
+    def __init__(self):
+        self.documents = []
+        self.md5 = None
+
+    @abstractmethod
+    def train(self, documents, save_to):
+        """
+
+            return ClassifierModel
+        """
+        assert len(set([d.annotation_format for d in documents])) == 1
+        # do the training
+        self.md5 = md5.new().update(open('attributes_extractor.py')).digest()
+        return ClassificationModel(self.md5, save_to)
+
+    @abstractmethod
+    def test(self, documents):
+        """
+
+            return List of <Document> (with .annotations filled in.)
+        """
+        curr_md5 = md5.new().update(open('attributes_extractor.py')).digest()
+        assert self.md5 == curr_md5, 'The training and testing model' +\
+                                     'MD5 digests don\'t match.'
+        # do the testing
+        return []
+
+
+class WapitiClassifier(object):
+    """This class is a Wapiti CRF interface."""
     def __init__(self):
         pass
 
@@ -101,3 +135,17 @@ class Tagger(object):
             position += 1
             displacement += 2
         return ''.join(annotated_sentence), position, positive_sequences
+
+
+class ClassificationModel(object):
+    """It just contains a time stamp of the files involved in the extraction
+       of the attributes (nlp_functions.py) and their MD5-sum codes. I would
+       like to be sure that the attribute set is compatible with the trained
+       model. In order to check for it I'll check if the timestamps of the .pyc
+       files are equal. Does something more elegant exists? I don't know.
+    """
+
+    def __init__(self, MD5sum_code, model_path):
+        self.MD5sum_code = MD5sum_code
+        self.model_path = model_path
+        pass

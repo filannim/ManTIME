@@ -45,17 +45,20 @@ def __format_annotation(start_token, end_token, annotations, annotation_format):
 class Document(object):
     '''It represents the root of a parsed document.'''
 
-    def __init__(self, name, dct=None):
+    def __init__(self, name, file_path='', dct=None):
         self.name = name
+        self.file_path = file_path
         self.dct = dct
         self.text = ''
         self.gold_annotations = []
+        self.predicted_annotations = []
         self.children = []
         self.stanford_tree = {}
         self.attributes = dict()
+        self.annotation_format = ''
 
-    def push_classes(self, annotation_format):
-        """Enriching the Stanford Parser output with annotations."""
+    def store_gold_annotations(self, annotation_format):
+        """Enriching the Stanford Parser output with gold annotations."""
         import copy
         tree = self.stanford_tree
         for num_sentence, sentence in enumerate(tree['sentences']):
@@ -68,24 +71,13 @@ class Document(object):
                         self.gold_annotations,
                         annotation_format)
             tree['sentences'][num_sentence] = new_sentence
+        self.annotation_format = annotation_format
 
     def __str__(self):
         return self.__dict__
 
     def __repr__(self):
         return repr(self.__dict__)
-
-
-class ClassificationModel(object):
-    """It just contains a time stamp of the files involved in the extraction
-       of the attributes and their MD5-sum codes. I would like to be sure that
-       the attribute set is compatible with the trained model. In order to
-       check for it I'll check if the timestamps of the .pyc files are equal.
-       Does something more elegant exists? I don't know.
-    """
-
-    def __init__(self):
-        pass
 
 
 class Classifier(object):
