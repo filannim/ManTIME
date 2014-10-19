@@ -42,6 +42,7 @@ class ManTIME(object):
         self.writer = writer
         self.processes = processes
         self.post_processing_pipeline = post_processing_pipeline
+        # start STANFORDCoreNLP
 
     def extract_from_folder(self, folder_path):
         files = [str(folder_path+'/'+f) for f in listdir(folder_path)

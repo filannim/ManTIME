@@ -47,6 +47,7 @@ class Document(object):
     def __init__(self, name, dct=None):
         self.name = name
         self.dct = dct
+        self.text = ''
         self.annotations = []
         self.children = []
         self.stanford_tree = {}
