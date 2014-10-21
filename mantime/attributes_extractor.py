@@ -19,24 +19,42 @@ import pickle
 import re
 
 from utilities import apply_gazetteer
+from utilities import Memoize
 import nlp_functions
-from nlp_functions import Parser
-from nlp_functions import NLP
-from nlp_functions import TreeTaggerTokeniser
-from nlp_functions import TreeTaggerPOS
 
 
-class Memoize(object):
-    '''Memoization utility.'''
+PORTER_STEMMER = Memoize(nltk.PorterStemmer().stem)
+LANCASTER_STEMMER = Memoize(nltk.LancasterStemmer().stem)
+WORDNET_LEMMATIZER = Memoize(nltk.WordNetLemmatizer().lemmatize)
 
-    def __init__(self, function):
-        self.function = function
-        self.memo = {}
 
-    def __call__(self, *args):
-        if args not in self.memo:
-            self.memo[args] = self.function(*args)
-        return self.memo[args]
+class AttributesExtractor(object):
+    """This class is a generic AttributesExtractor. In the future we can have
+       muliple of them, each one dedicated to the identification of particular
+       tasks: timexes, events, people, treatments, and so on.
+
+       An AttributeExtractor contains sentence attributes extractors and word
+       attributes extractor.
+    """
+
+    def __init__(self):
+        self.sentence_extractors = []
+        self.word_extractors = []
+
+    def extract(self, word):
+        """It returns an updated word with all the attributes extractors
+           applied on the word.
+        """
+        for num, extractor in enumerate(self.word_extractors):
+            func_name = '{type}_{num}_{name}'.format(type='word',
+                                                     num=str(num),
+                                                     name=extractor.func_name)
+            word[1][func_name] = extractor(word[0])
+        return word
+
+
+
+"""---OLD CODE--------------------------------------------------------------"""
 
 
 class FeatureFactory(object):
@@ -44,9 +62,6 @@ class FeatureFactory(object):
 
     def __init__(self):
         self.nlp = NLP()
-        self.porterstemmer = Memoize(nltk.PorterStemmer().stem)
-        self.lancasterstemmer = Memoize(nltk.LancasterStemmer().stem)
-        self.wordnetlemmatiser = Memoize(nltk.WordNetLemmatizer().lemmatize)
         self.tokeniser = TreeTaggerTokeniser()
         self.postagger = TreeTaggerPOS()
         self.parser = Parser()

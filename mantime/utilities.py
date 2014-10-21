@@ -73,6 +73,19 @@ def apply_gazetteer(sentence, gazetteer, case_sensitive=False):
     return sorted(indexes)
 
 
+class Memoize(object):
+    """Memoization utility."""
+
+    def __init__(self, function):
+        self.function = function
+        self.memo = {}
+
+    def __call__(self, *args):
+        if args not in self.memo:
+            self.memo[args] = self.function(*args)
+        return self.memo[args]
+
+
 def main():
     '''Test code'''
     assert list(search_subsequence('', 'come')) == []

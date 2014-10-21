@@ -33,7 +33,7 @@ class Writer(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def parse(self, text):
+    def write(self, documents):
         pass
 
 
@@ -45,8 +45,20 @@ class FileWriter(Writer):
         pass
 
     @abstractmethod
-    def write(self, save_to):
+    def write(self, documents, save_to):
         pass
+
+
+class SimpleWriter(Writer):
+    """This class is a simple writer for ManTIME."""
+
+    def __init__(self):
+        super(SimpleWriter, self).__init__()
+
+    def write(self, documents):
+        """
+        """
+        return [document.predicted_annotations for document in documents]
 
 
 class SimpleXMLFileWriter(FileWriter):
@@ -70,10 +82,12 @@ FileWriter.register(SimpleXMLFileWriter)
 def main():
     '''Simple ugly non-elegant test.'''
     import sys
-    import pprint
-    file_reader = SimpleXMLFileWriter(annotation_format='IO')
+    from readers import TempEval3FileReader
+
+    file_reader = TempEval3FileReader(annotation_format='IO')
     document = file_reader.parse(sys.argv[1])
-    pprint.pprint(document.__dict__)
+    file_writer = SimpleWriter()
+    print file_writer.write([document])
 
 if __name__ == '__main__':
     main()

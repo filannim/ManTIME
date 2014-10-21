@@ -83,7 +83,7 @@ class TempEval3FileReader(FileReader):
         document.text = text
         document.gold_annotations = self.__get_annotations(xml, l_strip_chars)
         document.stanford_tree = CORENLP.raw_parse(document.text)
-        document.push_classes(self.annotation_format)
+        document.store_gold_annotations(self.annotation_format)
         return document
 
     def __get_annotations(self, source, start_offset=0):

@@ -11,10 +11,10 @@
 #
 #   For details, see www.cs.man.ac.uk/~filannim/
 
-'''It contains the classes for the document data model of ManTIME.'''
+"""It contains the classes for the document data model of ManTIME."""
 
 
-def __format_annotation(start_token, end_token, annotations, annotation_format):
+def format_annotation(start_token, end_token, annotations, annotation_format):
     '''It returns the correct sequence class label for the given token.'''
     sequence_label = None
     tag_fired = ''
@@ -59,18 +59,16 @@ class Document(object):
 
     def store_gold_annotations(self, annotation_format):
         """Enriching the Stanford Parser output with gold annotations."""
-        import copy
         tree = self.stanford_tree
         for num_sentence, sentence in enumerate(tree['sentences']):
-            new_sentence = copy.deepcopy(sentence)
-            for num_word, (_, attributes) in enumerate(new_sentence['words']):
-                new_sentence['words'][num_word][1]['CLASS'] = \
-                    __format_annotation(
-                        int(attributes['CharacterOffsetBegin']),
-                        int(attributes['CharacterOffsetEnd']),
-                        self.gold_annotations,
-                        annotation_format)
-            tree['sentences'][num_sentence] = new_sentence
+            for num_word, (word, attributes) in enumerate(sentence['words']):
+                attributes[u'CLASS'] = format_annotation(
+                    int(attributes['CharacterOffsetBegin']),
+                    int(attributes['CharacterOffsetEnd']),
+                    self.gold_annotations,
+                    annotation_format)
+                tree['sentences'][num_sentence]['words'][num_word] = \
+                    [word, attributes]
         self.annotation_format = annotation_format
 
     def __str__(self):

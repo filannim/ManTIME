@@ -26,6 +26,9 @@ import argparse
 import sys
 
 from distutils.version import StrictVersion
+
+from readers import TempEval3Reader
+from writers import SimpleXMLFileWriter
 # import mantime.nlp_functions
 # from mantime.feature_factory import FeatureFactory
 # from mantime.text_extractor import TextExtractor
@@ -166,8 +169,8 @@ def main():
     mantime = ManTIME()
     mantime.processes = 3
     mantime.post_processing_pipeline = True
-    mantime.reader = TempEval_3_Reader()
-    mantime.writer = ISO_TimeML_Writer()
+    mantime.reader = TempEval3Reader()
+    mantime.writer = SimpleXMLFileWriter()
     mantime.extract_from_folder(args.folder)
 
 
