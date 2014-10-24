@@ -28,6 +28,8 @@ from StringIO import StringIO
 from corenlp import StanfordCoreNLP
 
 from model import Document
+from model import Sentence
+from model import Word
 from settings import PATH_CORENLP_FOLDER
 
 CORENLP = StanfordCoreNLP(PATH_CORENLP_FOLDER)
@@ -70,20 +72,41 @@ class TempEval3FileReader(FileReader):
         Document object, which is our internal representation.
         """
         xml_document = etree.parse(file_path)
-        document = Document(file_path)
-
         text_node = xml_document.findall(".//TEXT")[0]
         text = etree.tostring(text_node, method='text')
         xml = etree.tostring(text_node)
         xpath_dct = ".//TIMEX3[@functionInDocument='CREATION_TIME']"
         # StanfordParser strips internally the text :(
         l_strip_chars = len(text.lstrip()) - len(text)
+        stanford_tree = CORENLP.raw_parse(text)
 
+        document = Document(file_path)
         document.dct = xml_document.findall(xpath_dct)[0].attrib['value']
         document.text = text
         document.gold_annotations = self.__get_annotations(xml, l_strip_chars)
-        document.stanford_tree = CORENLP.raw_parse(document.text)
+        document.coref = stanford_tree.get('coref', None)
+
+        for stanford_sentence in stanford_tree['sentences']:
+            dependencies = stanford_sentence.get('dependencies', None)
+            i_dependencies = stanford_sentence.get('indexeddependencies', None)
+            parsetree = stanford_sentence.get('parsetree', u'')
+            sentence_text = stanford_sentence.get('text', u'')
+            sentence = Sentence(dependencies=dependencies,
+                                indexed_dependencies=i_dependencies,
+                                parsetree=parsetree,
+                                text=sentence_text)
+            for (word_form, attr) in stanford_sentence['words']:
+                word = Word(word_form=word_form,
+                            char_offset_begin=attr['CharacterOffsetBegin'],
+                            char_offset_end=attr['CharacterOffsetEnd'],
+                            lemma=attr['Lemma'],
+                            named_entity_tag=attr['NamedEntityTag'],
+                            part_of_speech=attr['PartOfSpeech'])
+                sentence.words.append(word)
+            document.sentences.append(sentence)
+
         document.store_gold_annotations(self.annotation_format)
+        del stanford_tree, l_strip_chars, text, text_node, xml_document
         return document
 
     def __get_annotations(self, source, start_offset=0):

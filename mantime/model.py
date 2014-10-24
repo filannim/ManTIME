@@ -50,25 +50,21 @@ class Document(object):
         self.file_path = file_path
         self.dct = dct
         self.text = ''
+        self.sentences = []
+        self.coref = None
         self.gold_annotations = []
         self.predicted_annotations = []
-        self.children = []
-        self.stanford_tree = {}
-        self.attributes = dict()
         self.annotation_format = ''
 
     def store_gold_annotations(self, annotation_format):
         """Enriching the Stanford Parser output with gold annotations."""
-        tree = self.stanford_tree
-        for num_sentence, sentence in enumerate(tree['sentences']):
-            for num_word, (word, attributes) in enumerate(sentence['words']):
-                attributes[u'CLASS'] = format_annotation(
-                    int(attributes['CharacterOffsetBegin']),
-                    int(attributes['CharacterOffsetEnd']),
+        for sentence in self.sentences:
+            for word in sentence.words:
+                word.attributes['CLASS'] = format_annotation(
+                    int(word.character_offset_begin),
+                    int(word.character_offset_end),
                     self.gold_annotations,
                     annotation_format)
-                tree['sentences'][num_sentence]['words'][num_word] = \
-                    [word, attributes]
         self.annotation_format = annotation_format
 
     def __str__(self):
@@ -77,6 +73,40 @@ class Document(object):
     def __repr__(self):
         return repr(self.__dict__)
 
+
+class Sentence(object):
+
+    def __init__(self, dependencies=None, indexed_dependencies=None,
+                 parsetree='', text='', words=[]):
+        if dependencies:
+            assert type(dependencies) == list, 'Wrong dependencies type'
+        if indexed_dependencies:
+            assert type(indexed_dependencies) == list, \
+                'Wrong indexed dependencies type'
+        if parsetree:
+            assert type(parsetree) == unicode, 'Wrong parsetree type'
+        if text:
+            assert type(text) == unicode, 'Wrong text type'
+        if words:
+            assert type(words) == list, 'Wrong words type'
+
+        self.dependencies = dependencies
+        self.indexed_dependencies = indexed_dependencies
+        self.parsetree = parsetree
+        self.words = words
+
+
+class Word(object):
+
+    def __init__(self, word_form, char_offset_begin, char_offset_end,
+                 lemma, named_entity_tag, part_of_speech):
+        self.word_form = word_form
+        self.character_offset_begin = char_offset_begin
+        self.character_offset_end = char_offset_end
+        self.lemma = lemma
+        self.named_entity_tag = named_entity_tag
+        self.part_of_speech = part_of_speech
+        self.attributes = {}
 
 class Classifier(object):
     """

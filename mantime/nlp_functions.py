@@ -22,18 +22,22 @@ import MBSP
 from properties import property as paths
 
 
-def memoise(f):
-    """ Memoization decorator 
+def memoise(function):
+    """ Memoization decorator
 
-    It save the result of a function wrt its arguments.
+        It save the result of a function wrt its arguments.
     """
-    class memodict(dict):
+    class Memodict(dict):
+        """It extendes a Python dictionary and it's used to store intermediate
+           results. It works like a cache memory for functions.
+        """
         def __getitem__(self, *key):
             return dict.__getitem__(self, key)
+
         def __missing__(self, key):
-            ret = self[key] = f(*key)
+            ret = self[key] = function(*key)
             return ret
-    return memodict().__getitem__
+    return Memodict().__getitem__
 
 class NLP:
     """Natural Language Processing utility class
