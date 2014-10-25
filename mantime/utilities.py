@@ -16,6 +16,8 @@
 from __future__ import generators
 import collections
 
+from extractors import WordBasedResult
+
 
 def search_subsequence(sequence, key, end=False):
     '''Yields all the start positions of the *key* in the *sequence*.
@@ -71,6 +73,22 @@ def apply_gazetteer(sentence, gazetteer, case_sensitive=False):
     for item in gazetteer:
         indexes.extend(search_subsequence(sentence, case(item), end=True))
     return sorted(indexes)
+
+
+def __format(matching_elements, length):
+    assert type(length) == int
+    assert type(matching_elements) == set
+    assert max(matching_elements) <= length
+    matching_elements = sorted(matching_elements)
+    for index in xrange(length):
+        if matching_elements:
+            if index == matching_elements[0]:
+                yield WordBasedResult('I')
+                matching_elements.pop(0)
+            else:
+                yield WordBasedResult('O')
+        else:
+            yield WordBasedResult('O')
 
 
 class Memoize(object):

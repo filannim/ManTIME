@@ -15,13 +15,16 @@ import re
 import pickle
 
 import nltk
+import types
 
 from utilities import Memoize
 from utilities import search_subsequence
+from settings import LANGUAGE
 
 PORTER_STEMMER = Memoize(nltk.PorterStemmer().stem)
 LANCASTER_STEMMER = Memoize(nltk.LancasterStemmer().stem)
 WORDNET_LEMMATIZER = Memoize(nltk.WordNetLemmatizer().lemmatize)
+STOPWORDS = nltk.corpus.stopwords.words(LANGUAGE)
 COMMON_WORDS = pickle.load(open('data/gazetteer/common_words.pickle'))
 POSITIVE_WORDS = pickle.load(open('data/gazetteer/positive_words.pickle'))
 NEGATIVE_WORDS = pickle.load(open('data/gazetteer/negative_words.pickle'))
@@ -96,6 +99,10 @@ class WordBasedExtractors(object):
     @staticmethod
     def morphological_unusual_word(word):
         return not word.word_form.lower() in COMMON_WORDS
+
+    @staticmethod
+    def morphological_is_stopword(word):
+        return word.word_form in STOPWORDS
 
     @staticmethod
     def morphological_pattern(word):
@@ -347,36 +354,66 @@ class WordBasedExtractors(object):
 class SentenceBasedExtractors(object):
 
     @staticmethod
+    def __matching_gazetteer(gazetteer, sentence):
+        word_forms = [token.word_form for token in sentence.words]
+        matchings = set()
+        for gazetteer_item in gazetteer:
+            subsequences = search_subsequence(word_forms, gazetteer_item)
+            if subsequences:
+                for subsequence_start in subsequences:
+                    subsequence_end = subsequence_start + len(gazetteer_item)
+                    matchings.update(range(subsequence_start, subsequence_end))
+        return format(matchings, len(word_forms))
+
+    @staticmethod
     def gazetteer_malename(sentence):
-        tokens = [token[0] for token in sentence['words']]
-        result = []
-        for gazetteer_item in MALE_NAMES:
-            if 
+        return SentenceBasedExtractors.__matching_gazetteer(MALE_NAMES,
+                                                            sentence)
 
     @staticmethod
-    def gazetteer_femalename
+    def gazetteer_femalename(sentence):
+        return SentenceBasedExtractors.__matching_gazetteer(FEMALE_NAMES,
+                                                            sentence)
 
     @staticmethod
-    def gazetteer_country
+    def gazetteer_country(sentence):
+        return SentenceBasedExtractors.__matching_gazetteer(COUNTRIES,
+                                                            sentence)
 
     @staticmethod
-    def gazetteer_male
-
-
-class DocumentBasedExtractor(ojbect):
+    def gazetteer_isocountry(sentence):
+        return SentenceBasedExtractors.__matching_gazetteer(ISOCOUNTRIES,
+                                                            sentence)
 
     @staticmethod
-    def ...
+    def gazetteer_uscity(sentence):
+        return SentenceBasedExtractors.__matching_gazetteer(US_CITIES,
+                                                            sentence)
+
+    @staticmethod
+    def gazetteer_nationality(sentence):
+        return SentenceBasedExtractors.__matching_gazetteer(NATIONALITIES,
+                                                            sentence)
+
+    @staticmethod
+    def gazetteer_festivity(sentence):
+        return SentenceBasedExtractors.__matching_gazetteer(FESTIVITIES,
+                                                            sentence)
+
+
+class DocumentBasedExtractor(object):
+
+    pass
 
 
 class WordBasedResult(object):
 
     def __init__(self, value):
         assert type(value) in (str, bool, int, float)
-        if type(self.value) in (str, bool):
-            self.value = '"{}"'.format(str(self.value))
+        if type(value) in (str, bool):
+            self.value = '"{}"'.format(str(value))
         else:
-            self.value = '{}'.format(str(self.value))
+            self.value = '{}'.format(str(value))
 
     def apply(word, name):
         assert type(word) == Word, 'Wrong word type'
@@ -393,9 +430,9 @@ class WordBasedResults(object):
 class SentenceBasedResult(object):
 
     def __init__(self, values):
-        assert type(values) == tuple, 'Wrong type for values'
-        assert len(set([type(value) for value in values])) == 1, \
-            'Multiple types in values'
-        assert set([type(value) for value in values])[0] == WordBasedResult, \
-            'No word-based values in values'
+        assert isinstance(values, types.GeneratorType), 'Wrong type for values'
+#       assert len(set([type(value) for value in values])) == 1, \
+#           'Multiple types in values'
+#       assert set([type(value) for value in values])[0] == WordBasedResult, \
+#           'No word-based values in values'
         self.values = values

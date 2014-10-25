@@ -16,12 +16,11 @@
 from __future__ import division
 import nltk
 import pickle
-import re
 
 from utilities import apply_gazetteer
-
-
-
+from extractors import WordBasedResult
+from extractors import WordBasedResults
+from extractors import SentenceBasedResult
 
 
 class AttributesExtractor(object):
@@ -37,25 +36,51 @@ class AttributesExtractor(object):
         self.sentence_extractors = []
         self.word_extractors = []
 
-    def extract(self, word):
+    def __get_attr_name(type, num, name):
+            return '{type}_{num}_{name}'.format(type=type, num=num, name=name)
+
+    def __extract_from_word(self, word, attribute_number, level='word'):
+        for word_extractor in self.word_extractors:
+            extractor_result = word_extractor(word)
+            if type(extractor_result) == WordBasedResult:
+                attribute_name = self.__get_attr_name(level,
+                                                      attribute_number,
+                                                      word_extractor.func_name)
+                extractor_result.apply(word, attribute_name)
+            elif type(extractor_result) == WordBasedResults:
+                for attribute_name, attribute_value in extractor_result:
+                    attribute_name = self.__get_attr_name(level,
+                                                          attribute_number,
+                                                          attribute_name)
+                    attribute_value.apply(word, attribute_name)
+                    attribute_number += 1
+            else:
+                raise Exception('Unexpected word-based attribute-value type.')
+            attribute_number += 1
+        return attribute_number
+
+    def __extract_from_sentence(self, sentence, attribute_number,
+                                level='sentence'):
+        return attribute_number
+
+    def __extract_from_document(self, document, attribute_number,
+                                level='document'):
+        return attribute_number
+
+    def extract(self, document):
         """It returns an updated word with all the attributes extractors
            applied on the word.
         """
-        for num, extractor in enumerate(self.word_extractors):
-            func_name = '{type}_{num}_{name}'.format(type='word',
-                                                     num=str(num),
-                                                     name=extractor.func_name)
-            # document-based extractors
+        # document-based extractors
+        attribute_number = self.__extract_from_document(document, 0)
+        for sentence in document.sentences:
             # sentence-based extractors
-
-            # word-based extractors
-            result = memoize(extractor(word.word_form))
-            if type(result) == set:
-                for attribute_name, attribute_value in result:
-                    word.attributes[attribute_name] = str(attribute_value)
-            else:
-                word.attributes[func_name] = str(result)
-        return word
+            attribute_number = self.__extract_from_sentence(sentence,
+                                                            attribute_number)
+            for word in sentence.words:
+                # word-based extractors
+                attribute_number = self.__extract_from_word(word,
+                                                            attribute_number)
 
 
 class TimexesExtractor(AttributeExtractor):
@@ -84,67 +109,4 @@ class FeatureFactory(object):
     '''Provides methods to obtain an input table for a classifier'''
 
     def __init__(self):
-        self.wordnet = nltk.corpus.wordnet
-        self.stopwords = nltk.corpus.stopwords.words('english')
-        self.malenames = pickle.load(open('gazetteer/male.pickle'))
-        self.femalenames = pickle.load(open('gazetteer/female.pickle'))
-        self.countries = pickle.load(open('gazetteer/countries.pickle'))
-        self.isocountries = pickle.load(open('gazetteer/isocountries.pickle'))
-        self.uscities = pickle.load(open('gazetteer/uscities.pickle'))
-        self.nationalities = pickle.load(
-            open('gazetteer/nationalities.pickle'))
-        self.festivities = pickle.load(open('gazetteer/festivities.pickle'))
-
-    def get_sentence_attributes(self, sentence, gold_predictions, tag):
-        '''It returns the features of *sentence* in IOB representation.'''
-        attributes_values = []
-        words = self.__compute_sentence_attributes(sentence, gold_predictions)
-        attribute_names = sorted([e for e in words[0].keys() if e.islower()]) \
-            + [e for e in words[0].keys() if e.isupper() and e == tag]
-        for word in words:
-            # if word[index] == None, the or stataments returns 'False'
-            row = [str(word[index] or 'False') for index in attribute_names]
-            attributes_values.append('{}'.format('\t'.join(row)))
-        return attribute_names, attributes_values
-
-    def __compute_sentence_attributes(self, sentence, gold_labels):
-        '''It returns the attribute table for the sentence.'''
-        attributes = []
-        tokens = self.tokeniser.tokenize(sentence)
-        # Use gazetteers at sentence level
-        gazetteers = {}
-        gazetteers['male_names'] = apply_gazetteer(self.malenames, tokens)
-        gazetteers['female_names'] = apply_gazetteer(self.femalenames, tokens)
-        gazetteers['countries'] = apply_gazetteer(self.countries, tokens)
-        gazetteers['iso_countries'] = apply_gazetteer(
-            self.isocountries, tokens)
-        gazetteers['uscities'] = apply_gazetteer(self.uscities, tokens)
-        gazetteers['nationalities'] = apply_gazetteer(
-            self.nationalities, tokens)
-        gazetteers['festivities'] = apply_gazetteer(self.festivities, tokens)
-        # Shallow parsing (chunk) and Propositional Noun Phrases recognition
-        parsing = Parser.parse(' '.join(tokens))
-        pos_tags = self.postagger.tag(tokens)
-        # For each token, compute the word level features
-        features = {}
-        for index, (token, pos_tag) in enumerate(pos_tags):
-            features = self.__compute_token_attributes(index, token, pos_tag,
-                                                       gazetteers, parsing,
-                                                       gold_labels)
-            attributes.append(features)
-        return attributes
-
-    def __compute_token_attributes(self, index, token, pos_tag, gazetteer_offsets, gold_labels):
-        '''It returns the attribute table for the word.'''
-        features = {}
-        # GAZETTEERs
-        features['gaz_stopword'] = True if token.lower() in self.stopwords else False
-        for gazetteer_name, offsets in gazetteer_offsets.iteritems():
-            features['gaz_'+gazetteer_name] = 'O-'+gazetteer_name
-            for start, end in offsets:
-                if index == start:
-                    features['gaz_'+gazetteer_name] = 'B-'+gazetteer_name
-                if index in range(start+1, end+1):
-                    features['gaz_'+gazetteer_name] = 'I-'+gazetteer_name
-
-        return features
+        self.stopwords = 
