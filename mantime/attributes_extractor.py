@@ -49,7 +49,7 @@ class AttributesExtractor(object):
             # sentence-based extractors
 
             # word-based extractors
-            result = memoize(extractor(word[0]))
+            result = memoize(extractor(word.word_form))
             if type(result) == set:
                 for attribute_name, attribute_value in result:
                     word.attributes[attribute_name] = str(attribute_value)

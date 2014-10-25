@@ -337,12 +337,11 @@ class WordBasedExtractors(object):
     @staticmethod
     def phonetic_form(word):
         phonemes = PHONEME_DICTIONARY.get(word.word_form.lower(), [''])[0]
-        attributes = set()
-        attributes.add('phonetic_form', '-'.join(phonemes) or '_')
-        attributes.add('phonetic_length', len(phonemes))
-        attributes.add('phonetic_first', phonemes[0] if len(phonemes) else '_')
-        attributes.add('phonetic_last', phonemes[-1] if len(phonemes) else '_')
-        return attributes
+        attributes = (('phonetic_form', '-'.join(phonemes) or '_'),
+                      ('phonetic_length', len(phonemes)),
+                      ('phonetic_first', phonemes[0] if phonemes else '_'),
+                      ('phonetic_last', phonemes[-1] if phonemes else '_'))
+        return WordBasedResults(attributes)
 
 
 class SentenceBasedExtractors(object):
@@ -364,7 +363,6 @@ class SentenceBasedExtractors(object):
     def gazetteer_male
 
 
-
 class DocumentBasedExtractor(ojbect):
 
     @staticmethod
@@ -374,20 +372,30 @@ class DocumentBasedExtractor(ojbect):
 class WordBasedResult(object):
 
     def __init__(self, value):
-        self.value = value
+        assert type(value) in (str, bool, int, float)
+        if type(self.value) in (str, bool):
+            self.value = '"{}"'.format(str(self.value))
+        else:
+            self.value = '{}'.format(str(self.value))
 
-    def __str__(self):
-        return '"{}"'.format(str(self.value))
+    def apply(word, name):
+        assert type(word) == Word, 'Wrong word type'
+        word.attributes[name] == self.value
+
+
+class WordBasedResults(object):
+
+    def __init__(self, values):
+        assert type(values) == tuple
+        self.values = values
 
 
 class SentenceBasedResult(object):
 
     def __init__(self, values):
-        assert type(values) == list, 'Wrong type for values'
+        assert type(values) == tuple, 'Wrong type for values'
         assert len(set([type(value) for value in values])) == 1, \
             'Multiple types in values'
         assert set([type(value) for value in values])[0] == WordBasedResult, \
             'No word-based values in values'
         self.values = values
-
-    def __str__
