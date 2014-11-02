@@ -26,6 +26,7 @@ import xml.etree.cElementTree as etree
 from StringIO import StringIO
 
 from corenlp import StanfordCoreNLP
+from nltk import ParentedTree
 
 from model import Document
 from model import Sentence
@@ -79,7 +80,6 @@ class TempEval3FileReader(FileReader):
         # StanfordParser strips internally the text :(
         l_strip_chars = len(text.lstrip()) - len(text)
         stanford_tree = CORENLP.raw_parse(text)
-
         document = Document(file_path)
         document.dct = xml_document.findall(xpath_dct)[0].attrib['value']
         document.text = text
@@ -89,19 +89,20 @@ class TempEval3FileReader(FileReader):
         for stanford_sentence in stanford_tree['sentences']:
             dependencies = stanford_sentence.get('dependencies', None)
             i_dependencies = stanford_sentence.get('indexeddependencies', None)
-            parsetree = stanford_sentence.get('parsetree', u'')
+            parsetree = ParentedTree(stanford_sentence.get('parsetree', u''))
             sentence_text = stanford_sentence.get('text', u'')
             sentence = Sentence(dependencies=dependencies,
                                 indexed_dependencies=i_dependencies,
                                 parsetree=parsetree,
                                 text=sentence_text)
-            for (word_form, attr) in stanford_sentence['words']:
+            for id, (word_form, attr) in enumerate(stanford_sentence['words']):
                 word = Word(word_form=word_form,
                             char_offset_begin=attr['CharacterOffsetBegin'],
                             char_offset_end=attr['CharacterOffsetEnd'],
                             lemma=attr['Lemma'],
                             named_entity_tag=attr['NamedEntityTag'],
-                            part_of_speech=attr['PartOfSpeech'])
+                            part_of_speech=attr['PartOfSpeech'],
+                            pos_in_sentence=id)
                 sentence.words.append(word)
             document.sentences.append(sentence)
 

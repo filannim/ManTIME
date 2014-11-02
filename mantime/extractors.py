@@ -11,14 +11,20 @@
 #
 #   For details, see www.cs.man.ac.uk/~filannim/
 
+from __future__ import division
+
 import re
 import pickle
+import calendar
+import types
 
 import nltk
-import types
+from num2words import num2words
 
 from utilities import Memoize
 from utilities import search_subsequence
+from utilities import matching_gazetteer
+from model import Word
 from settings import LANGUAGE
 
 PORTER_STEMMER = Memoize(nltk.PorterStemmer().stem)
@@ -41,68 +47,68 @@ class WordBasedExtractors(object):
 
     @staticmethod
     def token(word):
-        return word.word_form
+        return WordBasedResult(word.word_form)
 
     @staticmethod
     def token_normalised(word):
-        return re.sub(r'\d', 'D', word.word_form.strip())
+        return WordBasedResult(re.sub(r'\d', 'D', word.word_form.strip()))
 
     @staticmethod
     def lexical_lemma(word):
-        return word.lemma
+        return WordBasedResult(word.lemma)
 
     @staticmethod
     def lexical_pos(word):
-        return word.part_of_speech
+        return WordBasedResult(word.part_of_speech)
 
     @staticmethod
     def lexical_tense(word):
         postag = word.part_of_speech
         if postag in ('VB', 'VD', 'VH', 'VV'):
-            return 'BASE'
+            return WordBasedResult('BASE')
         elif postag in ('VBN', 'VDN', 'VHN', 'VVN'):
-            return 'PASTPARTICIPLE'
+            return WordBasedResult('PASTPARTICIPLE')
         elif postag in ('VBD', 'VDD', 'VHD', 'VVD'):
-            return 'PAST'
+            return WordBasedResult('PAST')
         elif postag in ('VBG', 'VDG', 'VHG', 'VVG'):
-            return 'GERUND'
+            return WordBasedResult('GERUND')
         elif postag in ('VBZ', 'VBP', 'VDZ', 'VDP', 'VHZ', 'VHP'):
-            return 'PRESENT'
+            return WordBasedResult('PRESENT')
         else:
-            return 'NONE'
+            return WordBasedResult('NONE')
 
     @staticmethod
     def lexical_polarity(word):
         if word.word_form.lower() in POSITIVE_WORDS:
-            return 'pos'
+            return WordBasedResult('pos')
         elif word.word_form.lower() in NEGATIVE_WORDS:
-            return 'neg'
+            return WordBasedResult('neg')
         else:
-            return 'neu'
+            return WordBasedResult('neu')
 
     @staticmethod
     def lexical_named_entity_tag(word):
-        return word.named_entity_tag
+        return WordBasedResult(word.named_entity_tag)
 
     @staticmethod
     def morphological_wordnet_lemma(word):
-        return WORDNET_LEMMATIZER(word.word_form)
+        return WordBasedResult(WORDNET_LEMMATIZER(word.word_form))
 
     @staticmethod
     def morphological_porter_stem(word):
-        return PORTER_STEMMER(word.word_form)
+        return WordBasedResult(PORTER_STEMMER(word.word_form))
 
     @staticmethod
     def morphological_lancaster_stem(word):
-        return LANCASTER_STEMMER(word.word_form)
+        return WordBasedResult(LANCASTER_STEMMER(word.word_form))
 
     @staticmethod
     def morphological_unusual_word(word):
-        return not word.word_form.lower() in COMMON_WORDS
+        return WordBasedResult(not word.word_form.lower() in COMMON_WORDS)
 
     @staticmethod
     def morphological_is_stopword(word):
-        return word.word_form in STOPWORDS
+        return WordBasedResult(word.word_form in STOPWORDS)
 
     @staticmethod
     def morphological_pattern(word):
@@ -123,7 +129,7 @@ class WordBasedExtractors(object):
             else:
                 if pattern[-1:] != char:
                     pattern += char
-        return pattern
+        return WordBasedResult(pattern)
 
     @staticmethod
     def morphological_extended_pattern(word):
@@ -139,7 +145,7 @@ class WordBasedExtractors(object):
                 pattern += ' '
             else:
                 pattern += char
-        return pattern
+        return WordBasedResult(pattern)
 
     @staticmethod
     def morphological_vocal_pattern(word):
@@ -160,248 +166,431 @@ class WordBasedExtractors(object):
             else:
                 if pattern[-1:] != 'c':
                     pattern += 'c'
-        return pattern
+        return WordBasedResult(pattern)
 
     @staticmethod
     def morphological_has_digit(word):
-        return any(map(str.isdigit, word.word_form))
+        return WordBasedResult(any(char.isdigit() for char in word.word_form))
 
     @staticmethod
     def morphological_has_symbol(word):
         issymbol = lambda x: not (x.isdigit() or x.isalpha())
-        return any(map(issymbol, word.word_form))
+        return WordBasedResult(any(issymbol(char) for char in word.word_form))
 
     @staticmethod
     def morphological_prefix(word):
-        return word.word_form[:3] or word.word_form[:2] or word.word_form[:1]
+        return WordBasedResult(word.word_form[:3] or
+                               word.word_form[:2] or
+                               word.word_form[:1])
 
     @staticmethod
     def morphological_suffix(word):
-        return word.word_form[-3:] or word.word_form[-2:] or word.word_form[-1:]
+        return WordBasedResult(word.word_form[-3:] or
+                               word.word_form[-2:] or
+                               word.word_form[-1:])
 
     @staticmethod
     def morphological_first_upper(word):
-        return word.word_form[0].isupper()
+        return WordBasedResult(word.word_form[0].isupper())
 
     @staticmethod
     def morphological_is_alpha(word):
-        return word.word_form.isalpha()
+        return WordBasedResult(word.word_form.isalpha())
 
     @staticmethod
     def morphological_is_lower(word):
-        return word.word_form.islower()
+        return WordBasedResult(word.word_form.islower())
 
     @staticmethod
     def morphological_is_digit(word):
-        return word.word_form.isdigit()
+        return WordBasedResult(word.word_form.isdigit())
 
     @staticmethod
     def morphological_is_alphabetic(word):
-        return word.word_form.isalpha()
+        return WordBasedResult(word.word_form.isalpha())
 
     @staticmethod
     def morphological_is_alphanumeric(word):
-        return word.word_form.isalnum()
+        return WordBasedResult(word.word_form.isalnum())
 
     @staticmethod
     def morphological_is_title(word):
-        return word.word_form.istitle()
+        return WordBasedResult(word.word_form.istitle())
 
     @staticmethod
     def morphological_is_upper(word):
-        return word.word_form.isupper()
+        return WordBasedResult(word.word_form.isupper())
 
     @staticmethod
     def morphological_is_numeric(word):
-        return unicode(word.word_form).isnumeric()
+        return WordBasedResult(unicode(word.word_form).isnumeric())
 
     @staticmethod
     def morphological_is_decimal(word):
-        return unicode(word.word_form).isdecimal()
+        return WordBasedResult(unicode(word.word_form).isdecimal())
 
     @staticmethod
     def morphological_ends_with_s(word):
-        return word.word_form[-1] == 's'
+        return WordBasedResult(word.word_form[-1] == 's')
 
     @staticmethod
     def morphological_token_with_no_letters(word):
-        return ''.join([c for c in word.word_form if not c.isalpha()])
+        return WordBasedResult(''.join([c for c in word.word_form
+                                        if not c.isalpha()]))
 
     @staticmethod
     def morphological_token_with_no_letters_and_numbers(word):
-        return ''.join([c for c in word.word_form if not (c.isalpha() or c.isdigit())])
+        return WordBasedResult(''.join([c for c in word.word_form
+                                        if not (c.isalpha() or c.isdigit())]))
 
     @staticmethod
     def morphological_is_all_caps_and_dots(word):
         iscapsanddots = lambda x: x.isupper() or x == '.'
-        return all(map(iscapsanddots, word.word_form))
+        return WordBasedResult(all(map(iscapsanddots, word.word_form)))
 
     @staticmethod
     def morphological_is_all_digits_and_dots(word):
         isdigitsanddots = lambda x: x.isdigit() or x == '.'
-        return all(map(isdigitsanddots, word.word_form))
+        return WordBasedResult(all(map(isdigitsanddots, word.word_form)))
 
     @staticmethod
     def temporal_number(word):
-        return any(re.findall('^[0-9]+ ?(?:st|nd|rd|th)$', word.word_form.lower()))
+        pattern = r'^[0-9]+ ?(?:st|nd|rd|th)$'
+        return WordBasedResult(any(re.findall(pattern,
+                                              word.word_form.lower())))
 
     @staticmethod
     def temporal_time(word):
-        return any(re.findall('^([0-9]{1,2})[:\.\-]([0-9]{1,2}) ?(a\.?m\.?|p\.?m\.?)?$', word.word_form.lower()))
+        pattern = r'^([0-9]{1,2})[:\.\-]([0-9]{1,2}) ?(a\.?m\.?|p\.?m\.?)?$'
+        return WordBasedResult(any(re.findall(pattern,
+                                              word.word_form.lower())))
 
     @staticmethod
     def temporal_digit(word):
-        return any(re.findall('^[0-9]+$', word.word_form.lower()))
+        return WordBasedResult(any(re.findall('^[0-9]+$',
+                                              word.word_form.lower())))
 
     @staticmethod
     def temporal_ordinal(word):
-        return any(re.findall('^(st|nd|rd|th)$', word.word_form.lower()))
+        return WordBasedResult(any(re.findall('^(st|nd|rd|th)$',
+                                              word.word_form.lower())))
 
     @staticmethod
     def temporal_year(word):
-        return any(re.findall('^[12][0-9]{3}|\'[0-9]{2,3}$', word.word_form.lower()))
+        return WordBasedResult(any(re.findall('^[12][0-9]{3}|\'[0-9]{2,3}$',
+                                              word.word_form.lower())))
 
     @staticmethod
     def temporal_literal_number(word):
-        return any(re.findall('^(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundreds?|thousands?|)$', word.word_form.lower()))
+        lit_numbers = set([num2words(num) for num in xrange(0, 1001)])
+        lit_numbers.update([num.replace('-', '') for num in lit_numbers])
+        pattern = r'^({pattern})$'.format(pattern='|'.join(lit_numbers))
+        return WordBasedResult(any(re.findall(pattern,
+                                   word.word_form.lower())))
 
     @staticmethod
-    def temporal_cardinal(word):
-        return any(re.findall('^(first|second|third|fourth|fifth|sixth|seventh|eighth|nineth|tenth|eleventh|twelfth|thirteenth|fourteenth|fifteenth|sixteenth|seventeenth|eighteenth|nineteenth|twentieth|thirtieth|fortieth|fiftieth|sixtieth|seventieth|eightieth|ninetieth|hundredth|thousandth)$', word.word_form.lower()))
+    def temporal_cardinal_number(word):
+        card_numbers = set([num2words(num, True) for num in xrange(0, 1001)])
+        card_numbers.update([num.replace('-', '') for num in card_numbers])
+        pattern = r'^({pattern})$'.format(pattern='|'.join(card_numbers))
+        return WordBasedResult(any(re.findall(pattern,
+                                              word.word_form.lower())))
 
     @staticmethod
     def temporal_month(word):
-        return any(re.findall('^(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sept|oct|nov|dec)\.?$', word.word_form.lower()))
+        regex = [calendar.month_name[num] for num in xrange(1, 13)]
+        regex.extend([calendar.month_name[num][:3] for num in xrange(1, 13)])
+        pattern = r'^({pattern})\.?$'.format(pattern='|'.join(regex))
+        return WordBasedResult(any(re.findall(pattern,
+                                              word.word_form.lower())))
 
     @staticmethod
     def temporal_period(word):
-        return any(re.findall('^(centur[y|ies]|decades?|years?|months?|week\-?ends?|weeks?|days?|hours?|minutes?|seconds?|fortnights?|)$', word.word_form.lower()))
+        periods = ['centur[y|ies]', 'decades?', 'years?', 'months?',
+                   r'week\-?ends?', 'weeks?', 'days?', 'hours?', 'minutes?',
+                   'seconds?', 'fortnights?']
+        pattern = r'^({pattern})$'.format(pattern=periods)
+        return WordBasedResult(any(re.findall(pattern,
+                                              word.word_form.lower())))
 
     @staticmethod
     def temporal_weekday(word):
-        return any(re.findall('^(monday|tuesday|wednesday|thursday|friday|saturday|sunday|wed|tues|tue|thurs|thur|thu|sun|sat|mon|fri)$', word.word_form.lower()))
+        return WordBasedResult(any(re.findall(r'^(monday|tuesday|wednesday|thursday|friday|saturday|sunday|wed|tues|tue|thurs|thur|thu|sun|sat|mon|fri)$', word.word_form.lower())))
 
     @staticmethod
     def temporal_pod(word):
-        return any(re.findall('^(morning|afternoon|evening|night|noon|midnight|midday|sunrise|dusk|sunset|dawn|overnight|midday|noonday|noontide|nightfall|midafternoon|daybreak|gloaming|a\.?m\.?|p\.?m\.?)s?$', word.word_form.lower()))
+        return WordBasedResult(any(re.findall(r'^(morning|afternoon|evening|night|noon|midnight|midday|sunrise|dusk|sunset|dawn|overnight|midday|noonday|noontide|nightfall|midafternoon|daybreak|gloaming|a\.?m\.?|p\.?m\.?)s?$', word.word_form.lower())))
 
     @staticmethod
     def temporal_season(word):
-        return any(re.findall('^(winter|autumn|spring|summer)s?', word.word_form.lower()))
+        return WordBasedResult(any(re.findall(r'^(winter|autumn|spring|summer)s?', word.word_form.lower())))
 
     @staticmethod
     def temporal_past_ref(word):
-        return any(re.findall('^(yesterday|ago|earlier|early|last|recent|nearly|past|previous|before)$', word.word_form.lower()))    
+        return WordBasedResult(any(re.findall(r'^(yesterday|ago|earlier|early|last|recent|nearly|past|previous|before)$', word.word_form.lower())))
 
     @staticmethod
     def temporal_present_ref(word):
-        return any(re.findall('^(tonight|current|present|now|nowadays|today|currently)$', word.word_form.lower()))    
+        return WordBasedResult(any(re.findall(r'^(tonight|current|present|now|nowadays|today|currently)$', word.word_form.lower())))
 
     @staticmethod
     def temporal_future_ref(word):
-        return any(re.findall('^(next|forthcoming|coming|tomorrow|after|later|ahead)$', word.word_form.lower()))
+        future_refs = ['next', 'forthcoming', 'coming', 'tomorrow', 'after',
+                       'later', 'ahead']
+        pattern = r'^({pattern})$'.format(pattern='|'.join(future_refs))
+        return WordBasedResult(any(re.findall(pattern, word.word_form.lower())))
 
     @staticmethod
     def temporal_signal(word):
-        return any(re.findall('^(after|about|into|between|again|within|every|for|on|the|since|in|of|until|at|over|from|by|through|to|and|a)$', word.word_form.lower()))
+        signals = ['after', 'about', 'into', 'between', 'again', 'within',
+                   'every', 'for', 'on', 'the', 'since', 'in', 'of', 'until',
+                   'at', 'over', 'from', 'by', 'through', 'to', 'and', 'a']
+        pattern = r'^({pattern})$'.format(pattern='|'.join(signals))
+        return WordBasedResult(any(re.findall(pattern, word.word_form.lower())))
 
     @staticmethod
     def temporal_fuzzy_quantifier(word):
-        return any(re.findall('^(approximately|approximate|approx|about|few|some|bunch|several|around)$', word.word_form.lower()))
+        quantifiers = ['approximately', 'approximate', 'approx', 'about',
+                       'few', 'some', 'bunch', 'several', 'around']
+        pattern = r'^({pattern})$'.format(pattern='|'.join(quantifiers))
+        return WordBasedResult(any(re.findall(pattern, word.word_form.lower())))
 
     @staticmethod
     def temporal_modifier(word):
-        return any(re.findall('^(beginning|less|more|much|long|short|end|start|half)$', word.word_form.lower()))
+        return WordBasedResult(any(re.findall(r'^(beginning|less|more|much|long|short|end|start|half)$', word.word_form.lower())))
 
     @staticmethod
     def temporal_temporal_adverbs(word):
-        return any(re.findall('^(daily|earlier)$', word.word_form.lower()))
+        return WordBasedResult(any(re.findall(r'^(daily|earlier)$', word.word_form.lower())))
 
     @staticmethod
     def temporal_temporal_adjectives(word):
-        return any(re.findall('^(early|late|soon|fiscal|financial|tax)$', word.word_form.lower()))
+        return WordBasedResult(any(re.findall(r'^(early|late|soon|fiscal|financial|tax)$', word.word_form.lower())))
 
     @staticmethod
     def temporal_temporal_conjunctives(word):
-        return any(re.findall('^(when|while|meanwhile|during|on|and|or|until)$', word.word_form.lower()))
+        return WordBasedResult(any(re.findall(r'^(when|while|meanwhile|during|on|and|or|until)$', word.word_form.lower())))
 
     @staticmethod
     def temporal_temporal_prepositions(word):
-        return any(re.findall('^(pre|during|for|over|along|this|that|these|those|than|mid)$', word.word_form.lower()))
+        return WordBasedResult(any(re.findall(r'^(pre|during|for|over|along|this|that|these|those|than|mid)$', word.word_form.lower())))
 
     @staticmethod
     def temporal_temporal_coreference(word):
-        return any(re.findall('^(dawn|time|period|course|era|age|season|quarter|semester|millenia|millenium|eve|festival|festivity)s?$', word.word_form.lower()))
+        return WordBasedResult(any(re.findall(r'^(dawn|time|period|course|era|age|season|quarter|semester|millenia|millenium|eve|festival|festivity)s?$', word.word_form.lower())))
 
     @staticmethod
     def temporal_festivity(word):
-        return any(re.findall('^(christmas|easter|epifany|martin|luther|thanksgiving|halloween|saints|armistice|nativity|advent|solstice|boxing|stephen|sylvester)$', word.word_form.lower()))
+        return WordBasedResult(any(re.findall(r'^(christmas|easter|epifany|martin|luther|thanksgiving|halloween|saints|armistice|nativity|advent|solstice|boxing|stephen|sylvester)$', word.word_form.lower())))
 
     @staticmethod
     def temporal_compound(word):
-        return any(re.findall('^[0-9]+\-(century|decade|year|month|week\-end|week|day|hour|minute|second|fortnight|)$', word.word_form.lower()))
+        return WordBasedResult(any(re.findall(r'^[0-9]+\-(century|decade|year|month|week\-end|week|day|hour|minute|second|fortnight|)$', word.word_form.lower())))
 
     @staticmethod
     def phonetic_form(word):
         phonemes = PHONEME_DICTIONARY.get(word.word_form.lower(), [''])[0]
-        attributes = (('phonetic_form', '-'.join(phonemes) or '_'),
-                      ('phonetic_length', len(phonemes)),
-                      ('phonetic_first', phonemes[0] if phonemes else '_'),
-                      ('phonetic_last', phonemes[-1] if phonemes else '_'))
+        attributes = (('phonetic_form', WordBasedResult('-'.join(phonemes))),
+                      ('phonetic_length', WordBasedResult(len(phonemes))),
+                      ('phonetic_first', WordBasedResult(phonemes[0] if phonemes else None)),
+                      ('phonetic_last', WordBasedResult(phonemes[-1] if phonemes else None)))
         return WordBasedResults(attributes)
 
 
 class SentenceBasedExtractors(object):
 
     @staticmethod
-    def __matching_gazetteer(gazetteer, sentence):
-        word_forms = [token.word_form for token in sentence.words]
-        matchings = set()
-        for gazetteer_item in gazetteer:
-            subsequences = search_subsequence(word_forms, gazetteer_item)
-            if subsequences:
-                for subsequence_start in subsequences:
-                    subsequence_end = subsequence_start + len(gazetteer_item)
-                    matchings.update(range(subsequence_start, subsequence_end))
-        return format(matchings, len(word_forms))
-
-    @staticmethod
     def gazetteer_malename(sentence):
-        return SentenceBasedExtractors.__matching_gazetteer(MALE_NAMES,
-                                                            sentence)
+        return matching_gazetteer(MALE_NAMES, sentence)
 
     @staticmethod
     def gazetteer_femalename(sentence):
-        return SentenceBasedExtractors.__matching_gazetteer(FEMALE_NAMES,
-                                                            sentence)
+        return matching_gazetteer(FEMALE_NAMES, sentence)
 
     @staticmethod
     def gazetteer_country(sentence):
-        return SentenceBasedExtractors.__matching_gazetteer(COUNTRIES,
-                                                            sentence)
+        return matching_gazetteer(COUNTRIES, sentence)
 
     @staticmethod
     def gazetteer_isocountry(sentence):
-        return SentenceBasedExtractors.__matching_gazetteer(ISOCOUNTRIES,
-                                                            sentence)
+        return matching_gazetteer(ISO_COUNTRIES, sentence)
 
     @staticmethod
     def gazetteer_uscity(sentence):
-        return SentenceBasedExtractors.__matching_gazetteer(US_CITIES,
-                                                            sentence)
+        return matching_gazetteer(US_CITIES, sentence)
 
     @staticmethod
     def gazetteer_nationality(sentence):
-        return SentenceBasedExtractors.__matching_gazetteer(NATIONALITIES,
-                                                            sentence)
+        return matching_gazetteer(NATIONALITIES, sentence)
 
     @staticmethod
     def gazetteer_festivity(sentence):
-        return SentenceBasedExtractors.__matching_gazetteer(FESTIVITIES,
-                                                            sentence)
+        return matching_gazetteer(FESTIVITIES, sentence)
+
+    @staticmethod
+    def parse_2_levels_up_node(sentence):
+        result = []
+        for tree_index in sentence.parsetree.treepositions(order='leaves'):
+            try:
+                node_label = sentence.parsetree[tree_index[:-2]].node()
+                result.append(WordBasedResult(node_label))
+            except TypeError:
+                result.append(WordBasedResult('_^_'))
+                continue
+        return SentenceBasedResult(tuple(result))
+
+    @staticmethod
+    def parse_3_levels_up_node(sentence):
+        result = []
+        for tree_index in sentence.parsetree.treepositions(order='leaves'):
+            node = tree_index[:-3]
+            try:
+                node_label = sentence.parsetree[node].node()
+                result.append(WordBasedResult(node_label))
+            except TypeError:
+                result.append(WordBasedResult('_^_'))
+                continue
+        return SentenceBasedResult(tuple(result))
+
+    @staticmethod
+    def parse_2_levels_up_childs(sentence):
+        result = []
+        for tree_index in sentence.parsetree.treepositions(order='leaves'):
+            node = tree_index[:-2]
+            try:
+                node_labels = [i.node for i in sentence.parsetree[node]]
+                result.append(WordBasedResult('_'.join(node_labels)))
+            except TypeError:
+                result.append(WordBasedResult('_^_'))
+                continue
+        return SentenceBasedResult(tuple(result))
+
+    @staticmethod
+    def parse_3_levels_up_childs(sentence):
+        result = []
+        for tree_index in sentence.parsetree.treepositions(order='leaves'):
+            node = tree_index[:-3]
+            try:
+                node_label = [i.node for i in sentence.parsetree[node]]
+                result.append(WordBasedResult('_'.join(node_label)))
+            except TypeError:
+                result.append(WordBasedResult('_^_'))
+                continue
+        return SentenceBasedResult(tuple(result))
+
+    @staticmethod
+    def parse_3_levels_up_nodes(sentence):
+        result = []
+        for tree_index in sentence.parsetree.treepositions(order='leaves'):
+            parents = []
+            for level in xrange(-3, 0):
+                node = tree_index[:-level]
+                try:
+                    parents.append(sentence.parsetree[node].node)
+                except (TypeError, AttributeError):
+                    continue
+            result.append(WordBasedResult('_'.join(parents)))
+        return SentenceBasedResult(tuple(result))
+
+    @staticmethod
+    def parse_2_levels_up_nodes(sentence):
+        result = []
+        for tree_index in sentence.parsetree.treepositions(order='leaves'):
+            parents = []
+            for level in xrange(-2, 0):
+                node = tree_index[:-level]
+                try:
+                    parents.append(sentence.parsetree[node].node)
+                except TypeError:
+                    continue
+            result.append(WordBasedResult('_'.join(parents)))
+        return SentenceBasedResult(tuple(result))
+
+    @staticmethod
+    def parse_start_or_end_child_in_s_clause(sentence):
+        '''Suggested by Marilena Di Bari.
+        Typically temporal expressions are at the very end or beginning of a
+        well-formed English sentence.
+        '''
+        parsetree = sentence.parsetree
+        result = []
+        for idx in parsetree.treepositions(order='leaves'):
+            tree = parsetree[idx[:-1]]
+            steps_up = 1
+            while not tree.node.startswith('S'):
+                tree = tree.parent()
+                steps_up += 1
+            position_under_s = idx[(len(idx) - steps_up)]
+            leaf_result = position_under_s in(0, len(tree)-1)
+            result.append(WordBasedResult(leaf_result))
+        return SentenceBasedResult(tuple(result))
+
+    @staticmethod
+    def parse_distance_from_s_node(sentence):
+        '''How far the current node (its POS) is from an S-parent.
+        '''
+        parsetree = sentence.parsetree
+        result = []
+        for idx in parsetree.treepositions(order='leaves'):
+            tree = parsetree[idx[:-1]]
+            steps_up = 1
+            while not tree.node.startswith('S'):
+                tree = tree.parent()
+                steps_up += 1
+            result.append(WordBasedResult(steps_up))
+        return SentenceBasedResult(tuple(result))
 
 
-class DocumentBasedExtractor(object):
+    @staticmethod
+    def dependency_relations(sentence):
+        '''For each word I represent a vector of all the incoming and outcoming
+           relations.
+
+           Dependencies relations are taken from:
+           http://nlp.stanford.edu/software/dependencies_manual.pdf
+        '''
+        dependencies = ['root', 'dep', 'aux', 'auxpass', 'cop', 'arg',
+                        'agent', 'comp', 'acomp', 'ccomp', 'xcomp', 'obj',
+                        'dobj', 'iobj', 'pobj', 'subj', 'nsubj', 'nsubjpass',
+                        'csubj', 'csubjpass', 'cc', 'conj', 'expl', 'mod',
+                        'amod', 'appos', 'advcl', 'det', 'predet', 'preconj',
+                        'vmod', 'mwe', 'mark', 'advmod', 'neg', 'rcmod',
+                        'quantmod', 'nn', 'npadvmod', 'tmod', 'num', 'number',
+                        'prep', 'prepc', 'poss', 'possessive', 'prt',
+                        'parataxis', 'punct', 'ref', 'sdep', 'xsubj']
+        dependencies = ['dependency_' + dep for dep in dependencies]
+
+        result = []
+        for word in sentence.words:
+            word_vector = {dep: WordBasedResult('') for dep in dependencies}
+            for (dependency, start, end) in sentence.indexed_dependencies:
+                start_ref = int(start.split('-')[-1])
+                end_ref = int(end.split('-')[-1])
+                dependency = dependency.split('_')[0]
+                if start_ref == word.pos_in_sentence:
+                    try:
+                        word_vector['dependency_' + dependency] = \
+                            WordBasedResult('o_' +
+                            sentence.words[start_ref].part_of_speech)
+                    except KeyError:
+                        print 'WARNING: {} dependency relation missed.'.format(
+                            dependency)
+                if end_ref == word.pos_in_sentence:
+                    try:
+                        word_vector['dependency_' + dependency] = \
+                            WordBasedResult('i_' +
+                            sentence.words[end_ref].part_of_speech)
+                    except KeyError:
+                        print 'WARNING: {} dependency relation missed.'.format(
+                            dependency)
+            result.append(tuple(word_vector.items()))
+        return SentenceBasedResults(tuple(result))
+
+
+
+
+
+class DocumentBasedExtractors(object):
 
     pass
 
@@ -409,15 +598,17 @@ class DocumentBasedExtractor(object):
 class WordBasedResult(object):
 
     def __init__(self, value):
-        assert type(value) in (str, bool, int, float)
-        if type(value) in (str, bool):
+        assert type(value) in (types.NoneType, str, unicode, bool, int, float)
+        if isinstance(value, types.NoneType):
+            self.value = '_'
+        elif type(value) in (str, unicode, bool):
             self.value = '"{}"'.format(str(value))
         else:
             self.value = '{}'.format(str(value))
 
-    def apply(word, name):
+    def apply(self, word, name):
         assert type(word) == Word, 'Wrong word type'
-        word.attributes[name] == self.value
+        word.attributes[name] = self.value
 
 
 class WordBasedResults(object):
@@ -430,9 +621,11 @@ class WordBasedResults(object):
 class SentenceBasedResult(object):
 
     def __init__(self, values):
-        assert isinstance(values, types.GeneratorType), 'Wrong type for values'
-#       assert len(set([type(value) for value in values])) == 1, \
-#           'Multiple types in values'
-#       assert set([type(value) for value in values])[0] == WordBasedResult, \
-#           'No word-based values in values'
+        assert type(values) == tuple, 'Wrong type for values'
+        self.values = values
+
+class SentenceBasedResults(object):
+
+    def __init__(self, values):
+        assert type(values) == tuple, 'Wrong type for values'
         self.values = values

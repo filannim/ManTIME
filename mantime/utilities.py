@@ -16,9 +16,6 @@
 from __future__ import generators
 import collections
 
-from extractors import WordBasedResult
-
-
 def search_subsequence(sequence, key, end=False):
     '''Yields all the start positions of the *key* in the *sequence*.
 
@@ -75,20 +72,41 @@ def apply_gazetteer(sentence, gazetteer, case_sensitive=False):
     return sorted(indexes)
 
 
+def matching_gazetteer(gazetteer, sentence):
+    word_forms = [token.word_form for token in sentence.words]
+    matchings = set()
+    for gazetteer_item in gazetteer:
+        subsequences = search_subsequence(word_forms, gazetteer_item)
+        if subsequences:
+            for subsequence_start in subsequences:
+                subsequence_end = subsequence_start + len(gazetteer_item)
+                matchings.update(range(subsequence_start, subsequence_end))
+    return __format(matchings, len(word_forms))
+
+
 def __format(matching_elements, length):
+    from extractors import WordBasedResult
+    from extractors import SentenceBasedResult
+
     assert type(length) == int
     assert type(matching_elements) == set
-    assert max(matching_elements) <= length
-    matching_elements = sorted(matching_elements)
-    for index in xrange(length):
-        if matching_elements:
-            if index == matching_elements[0]:
-                yield WordBasedResult('I')
-                matching_elements.pop(0)
+
+    if matching_elements:
+        assert max(matching_elements) <= length
+        matching_elements = sorted(matching_elements)
+        result = []
+        for index in xrange(length):
+            if matching_elements:
+                if index == matching_elements[0]:
+                    result.append(WordBasedResult('I'))
+                    matching_elements.pop(0)
+                else:
+                    result.append(WordBasedResult('O'))
             else:
-                yield WordBasedResult('O')
-        else:
-            yield WordBasedResult('O')
+                result.append(WordBasedResult('O'))
+        return SentenceBasedResult(tuple(result))
+    else:
+        return SentenceBasedResult(tuple([WordBasedResult('O')]*length))
 
 
 class Memoize(object):
