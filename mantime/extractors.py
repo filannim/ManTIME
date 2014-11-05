@@ -615,9 +615,9 @@ class SentenceBasedExtractors(object):
         for idx in deptree.treepositions():
             current_node = deptree[idx]
             try:
-                ref = current_node.node
+                ref = int(current_node.node)
             except:
-                ref = current_node
+                ref = int(current_node)
 
             print 'ref: {} {}'.format(ref, type(ref))
             if len(idx) == 0:
@@ -649,11 +649,11 @@ class SentenceBasedExtractors(object):
                 result[ref]['dominant_verb'] =\
                     sentence.words[ref].part_of_speech
             else:
-                while not\
-                    sentence.words[ref].part_of_speech.startswith('V'):
+                while not \
+                        sentence.words[ref].part_of_speech.startswith('V'):
                     current_node = current_node.parent()
-                result[current_node.node]['dominant_verb'] =\
-                    sentence.words[ref].part_of_speech
+                    result[int(current_node.node)]['dominant_verb'] =\
+                        sentence.words[ref].part_of_speech
             result[ref] = tuple(result[ref].items())
         return SentenceBasedResults(tuple(result))
 
