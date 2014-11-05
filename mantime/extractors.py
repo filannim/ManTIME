@@ -614,10 +614,10 @@ class SentenceBasedExtractors(object):
         deptree = ParentedTree(sentence.indexed_dependencies.tree())
         for idx in deptree.treepositions():
             current_node = deptree[idx]
-            try:
-                ref = int(current_node.node)
-            except:
-                ref = int(current_node)
+            print current_node
+            print current_node.node
+            ref = int(current_node.node)
+            #ref = int(current_node)
 
             print 'ref: {} {}'.format(ref, type(ref))
             if len(idx) == 0:

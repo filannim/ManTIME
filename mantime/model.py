@@ -54,19 +54,19 @@ class DependencyGraph(object):
 
     def add_node(self, label):
         if label not in self.nodes.keys():
-            self.nodes[label] = set()
+            self.nodes[label] = dict()
 
     def add_arc(self, relation, label1, label2):
         assert label1 in self.nodes.keys()
         assert label2 in self.nodes.keys()
-        self.nodes[label1].add((label2, relation))
+        self.nodes[label1][label2] = relation
 
     def tree(self, node=-1):
         if self.nodes[node]:
-            childs = ' '.join([self.tree(t) for (t, _) in self.nodes[node]])
-            return '({} ({}))'.format(node, childs)
+            childs = ' '.join([self.tree(t) for t in self.nodes[node].keys()])
+            return '({} {})'.format(node, childs)
         else:
-            return str(node)
+            return '({})'.format(str(node))
 
     def load(self, indexeddependencies):
         node = lambda dependency: int(dependency.split('-')[-1])-1
