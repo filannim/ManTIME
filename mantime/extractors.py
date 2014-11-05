@@ -540,54 +540,122 @@ class SentenceBasedExtractors(object):
             result.append(WordBasedResult(steps_up))
         return SentenceBasedResult(tuple(result))
 
-
     @staticmethod
-    def dependency_relations(sentence):
-        '''For each word I represent a vector of all the incoming and outcoming
+    def dependency_outgoing_relations(sentence):
+        '''For each word I represent a vector of all outgoing relations, plus
+           the information related to the number of outgoing dependency
            relations.
+
+           for each word =
+            dr1   dr2   dr2   dr2   dr2   dr2   ...   dr2   #outgoing_deps
+           [ F  ,  F  , NNS ,  F  ,  F  ,  F  , ... , VBZ ,       2         ]
 
            Dependencies relations are taken from:
            http://nlp.stanford.edu/software/dependencies_manual.pdf
+
+           Since I don't trust 100% the documentat linked above, I print out
+           a warning message in case a dependency relation is not in the list
+           belove (*dep_labels*), so that I can update this list in the future.
+           Anyway, the list should be quite complete as it is.
         '''
-        dependencies = ['root', 'dep', 'aux', 'auxpass', 'cop', 'arg',
-                        'agent', 'comp', 'acomp', 'ccomp', 'xcomp', 'obj',
-                        'dobj', 'iobj', 'pobj', 'subj', 'nsubj', 'nsubjpass',
-                        'csubj', 'csubjpass', 'cc', 'conj', 'expl', 'mod',
-                        'amod', 'appos', 'advcl', 'det', 'predet', 'preconj',
-                        'vmod', 'mwe', 'mark', 'advmod', 'neg', 'rcmod',
-                        'quantmod', 'nn', 'npadvmod', 'tmod', 'num', 'number',
-                        'prep', 'prepc', 'poss', 'possessive', 'prt',
-                        'parataxis', 'punct', 'ref', 'sdep', 'xsubj']
-        dependencies = ['dependency_' + dep for dep in dependencies]
+        dependencies = sentence.indexed_dependencies
+        dep_labels = ['root', 'dep', 'aux', 'auxpass', 'cop', 'arg',
+                      'agent', 'comp', 'acomp', 'ccomp', 'xcomp', 'obj',
+                      'dobj', 'iobj', 'pobj', 'subj', 'nsubj', 'nsubjpass',
+                      'csubj', 'csubjpass', 'cc', 'conj', 'expl', 'mod',
+                      'amod', 'appos', 'advcl', 'det', 'predet', 'preconj',
+                      'vmod', 'mwe', 'mark', 'advmod', 'neg', 'rcmod',
+                      'quantmod', 'nn', 'npadvmod', 'tmod', 'num', 'number',
+                      'prep', 'prepc', 'poss', 'possessive', 'prt',
+                      'parataxis', 'punct', 'ref', 'sdep', 'xsubj',
+                      'n_of_outgoing_relations']
 
         result = []
         for word in sentence.words:
-            word_vector = {dep: WordBasedResult('') for dep in dependencies}
-            for (dependency, start, end) in sentence.indexed_dependencies:
-                start_ref = int(start.split('-')[-1])
-                end_ref = int(end.split('-')[-1])
-                dependency = dependency.split('_')[0]
-                if start_ref == word.pos_in_sentence:
-                    try:
-                        word_vector['dependency_' + dependency] = \
-                            WordBasedResult('o_' +
-                            sentence.words[start_ref].part_of_speech)
-                    except KeyError:
-                        print 'WARNING: {} dependency relation missed.'.format(
-                            dependency)
-                if end_ref == word.pos_in_sentence:
-                    try:
-                        word_vector['dependency_' + dependency] = \
-                            WordBasedResult('i_' +
-                            sentence.words[end_ref].part_of_speech)
-                    except KeyError:
-                        print 'WARNING: {} dependency relation missed.'.format(
-                            dependency)
+            word_vector = {dep: WordBasedResult(False) for dep in dep_labels}
+            deps = dependencies.get(word.id_token, [])
+            for ref, relation in deps:
+                relation = relation.split('-')[0]
+                try:
+                    word_vector[relation] = WordBasedResult(
+                        sentence.words[ref].part_of_speech)
+                except KeyError:
+                    print 'WARNING: {} dep. relation missed.'.format(relation)
+                word_vector['n_of_outgoing_relations'] =\
+                    WordBasedResult(len(deps))
             result.append(tuple(word_vector.items()))
         return SentenceBasedResults(tuple(result))
 
+    @staticmethod
+    def dependency_incoming_relations(sentence):
+        '''For each word I represent a vector derived from the incoming
+           dependency relations. I represent the following information:
+           - father dependency relation (fdr);
+           - grandfather dependecy relation (gdr);
+           - part-of-speech tag for the father word (pfw);
+           - part-of-speech tag for the grandfather word (pgw);
+           - dominant verb (dmv);
 
+           for each word =
+            fdr   gdr   pfw   pgw   dmv
+           [aux , cop , NNS,  F  ,  F  ,  F  , ... , VBZ ,       2         ]
+        '''
 
+        from nltk.tree import ParentedTree
+        dependencies = sentence.indexed_dependencies
+        attributes = ['father_dep_rel',
+                      'gfather dep_rel',
+                      'postag_father',
+                      'postag_gfather',
+                      'dominant_verb']
+        result = []
+        for _ in sentence.words:
+            result.append({dep: WordBasedResult(False) for dep in attributes})
+        deptree = ParentedTree(sentence.indexed_dependencies.tree())
+        for idx in deptree.treepositions():
+            current_node = deptree[idx]
+            try:
+                ref = current_node.node
+            except:
+                ref = current_node
+
+            print 'ref: {} {}'.format(ref, type(ref))
+            if len(idx) == 0:
+                continue
+            elif len(idx) == 1:
+                result[ref]['father_dep_rel'] = WordBasedResult('ROOT')
+                result[ref]['postag_father'] = WordBasedResult(False)
+                result[ref]['gfather_dep_rel'] = WordBasedResult(False)
+                result[ref]['postag_gfather'] = WordBasedResult(False)
+            elif len(idx) == 2:
+                father = current_node.parent()
+                result[ref]['father_dep_rel'] = WordBasedResult(father.node)
+                result[ref]['postag_father'] =\
+                    WordBasedResult(sentence.words[father.node].part_of_speech)
+                result[ref]['gfather_dep_rel'] = WordBasedResult('ROOT')
+                result[ref]['postag_gfather'] = WordBasedResult(False)
+            else:
+                father = current_node.parent()
+                gfather = father.parent()
+                result[ref]['father_dep_rel'] = WordBasedResult(father.node)
+                result[ref]['postag_father'] =\
+                    WordBasedResult(sentence.words[father.node].part_of_speech)
+                result[ref]['gfather_dep_rel'] = WordBasedResult(gfather.node)
+                result[ref]['postag_gfather'] =\
+                    WordBasedResult(sentence.words[gfather.node].part_of_speech)
+            print ref
+            # Dominant verb calculation
+            if sentence.words[ref].part_of_speech.startswith('V'):
+                result[ref]['dominant_verb'] =\
+                    sentence.words[ref].part_of_speech
+            else:
+                while not\
+                    sentence.words[ref].part_of_speech.startswith('V'):
+                    current_node = current_node.parent()
+                result[current_node.node]['dominant_verb'] =\
+                    sentence.words[ref].part_of_speech
+            result[ref] = tuple(result[ref].items())
+        return SentenceBasedResults(tuple(result))
 
 
 class DocumentBasedExtractors(object):

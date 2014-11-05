@@ -45,6 +45,41 @@ def format_annotation(start_token, end_token, annotations, annotation_format):
         return 'O'
 
 
+class DependencyGraph(object):
+
+    def __init__(self, indexeddependencies=None):
+        self.nodes = dict()
+        if indexeddependencies:
+            self.load(indexeddependencies)
+
+    def add_node(self, label):
+        if label not in self.nodes.keys():
+            self.nodes[label] = set()
+
+    def add_arc(self, relation, label1, label2):
+        assert label1 in self.nodes.keys()
+        assert label2 in self.nodes.keys()
+        self.nodes[label1].add((label2, relation))
+
+    def tree(self, node=-1):
+        if self.nodes[node]:
+            childs = ' '.join([self.tree(t) for (t, _) in self.nodes[node]])
+            return '({} ({}))'.format(node, childs)
+        else:
+            return str(node)
+
+    def load(self, indexeddependencies):
+        node = lambda dependency: int(dependency.split('-')[-1])-1
+        indexeddependencies = ((relation, node(start), node(end))
+                               for relation, start, end
+                               in indexeddependencies)
+        for relation, start, end in indexeddependencies:
+            self.add_node(start)
+            self.add_node(end)
+            self.add_arc(relation, start, end)
+        return self
+
+
 class Document(object):
     '''It represents the root of a parsed document.'''
 
@@ -86,7 +121,7 @@ class Sentence(object):
         if dependencies:
             assert type(dependencies) == list, 'Wrong dependencies type'
         if indexed_dependencies:
-            assert type(indexed_dependencies) == list, \
+            assert type(indexed_dependencies) == DependencyGraph, \
                 'Wrong indexed dependencies type'
         if parsetree:
             assert type(parsetree) == ParentedTree, 'Wrong parsetree type'
@@ -108,7 +143,7 @@ class Sentence(object):
 class Word(object):
 
     def __init__(self, word_form, char_offset_begin, char_offset_end,
-                 lemma, named_entity_tag, part_of_speech, pos_in_sentence):
+                 lemma, named_entity_tag, part_of_speech, id_token):
         self.word_form = word_form
         self.character_offset_begin = char_offset_begin
         self.character_offset_end = char_offset_end
@@ -116,13 +151,14 @@ class Word(object):
         self.named_entity_tag = named_entity_tag
         self.part_of_speech = part_of_speech
         self.attributes = dict()
-        self.pos_in_sentence = pos_in_sentence
+        self.id_token = id_token
 
     def __str__(self):
         return str(self.__dict__)
 
     def __repr__(self):
         return repr(self.__dict__)
+
 
 class Classifier(object):
     """

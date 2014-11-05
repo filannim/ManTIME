@@ -31,6 +31,7 @@ from nltk import ParentedTree
 from model import Document
 from model import Sentence
 from model import Word
+from model import DependencyGraph
 from settings import PATH_CORENLP_FOLDER
 
 CORENLP = StanfordCoreNLP(PATH_CORENLP_FOLDER)
@@ -89,8 +90,10 @@ class TempEval3FileReader(FileReader):
         for stanford_sentence in stanford_tree['sentences']:
             dependencies = stanford_sentence.get('dependencies', None)
             i_dependencies = stanford_sentence.get('indexeddependencies', None)
+            i_dependencies = DependencyGraph(i_dependencies)
             parsetree = ParentedTree(stanford_sentence.get('parsetree', u''))
             sentence_text = stanford_sentence.get('text', u'')
+
             sentence = Sentence(dependencies=dependencies,
                                 indexed_dependencies=i_dependencies,
                                 parsetree=parsetree,
@@ -102,7 +105,7 @@ class TempEval3FileReader(FileReader):
                             lemma=attr['Lemma'],
                             named_entity_tag=attr['NamedEntityTag'],
                             part_of_speech=attr['PartOfSpeech'],
-                            pos_in_sentence=id)
+                            id_token=id)
                 sentence.words.append(word)
             document.sentences.append(sentence)
 
