@@ -45,7 +45,24 @@ def format_annotation(start_token, end_token, annotations, annotation_format):
         return 'O'
 
 
+class DependencyGraphNode(object):
+
+    def __init__(self, label, parent=None, childs=None):
+        self.label = label
+        self.parent = parent
+        if childs:
+            self.childs = childs
+        else:
+            self.childs = dict()
+
+    def __str__(self):
+        childs = ' '.join(str(c) for c in self.childs.keys())
+        return '(label:{}; parent: {}; childs:{})'.format(
+            self.label, self.parent, childs)
+
 class DependencyGraph(object):
+
+    DUMMY_LABEL = -1
 
     def __init__(self, indexeddependencies=None):
         self.nodes = dict()
@@ -54,19 +71,37 @@ class DependencyGraph(object):
 
     def add_node(self, label):
         if label not in self.nodes.keys():
-            self.nodes[label] = dict()
+            self.nodes[label] = DependencyGraphNode(label)
 
     def add_arc(self, relation, label1, label2):
         assert label1 in self.nodes.keys()
         assert label2 in self.nodes.keys()
-        self.nodes[label1][label2] = relation
+        self.nodes[label1].childs[label2] = relation
+        self.nodes[label2].parent = label1
 
-    def tree(self, node=-1):
-        if self.nodes[node]:
-            childs = ' '.join([self.tree(t) for t in self.nodes[node].keys()])
-            return '({} {})'.format(node, childs)
+    def tree(self, node=DUMMY_LABEL):
+        if self.nodes[node].childs:
+            childs = ' '.join([self.tree(t) for t
+                               in self.nodes[node].childs.keys()])
+            return '({} {})'.format(self.nodes[node].label, childs)
         else:
-            return '({})'.format(str(node))
+            return '({})'.format(self.nodes[node].label)
+
+    def father(self, node):
+        try:
+            result = self.nodes[node].parent
+            if result == self.DUMMY_LABEL:
+                return None
+            else:
+                return result
+        except KeyError:
+            return None
+
+    def grandfather(self, node):
+        return self.father(self.father(node))
+
+    def is_dummy(self, node):
+        return node == self.DUMMY_LABEL
 
     def load(self, indexeddependencies):
         node = lambda dependency: int(dependency.split('-')[-1])-1

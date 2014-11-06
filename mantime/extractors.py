@@ -573,16 +573,18 @@ class SentenceBasedExtractors(object):
         result = []
         for word in sentence.words:
             word_vector = {dep: WordBasedResult(False) for dep in dep_labels}
-            deps = dependencies.get(word.id_token, [])
-            for ref, relation in deps:
-                relation = relation.split('-')[0]
-                try:
-                    word_vector[relation] = WordBasedResult(
-                        sentence.words[ref].part_of_speech)
-                except KeyError:
-                    print 'WARNING: {} dep. relation missed.'.format(relation)
-                word_vector['n_of_outgoing_relations'] =\
-                    WordBasedResult(len(deps))
+            word_dep_node = dependencies.nodes[word.id_token]
+            if word_dep_node:
+                for out_ref, relation in word_dep_node.childs.iteritems():
+                    relation = relation.split('-')[0]
+                    try:
+                        word_vector[relation] = WordBasedResult(
+                            sentence.words[out_ref].part_of_speech)
+                    except KeyError:
+                        print 'WARNING: {} dep. relation missed.'.format(
+                            relation)
+                    word_vector['n_of_outgoing_relations'] =\
+                        WordBasedResult(len(word_dep_node.childs))
             result.append(tuple(word_vector.items()))
         return SentenceBasedResults(tuple(result))
 
@@ -601,8 +603,7 @@ class SentenceBasedExtractors(object):
            [aux , cop , NNS,  F  ,  F  ,  F  , ... , VBZ ,       2         ]
         '''
 
-        from nltk.tree import ParentedTree
-        dependencies = sentence.indexed_dependencies
+        deps = sentence.indexed_dependencies
         attributes = ['father_dep_rel',
                       'gfather dep_rel',
                       'postag_father',
@@ -611,50 +612,44 @@ class SentenceBasedExtractors(object):
         result = []
         for _ in sentence.words:
             result.append({dep: WordBasedResult(False) for dep in attributes})
-        deptree = ParentedTree(sentence.indexed_dependencies.tree())
-        for idx in deptree.treepositions():
-            current_node = deptree[idx]
-            print current_node
-            print current_node.node
-            ref = int(current_node.node)
-            #ref = int(current_node)
-
-            print 'ref: {} {}'.format(ref, type(ref))
-            if len(idx) == 0:
+        for ref in deps.nodes.iterkeys():
+            if ref == deps.DUMMY_LABEL:
                 continue
-            elif len(idx) == 1:
-                result[ref]['father_dep_rel'] = WordBasedResult('ROOT')
-                result[ref]['postag_father'] = WordBasedResult(False)
+            elif deps.grandfather(ref):
+                fref = deps.father(ref)
+                gref = deps.father(fref)
+                result[ref]['father_dep_rel'] = WordBasedResult(
+                    deps.nodes[fref].childs[ref])
+                result[ref]['postag_father'] =\
+                    WordBasedResult(sentence.words[fref].part_of_speech)
+                result[ref]['gfather_dep_rel'] = WordBasedResult(
+                    deps.nodes[gref].childs[fref])
+                result[ref]['postag_gfather'] =\
+                    WordBasedResult(sentence.words[gref].part_of_speech)
+            elif deps.father(ref):
+                fref = deps.father(ref)
+                result[ref]['father_dep_rel'] = WordBasedResult(
+                    deps.nodes[fref].childs[ref])
+                result[ref]['postag_father'] =\
+                    WordBasedResult(sentence.words[fref].part_of_speech)
                 result[ref]['gfather_dep_rel'] = WordBasedResult(False)
                 result[ref]['postag_gfather'] = WordBasedResult(False)
-            elif len(idx) == 2:
-                father = current_node.parent()
-                result[ref]['father_dep_rel'] = WordBasedResult(father.node)
-                result[ref]['postag_father'] =\
-                    WordBasedResult(sentence.words[father.node].part_of_speech)
-                result[ref]['gfather_dep_rel'] = WordBasedResult('ROOT')
-                result[ref]['postag_gfather'] = WordBasedResult(False)
-            else:
-                father = current_node.parent()
-                gfather = father.parent()
-                result[ref]['father_dep_rel'] = WordBasedResult(father.node)
-                result[ref]['postag_father'] =\
-                    WordBasedResult(sentence.words[father.node].part_of_speech)
-                result[ref]['gfather_dep_rel'] = WordBasedResult(gfather.node)
-                result[ref]['postag_gfather'] =\
-                    WordBasedResult(sentence.words[gfather.node].part_of_speech)
-            print ref
+
             # Dominant verb calculation
-            if sentence.words[ref].part_of_speech.startswith('V'):
-                result[ref]['dominant_verb'] =\
-                    sentence.words[ref].part_of_speech
+            current_ref = ref
+            current_pos = sentence.words[ref].part_of_speech
+            if current_pos.startswith('V'):
+                result[ref]['dominant_verb'] = WordBasedResult(current_pos)
             else:
-                while not \
-                        sentence.words[ref].part_of_speech.startswith('V'):
-                    current_node = current_node.parent()
-                    result[int(current_node.node)]['dominant_verb'] =\
-                        sentence.words[ref].part_of_speech
-            result[ref] = tuple(result[ref].items())
+                while not (current_pos.startswith('V')
+                           or deps.is_dummy(current_ref)):
+                    print current_ref+1
+                    current_ref = deps.father(current_ref)
+                    current_pos = sentence.words[current_ref].part_of_speech
+                result[ref]['dominant_verb'] =\
+                    WordBasedResult(current_pos)
+        for num, word_result in enumerate(result):
+            result[num] = tuple(word_result.items())
         return SentenceBasedResults(tuple(result))
 
 
