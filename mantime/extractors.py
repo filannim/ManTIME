@@ -571,19 +571,21 @@ class SentenceBasedExtractors(object):
                       'n_of_outgoing_relations']
 
         result = []
+        f_suffix = lambda function_name: function_name + 'dependency_outgoing_'
         for word in sentence.words:
-            word_vector = {dep: WordBasedResult(False) for dep in dep_labels}
-            word_dep_node = dependencies.nodes[word.id_token]
+            word_vector = {f_suffix(dep): WordBasedResult(False) for dep
+                           in dep_labels}
+            word_dep_node = dependencies.nodes.get(word.id_token, None)
             if word_dep_node:
                 for out_ref, relation in word_dep_node.childs.iteritems():
                     relation = relation.split('-')[0]
                     try:
-                        word_vector[relation] = WordBasedResult(
+                        word_vector[f_suffix(relation)] = WordBasedResult(
                             sentence.words[out_ref].part_of_speech)
                     except KeyError:
                         print 'WARNING: {} dep. relation missed.'.format(
                             relation)
-                    word_vector['n_of_outgoing_relations'] =\
+                    word_vector[f_suffix('n_of_outgoing_relations')] =\
                         WordBasedResult(len(word_dep_node.childs))
             result.append(tuple(word_vector.items()))
         return SentenceBasedResults(tuple(result))
@@ -609,44 +611,48 @@ class SentenceBasedExtractors(object):
                       'postag_father',
                       'postag_gfather',
                       'dominant_verb']
+        f_suffix = lambda function_name: function_name + 'dependency_incoming_'
         result = []
         for _ in sentence.words:
-            result.append({dep: WordBasedResult(False) for dep in attributes})
+            result.append({f_suffix(dep): WordBasedResult(False) for dep
+                           in attributes})
         for ref in deps.nodes.iterkeys():
             if ref == deps.DUMMY_LABEL:
                 continue
             elif deps.grandfather(ref):
                 fref = deps.father(ref)
                 gref = deps.father(fref)
-                result[ref]['father_dep_rel'] = WordBasedResult(
+                result[ref][f_suffix('father_dep_rel')] = WordBasedResult(
                     deps.nodes[fref].childs[ref])
-                result[ref]['postag_father'] =\
+                result[ref][f_suffix('postag_father')] =\
                     WordBasedResult(sentence.words[fref].part_of_speech)
-                result[ref]['gfather_dep_rel'] = WordBasedResult(
+                result[ref][f_suffix('gfather_dep_rel')] = WordBasedResult(
                     deps.nodes[gref].childs[fref])
-                result[ref]['postag_gfather'] =\
+                result[ref][f_suffix('postag_gfather')] =\
                     WordBasedResult(sentence.words[gref].part_of_speech)
             elif deps.father(ref):
                 fref = deps.father(ref)
-                result[ref]['father_dep_rel'] = WordBasedResult(
+                result[ref][f_suffix('father_dep_rel')] = WordBasedResult(
                     deps.nodes[fref].childs[ref])
-                result[ref]['postag_father'] =\
+                result[ref][f_suffix('postag_father')] =\
                     WordBasedResult(sentence.words[fref].part_of_speech)
-                result[ref]['gfather_dep_rel'] = WordBasedResult(False)
-                result[ref]['postag_gfather'] = WordBasedResult(False)
+                result[ref][f_suffix('gfather_dep_rel')] =\
+                    WordBasedResult(False)
+                result[ref][f_suffix('postag_gfather')] =\
+                    WordBasedResult(False)
 
             # Dominant verb calculation
             current_ref = ref
             current_pos = sentence.words[ref].part_of_speech
             if current_pos.startswith('V'):
-                result[ref]['dominant_verb'] = WordBasedResult(current_pos)
+                result[ref][f_suffix('dominant_verb')] =\
+                    WordBasedResult(current_pos)
             else:
                 while not (current_pos.startswith('V')
                            or deps.is_dummy(current_ref)):
-                    print current_ref+1
                     current_ref = deps.father(current_ref)
                     current_pos = sentence.words[current_ref].part_of_speech
-                result[ref]['dominant_verb'] =\
+                result[ref][f_suffix('dominant_verb')] =\
                     WordBasedResult(current_pos)
         for num, word_result in enumerate(result):
             result[num] = tuple(word_result.items())
