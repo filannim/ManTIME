@@ -9,6 +9,7 @@ This document lists all the things I should look more carefully in the future.
   grammar. Are all the things called prepositions actually prepositions?
 - [ ] Probably you can avoid the text variable for Sentence objects.
 - [ ] Do I really need to load Stanford Core NLP everytime for every document?
+  Once (the problem)[https://github.com/dasmith/stanford-corenlp-python/issues/13] with long texts is solved I should switch to the new stanford-core-nlp.
 - [ ] There are some print statement somewhere (WARNING cases). I should use
   something more appropriate for them (log).
 - [ ] Instead of the settings.py file, I should use the OS.ENVIRONS variable.
