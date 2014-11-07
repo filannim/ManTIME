@@ -270,11 +270,11 @@ def parse_parser_xml_results(xml, file_name="", raw_output=False):
         raw_sent_list = enforceList(raw_sent_list)
 
         # To dicrease is for given index different from list index
-        coref_index = [((int(raw_coref_list[j]['mention'][i]['sentence']) - 1,
+        coref_index = [[[int(raw_coref_list[j]['mention'][i]['sentence']) - 1,
                          int(raw_coref_list[j]['mention'][i]['head']) - 1,
                          int(raw_coref_list[j]['mention'][i]['start']) - 1,
-                         int(raw_coref_list[j]['mention'][i]['end']) - 1)
-                        for i in xrange(len(raw_coref_list[j][u'mention'])))
+                         int(raw_coref_list[j]['mention'][i]['end']) - 1]
+                        for i in xrange(len(raw_coref_list[j][u'mention']))]
                        for j in xrange(len(raw_coref_list))]
 
         coref_list = []
