@@ -25,7 +25,6 @@ from abc import ABCMeta, abstractmethod
 import xml.etree.cElementTree as etree
 from StringIO import StringIO
 
-from corenlp import StanfordCoreNLP
 from nltk import ParentedTree
 
 from model import Document
@@ -34,7 +33,26 @@ from model import Word
 from model import DependencyGraph
 from settings import PATH_CORENLP_FOLDER
 
-CORENLP = StanfordCoreNLP(PATH_CORENLP_FOLDER)
+
+class BatchedCoreNLP(object):
+
+    def __init__(self, stanford_dir):
+        from corenlp import batch_parse
+        self.DIR = stanford_dir
+        self.batch_parse = batch_parse
+
+    def parse(self, text):
+        import os
+        import tempfile
+        dirname = tempfile.mkdtemp()
+        with tempfile.NamedTemporaryFile('w', dir=dirname) as tmp:
+            tmp.write(text)
+            tmp.flush()
+            result = self.batch_parse(os.path.dirname(tmp.name), self.DIR)
+            result = list(result)[0]
+        return result
+
+CORENLP = BatchedCoreNLP(PATH_CORENLP_FOLDER)
 
 
 class Reader(object):

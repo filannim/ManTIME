@@ -75,11 +75,11 @@ class AttributesExtractor(object):
                                                  attribute_number,
                                                  sentence_extrator.func_name)
                     word_value.apply(word, attr_name)
-                    attribute_number += 1
+                attribute_number += 1
             elif type(extractor_result) == SentenceBasedResults:
                 assert len(extractor_result.values) == len(sentence.words)
                 for word_num, word_values in enumerate(extractor_result.values):
-                    original_attribute_number = attribute_number
+                    num_attributes = 0
                     for (attr_name, value) in word_values:
                         word = sentence.words[word_num]
                         attr_name = self.__name_attr(level,
@@ -87,7 +87,9 @@ class AttributesExtractor(object):
                                                      attr_name)
                         value.apply(word, attr_name)
                         attribute_number += 1
-                    attribute_number = original_attribute_number
+                        num_attributes += 1
+                    attribute_number -= num_attributes
+                attribute_number += num_attributes
             else:
                 raise Exception('Unexpected sentence-based ' +
                                 'attribute-value type.')
@@ -143,11 +145,11 @@ def main():
     from readers import TempEval3FileReader
     file_reader = TempEval3FileReader(annotation_format='IO')
     document = file_reader.parse(sys.argv[1])
-    extractor = FullExtractor()
-    extractor.extract(document)
-    for sentence in document.sentences:
-        for word in sentence.words:
-            pprint.pprint(sorted(word.attributes.items()))
+    # extractor = FullExtractor()
+    # extractor.extract(document)
+    # for sentence in document.sentences:
+    #     for word in sentence.words:
+    #         pprint.pprint(sorted(word.attributes.items()))
             
 
 if __name__ == '__main__':

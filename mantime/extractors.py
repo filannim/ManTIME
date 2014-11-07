@@ -571,7 +571,7 @@ class SentenceBasedExtractors(object):
                       'n_of_outgoing_relations']
 
         result = []
-        f_suffix = lambda function_name: function_name + 'dependency_outgoing_'
+        f_suffix = lambda function_name: 'dependency_outgoing_' + function_name
         for word in sentence.words:
             word_vector = {f_suffix(dep): WordBasedResult(False) for dep
                            in dep_labels}
@@ -611,7 +611,7 @@ class SentenceBasedExtractors(object):
                       'postag_father',
                       'postag_gfather',
                       'dominant_verb']
-        f_suffix = lambda function_name: function_name + 'dependency_incoming_'
+        f_suffix = lambda function_name: 'dependency_incoming_' + function_name
         result = []
         for _ in sentence.words:
             result.append({f_suffix(dep): WordBasedResult(False) for dep

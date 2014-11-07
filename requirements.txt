@@ -2,3 +2,4 @@ nltk==2.0b9
 MBSP==1.4
 corenlp==3.4.1-0
 num2words==0.5.1
+jsonrpclib==0.1.3
