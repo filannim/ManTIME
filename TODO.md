@@ -13,3 +13,6 @@ This document lists all the things I should look more carefully in the future.
   something more appropriate for them (log).
 - Instead of the settings.py file, I should use the OS.ENVIRONS variable.
   Have a look in CORENLP and others to have a grasp.
+- Find documentation about how to comment the code so that nice Python-doc
+  style web pages can be automatically generated.
+- Love ManTIME!
