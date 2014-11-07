@@ -52,9 +52,7 @@ class BatchedCoreNLP(object):
             result = list(result)[0]
         return result
 
-#CORENLP = BatchedCoreNLP(PATH_CORENLP_FOLDER)
-from corenlp.corenlp import StanfordCoreNLP
-CORENLP = StanfordCoreNLP(PATH_CORENLP_FOLDER+'/')
+CORENLP = BatchedCoreNLP(PATH_CORENLP_FOLDER)
 
 class Reader(object):
     """This class is an abstract reader for ManTIME."""
