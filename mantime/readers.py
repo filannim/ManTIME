@@ -98,7 +98,7 @@ class TempEval3FileReader(FileReader):
         xpath_dct = ".//TIMEX3[@functionInDocument='CREATION_TIME']"
         # StanfordParser strips internally the text :(
         l_strip_chars = len(text.lstrip()) - len(text)
-        stanford_tree = CORENLP.raw_parse(text)
+        stanford_tree = CORENLP.parse(text)
         document = Document(file_path)
         document.dct = xml_document.findall(xpath_dct)[0].attrib['value']
         document.text = text

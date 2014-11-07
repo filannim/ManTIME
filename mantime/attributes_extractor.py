@@ -145,11 +145,11 @@ def main():
     from readers import TempEval3FileReader
     file_reader = TempEval3FileReader(annotation_format='IO')
     document = file_reader.parse(sys.argv[1])
-    # extractor = FullExtractor()
-    # extractor.extract(document)
-    # for sentence in document.sentences:
-    #     for word in sentence.words:
-    #         pprint.pprint(sorted(word.attributes.items()))
+    extractor = FullExtractor()
+    extractor.extract(document)
+    for sentence in document.sentences:
+        for word in sentence.words:
+            pprint.pprint(sorted(word.attributes.items()))
             
 
 if __name__ == '__main__':

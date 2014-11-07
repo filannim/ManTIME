@@ -161,7 +161,7 @@ class Sentence(object):
         if parsetree:
             assert type(parsetree) == ParentedTree, 'Wrong parsetree type'
         if text:
-            assert type(text) == unicode, 'Wrong text type'
+            assert type(text) == list, 'Wrong text type'
 
         self.dependencies = dependencies
         self.indexed_dependencies = indexed_dependencies
