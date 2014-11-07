@@ -29,8 +29,6 @@ import traceback
 import pexpect
 import tempfile
 import shutil
-from progressbar import ProgressBar, Fraction
-from unidecode import unidecode
 from subprocess import call
 
 VERBOSE = False
@@ -565,7 +563,8 @@ def batch_parse(input_folder, corenlp_path=DIRECTORY, memory="3g", raw_output=Fa
     if not os.path.exists(input_folder):
         raise Exception("input_folder does not exist")
 
-    return parse_xml_output(input_folder, corenlp_path, memory, raw_output=raw_output)
+    result = parse_xml_output(input_folder, corenlp_path, memory, raw_output=raw_output)
+    return result
 
 
 if __name__ == '__main__':
