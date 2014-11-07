@@ -270,11 +270,11 @@ def parse_parser_xml_results(xml, file_name="", raw_output=False):
         raw_sent_list = enforceList(raw_sent_list)
 
         # To dicrease is for given index different from list index
-        coref_index = [[[int(raw_coref_list[j]['mention'][i]['sentence']) - 1,
+        coref_index = [((int(raw_coref_list[j]['mention'][i]['sentence']) - 1,
                          int(raw_coref_list[j]['mention'][i]['head']) - 1,
                          int(raw_coref_list[j]['mention'][i]['start']) - 1,
-                         int(raw_coref_list[j]['mention'][i]['end']) - 1]
-                        for i in xrange(len(raw_coref_list[j][u'mention']))]
+                         int(raw_coref_list[j]['mention'][i]['end']) - 1)
+                        for i in xrange(len(raw_coref_list[j][u'mention'])))
                        for j in xrange(len(raw_coref_list))]
 
         coref_list = []
@@ -299,7 +299,7 @@ def parse_parser_xml_results(xml, file_name="", raw_output=False):
     raw_sent_list = enforceList(raw_sent_list)
 
     sentences = []
-    for id in xrange(len(raw_sent_list)):
+    for id, _ in enumerate(raw_sent_list):
         sent = {}
         sent['text'] = extract_words_from_xml(raw_sent_list[id])
         sent['parsetree'] = unicode(raw_sent_list[id]['parse'])
@@ -314,28 +314,41 @@ def parse_parser_xml_results(xml, file_name="", raw_output=False):
             # This is also specific case of xmltodict
             token = raw_sent_list[id]['tokens']['token']
             sent['words'] = [
-                [unicode(token['word']), OrderedDict([
+                (unicode(token['word']), dict([
                     ('NamedEntityTag', str(token['NER'])),
                     ('CharacterOffsetEnd', str(token['CharacterOffsetEnd'])),
                     ('CharacterOffsetBegin', str(token['CharacterOffsetBegin'])),
                     ('PartOfSpeech', str(token['POS'])),
-                    ('Lemma', unicode(token['lemma']))])]
+                    ('Lemma', unicode(token['lemma']))]))
             ]
         else:
-            sent['words'] = [[unicode(token['word']), OrderedDict([
+            sent['words'] = [(unicode(token['word']), dict([
                 ('NamedEntityTag', str(token['NER'])),
                 ('CharacterOffsetEnd', str(token['CharacterOffsetEnd'])),
                 ('CharacterOffsetBegin', str(token['CharacterOffsetBegin'])),
                 ('PartOfSpeech', str(token['POS'])),
-                ('Lemma', unicode(token['lemma']))])]
+                ('Lemma', unicode(token['lemma']))]))
                              for token in raw_sent_list[id]['tokens']['token']]
 
-        sent['dependencies'] = [[enforceList(dep['dep'])[i]['@type'],
-                                 enforceList(dep['dep'])[i]['governor']['#text'],
-                                 enforceList(dep['dep'])[i]['dependent']['#text']]
-                                for dep in raw_sent_list[id]['dependencies'] if dep.get('dep')
-                                for i in xrange(len(enforceList(dep['dep'])))
-                                if dep['@type'] == 'basic-dependencies']
+        # Dependencies: Unindexed and Indexed
+        sent['dependencies'] = []
+        sent['indexeddependencies'] = []
+        for dep in raw_sent_list[id]['dependencies']:
+            for i, _ in enumerate(enforceList(dep['dep'])):
+                if dep['@type'] == 'basic-dependencies':
+                    current_dep = enforceList(dep['dep'])[i]
+                    dep_type = current_dep['@type']
+                    dep_start_text = current_dep['governor']['#text']
+                    dep_start_index = current_dep['governor']['@idx']
+                    dep_end_text = current_dep['dependent']['#text']
+                    dep_end_index = current_dep['dependent']['@idx']
+                    dep_start = '-'.join([dep_start_text, dep_start_index])
+                    dep_end = '-'.join([dep_end_text, dep_end_index])
+                    sent['dependencies'].append(
+                        (dep_type, dep_start_text, dep_end_text))
+                    sent['indexeddependencies'].append(
+                        (dep_type, dep_start, dep_end))
+
         sentences.append(sent)
 
     if coref_flag:
