@@ -8,6 +8,9 @@
 # Python bytecode files
 *.pyc
 
+# iPython notebooks
+*.ipynb
+
 # files I don't wanna touch right now
 pipeline.py
 

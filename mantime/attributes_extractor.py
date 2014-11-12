@@ -14,11 +14,8 @@
 '''This module collect attributes from a sentence.'''
 
 from __future__ import division
-import nltk
-import pickle
 import inspect
 
-from utilities import apply_gazetteer
 from extractors import WordBasedResult
 from extractors import WordBasedResults
 from extractors import SentenceBasedResult

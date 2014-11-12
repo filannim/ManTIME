@@ -163,9 +163,10 @@ def main():
     '''Simple ugly non-elegant test.'''
     import sys
     import pprint
+    import json
     file_reader = TempEval3FileReader(annotation_format='IO')
     document = file_reader.parse(sys.argv[1])
-    pprint.pprint(document.__dict__)
+    print json.dumps(document, indent=4)
 
 if __name__ == '__main__':
     main()
