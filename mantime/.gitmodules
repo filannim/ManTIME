@@ -1,0 +1,3 @@
+[submodule "wapiti"]
+    path = wapiti
+    url = https://github.com/adsva/python-wapiti
