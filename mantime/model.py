@@ -60,6 +60,7 @@ class DependencyGraphNode(object):
         return '(label:{}; parent: {}; childs:{})'.format(
             self.label, self.parent, childs)
 
+
 class DependencyGraph(object):
 
     DUMMY_LABEL = -1
@@ -133,7 +134,7 @@ class Document(object):
         """Enriching the Stanford Parser output with gold annotations."""
         for sentence in self.sentences:
             for word in sentence.words:
-                word.attributes['CLASS'] = format_annotation(
+                word.gold_label = format_annotation(
                     int(word.character_offset_begin),
                     int(word.character_offset_end),
                     self.gold_annotations,
@@ -187,23 +188,10 @@ class Word(object):
         self.part_of_speech = part_of_speech
         self.attributes = dict()
         self.id_token = id_token
+        self.gold_label = None
 
     def __str__(self):
         return str(self.__dict__)
 
     def __repr__(self):
         return repr(self.__dict__)
-
-
-class Classifier(object):
-    """
-    """
-    def __init__(self):
-        pass
-
-
-class AttributesExtractor(object):
-    """
-    """
-    def __init__(self):
-        pass

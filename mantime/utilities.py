@@ -15,6 +15,31 @@
 
 from __future__ import generators
 import collections
+import os
+import md5
+
+class Mute_stderr(object):
+    '''A context manager for doing a "deep suppression" of stderr.
+
+    It will suppress all print, even if the print originates in a compiled
+    C/Fortran sub-function. This will not suppress raised exceptions.
+    '''
+    def __init__(self):
+        # Open a pair of null files
+        self.null_fds = os.open(os.devnull, os.O_RDWR)
+        # Save the actual stderr file descriptors.
+        self.save_fds = os.dup(2)
+
+    def __enter__(self):
+        """Assign the null pointers to stderr."""
+        os.dup2(self.null_fds, 2)
+
+    def __exit__(self, *_):
+        """Re-assign the real stderr back (2)."""
+        os.dup2(self.save_fds, 2)
+        # Close the null file
+        os.close(self.null_fds)
+
 
 def search_subsequence(sequence, key, end=False):
     '''Yields all the start positions of the *key* in the *sequence*.
@@ -107,6 +132,12 @@ def __format(matching_elements, length):
         return SentenceBasedResult(tuple(result))
     else:
         return SentenceBasedResult(tuple([WordBasedResult('O')]*length))
+
+
+def extractors_timestamp():
+    attributes_extractor_content = open('./attributes_extractor.py')
+    md5_code = md5.new().update(attributes_extractor_content).digest()
+    return md5_code
 
 
 class Memoize(object):

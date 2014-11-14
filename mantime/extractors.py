@@ -22,7 +22,6 @@ import nltk
 from num2words import num2words
 
 from utilities import Memoize
-from utilities import search_subsequence
 from utilities import matching_gazetteer
 from model import Word
 from settings import LANGUAGE
@@ -31,23 +30,24 @@ PORTER_STEMMER = Memoize(nltk.PorterStemmer().stem)
 LANCASTER_STEMMER = Memoize(nltk.LancasterStemmer().stem)
 WORDNET_LEMMATIZER = Memoize(nltk.WordNetLemmatizer().lemmatize)
 STOPWORDS = nltk.corpus.stopwords.words(LANGUAGE)
-COMMON_WORDS = pickle.load(open('data/gazetteer/common_words.pickle'))
-POSITIVE_WORDS = pickle.load(open('data/gazetteer/positive_words.pickle'))
-NEGATIVE_WORDS = pickle.load(open('data/gazetteer/negative_words.pickle'))
-MALE_NAMES = pickle.load(open('data/gazetteer/male.pickle'))
-FEMALE_NAMES = pickle.load(open('data/gazetteer/female.pickle'))
-COUNTRIES = pickle.load(open('data/gazetteer/countries.pickle'))
-ISO_COUNTRIES = pickle.load(open('data/gazetteer/isocountries.pickle'))
-US_CITIES = pickle.load(open('data/gazetteer/uscities.pickle'))
-NATIONALITIES = pickle.load(open('data/gazetteer/nationalities.pickle'))
-FESTIVITIES = pickle.load(open('data/gazetteer/festivities.pickle'))
+gazetteer_folder = 'data/gazetteer/'
+COMMON_WORDS = pickle.load(open(gazetteer_folder + 'common_words.pickle'))
+POSITIVE_WORDS = pickle.load(open(gazetteer_folder + 'positive_words.pickle'))
+NEGATIVE_WORDS = pickle.load(open(gazetteer_folder + 'negative_words.pickle'))
+MALE_NAMES = pickle.load(open(gazetteer_folder + 'male.pickle'))
+FEMALE_NAMES = pickle.load(open(gazetteer_folder + 'female.pickle'))
+COUNTRIES = pickle.load(open(gazetteer_folder + 'countries.pickle'))
+ISO_COUNTRIES = pickle.load(open(gazetteer_folder + 'isocountries.pickle'))
+US_CITIES = pickle.load(open(gazetteer_folder + 'uscities.pickle'))
+NATIONALITIES = pickle.load(open(gazetteer_folder + 'nationalities.pickle'))
+FESTIVITIES = pickle.load(open(gazetteer_folder + 'festivities.pickle'))
 PHONEME_DICTIONARY = nltk.corpus.cmudict.dict()
 
 class WordBasedExtractors(object):
 
-    @staticmethod
-    def token(word):
-        return WordBasedResult(word.word_form)
+    #@staticmethod
+    #def token(word):
+    #    return WordBasedResult(word.word_form)
 
     @staticmethod
     def token_normalised(word):
@@ -568,7 +568,7 @@ class SentenceBasedExtractors(object):
                       'quantmod', 'nn', 'npadvmod', 'tmod', 'num', 'number',
                       'prep', 'prepc', 'poss', 'possessive', 'prt',
                       'parataxis', 'punct', 'ref', 'sdep', 'xsubj',
-                      'n_of_outgoing_relations']
+                      'discourse', 'n_of_outgoing_relations']
 
         result = []
         f_suffix = lambda function_name: 'dependency_outgoing_' + function_name
@@ -578,15 +578,16 @@ class SentenceBasedExtractors(object):
             word_dep_node = dependencies.nodes.get(word.id_token, None)
             if word_dep_node:
                 for out_ref, relation in word_dep_node.childs.iteritems():
-                    relation = relation.split('-')[0]
-                    try:
-                        word_vector[f_suffix(relation)] = WordBasedResult(
-                            sentence.words[out_ref].part_of_speech)
-                    except KeyError:
-                        print 'WARNING: {} dep. relation missed.'.format(
-                            relation)
-                    word_vector[f_suffix('n_of_outgoing_relations')] =\
-                        WordBasedResult(len(word_dep_node.childs))
+                    if relation in dep_labels:
+                        relation = relation.split('-')[0]
+                        try:
+                            word_vector[f_suffix(relation)] = WordBasedResult(
+                                sentence.words[out_ref].part_of_speech)
+                        except KeyError:
+                            print 'WARNING: {} dep. relation missed.'.format(
+                                relation)
+                        word_vector[f_suffix('n_of_outgoing_relations')] =\
+                            WordBasedResult(len(word_dep_node.childs))
             result.append(tuple(word_vector.items()))
         return SentenceBasedResults(tuple(result))
 
@@ -607,7 +608,7 @@ class SentenceBasedExtractors(object):
 
         deps = sentence.indexed_dependencies
         attributes = ['father_dep_rel',
-                      'gfather dep_rel',
+                      'gfather_dep_rel',
                       'postag_father',
                       'postag_gfather',
                       'dominant_verb']
@@ -651,6 +652,8 @@ class SentenceBasedExtractors(object):
                 while not (current_pos.startswith('V')
                            or deps.is_dummy(current_ref)):
                     current_ref = deps.father(current_ref)
+                    if current_ref is None:
+                        break
                     current_pos = sentence.words[current_ref].part_of_speech
                 result[ref][f_suffix('dominant_verb')] =\
                     WordBasedResult(current_pos)

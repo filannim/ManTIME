@@ -31,6 +31,7 @@ from model import Document
 from model import Sentence
 from model import Word
 from model import DependencyGraph
+from utilities import Mute_stderr
 from settings import PATH_CORENLP_FOLDER
 
 
@@ -52,7 +53,8 @@ class BatchedCoreNLP(object):
             result = list(result)[0]
         return result
 
-CORENLP = BatchedCoreNLP(PATH_CORENLP_FOLDER)
+with Mute_stderr():
+    CORENLP = BatchedCoreNLP(PATH_CORENLP_FOLDER)
 
 class Reader(object):
     """This class is an abstract reader for ManTIME."""
@@ -97,7 +99,8 @@ class TempEval3FileReader(FileReader):
         xpath_dct = ".//TIMEX3[@functionInDocument='CREATION_TIME']"
         # StanfordParser strips internally the text :(
         l_strip_chars = len(text.lstrip()) - len(text)
-        stanford_tree = CORENLP.parse(text)
+        with Mute_stderr():
+            stanford_tree = CORENLP.parse(text)
         document = Document(file_path)
         document.dct = xml_document.findall(xpath_dct)[0].attrib['value']
         document.text = text
@@ -115,14 +118,15 @@ class TempEval3FileReader(FileReader):
                                 indexed_dependencies=i_dependencies,
                                 parsetree=parsetree,
                                 text=sentence_text)
-            for id, (word_form, attr) in enumerate(stanford_sentence['words']):
+            for num_word, (word_form, attr) in\
+                    enumerate(stanford_sentence['words']):
                 word = Word(word_form=word_form,
                             char_offset_begin=attr['CharacterOffsetBegin'],
                             char_offset_end=attr['CharacterOffsetEnd'],
                             lemma=attr['Lemma'],
                             named_entity_tag=attr['NamedEntityTag'],
                             part_of_speech=attr['PartOfSpeech'],
-                            id_token=id)
+                            id_token=num_word)
                 sentence.words.append(word)
             document.sentences.append(sentence)
 

@@ -20,6 +20,9 @@ from extractors import WordBasedResult
 from extractors import WordBasedResults
 from extractors import SentenceBasedResult
 from extractors import SentenceBasedResults
+from extractors import WordBasedExtractors
+from extractors import SentenceBasedExtractors
+from extractors import DocumentBasedExtractors
 
 
 class AttributesExtractor(object):
@@ -36,8 +39,7 @@ class AttributesExtractor(object):
         self.word_extractors = []
 
     def __name_attr(self, type, num, name):
-        num = str(num).zfill(3)
-        return '{num}_{type}_{name}'.format(num=num, type=type, name=name)
+        return '{num:0>3}_{type}_{name}'.format(num=num, type=type, name=name)
 
     def __extract_from_word(self, word, attribute_number, level='word'):
         for word_extractor in self.word_extractors:
@@ -86,7 +88,7 @@ class AttributesExtractor(object):
                         attribute_number += 1
                         num_attributes += 1
                     attribute_number -= num_attributes
-                attribute_number += num_attributes
+                attribute_number = attribute_number + num_attributes + 1
             else:
                 raise Exception('Unexpected sentence-based ' +
                                 'attribute-value type.')
@@ -127,12 +129,18 @@ class FullExtractor(AttributesExtractor):
 
     def __init__(self):
         super(FullExtractor, self).__init__()
-        from extractors import WordBasedExtractors
-        from extractors import SentenceBasedExtractors
-        from extractors import DocumentBasedExtractors
-        self.document_extractors = [function[1] for function in inspect.getmembers(DocumentBasedExtractors, predicate=inspect.isfunction)]
-        self.sentence_extractors = [function[1] for function in inspect.getmembers(SentenceBasedExtractors, predicate=inspect.isfunction)]
-        self.word_extractors = [function[1] for function in inspect.getmembers(WordBasedExtractors, predicate=inspect.isfunction)]
+        self.document_extractors = [function[1] for function
+                                    in inspect.getmembers(
+                                        DocumentBasedExtractors,
+                                        predicate=inspect.isfunction)]
+        self.sentence_extractors = [function[1] for function
+                                    in inspect.getmembers(
+                                        SentenceBasedExtractors,
+                                        predicate=inspect.isfunction)]
+        self.word_extractors = [function[1] for function
+                                in inspect.getmembers(
+                                    WordBasedExtractors,
+                                    predicate=inspect.isfunction)]
 
 
 def main():
@@ -147,7 +155,6 @@ def main():
     for sentence in document.sentences:
         for word in sentence.words:
             pprint.pprint(sorted(word.attributes.items()))
-            
 
 if __name__ == '__main__':
     main()

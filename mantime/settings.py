@@ -19,10 +19,8 @@ import os
 HOME = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
 LANGUAGE = 'english'
-PATH_CRF_EXECUTABLE_FOLDER = '/Users/filannim/Downloads/CRF++-0.57/'
-PATH_CRF_MODEL = HOME + '/components/crf_models/human_m1.crf'
+PATH_CRF_ENGINE = '/Users/michele/Downloads/wapiti-1.5.0/wapiti'
 PATH_CRF_CONSISTENCY_MODULE = HOME + '/components/make_consistent.py'
 PATH_CRF_ADJUSTMENT_MODULE = HOME + '/components/make_adjusted.py'
-PATH_TREETAGGER = 'tree-tagger-bundle'
-PATH_TREETAGGER_TOKENIZER = '/usr/local/tree-tagger-linux-3.2/cmd/tokenize.pl'
 PATH_CORENLP_FOLDER = '/Users/filannim/Downloads/stanford-corenlp-full-2014-08-27'
+PATH_MODEL_FOLDER = '/models'
