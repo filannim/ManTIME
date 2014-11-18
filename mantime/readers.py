@@ -24,6 +24,8 @@
 from abc import ABCMeta, abstractmethod
 import xml.etree.cElementTree as etree
 from StringIO import StringIO
+import sys
+import os
 
 from nltk import ParentedTree
 
@@ -104,6 +106,7 @@ class TempEval3FileReader(FileReader):
         document = Document(file_path)
         document.dct = xml_document.findall(xpath_dct)[0].attrib['value']
         document.text = text
+        document.file_path = os.path.abspath(file_path)
         document.gold_annotations = self.__get_annotations(xml, l_strip_chars)
         document.coref = stanford_tree.get('coref', None)
 
@@ -121,8 +124,8 @@ class TempEval3FileReader(FileReader):
             for num_word, (word_form, attr) in\
                     enumerate(stanford_sentence['words']):
                 word = Word(word_form=word_form,
-                            char_offset_begin=attr['CharacterOffsetBegin'],
-                            char_offset_end=attr['CharacterOffsetEnd'],
+                            char_offset_begin=int(attr['CharacterOffsetBegin'])+l_strip_chars,
+                            char_offset_end=int(attr['CharacterOffsetEnd'])+l_strip_chars,
                             lemma=attr['Lemma'],
                             named_entity_tag=attr['NamedEntityTag'],
                             part_of_speech=attr['PartOfSpeech'],
@@ -166,7 +169,6 @@ FileReader.register(TempEval3FileReader)
 def main():
     '''Simple ugly non-elegant test.'''
     import sys
-    import pprint
     import json
     file_reader = TempEval3FileReader(annotation_format='IO')
     document = file_reader.parse(sys.argv[1])

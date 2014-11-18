@@ -20,7 +20,7 @@ HOME = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
 LANGUAGE = 'english'
 PATH_CRF_ENGINE = '/Users/michele/Downloads/wapiti-1.5.0/wapiti'
-PATH_CRF_CONSISTENCY_MODULE = HOME + '/components/make_consistent.py'
-PATH_CRF_ADJUSTMENT_MODULE = HOME + '/components/make_adjusted.py'
+PATH_CRF_CONSISTENCY_MODULE = HOME + 'components/make_consistent.py'
+PATH_CRF_ADJUSTMENT_MODULE = HOME + 'components/make_adjusted.py'
 PATH_CORENLP_FOLDER = '/Users/filannim/Downloads/stanford-corenlp-full-2014-08-27'
-PATH_MODEL_FOLDER = '/models'
+PATH_MODEL_FOLDER = 'models'

@@ -112,10 +112,8 @@ def matching_gazetteer(gazetteer, sentence):
 def __format(matching_elements, length):
     from extractors import WordBasedResult
     from extractors import SentenceBasedResult
-
     assert type(length) == int
     assert type(matching_elements) == set
-
     if matching_elements:
         assert max(matching_elements) <= length
         matching_elements = sorted(matching_elements)
@@ -135,9 +133,10 @@ def __format(matching_elements, length):
 
 
 def extractors_timestamp():
-    attributes_extractor_content = open('./attributes_extractor.py')
-    md5_code = md5.new().update(attributes_extractor_content).digest()
-    return md5_code
+    attributes_extractor_content = open('./attributes_extractor.py').read()
+    md5_obj = md5.new()
+    md5_obj.update(attributes_extractor_content)
+    return md5_obj.digest()
 
 
 class Memoize(object):

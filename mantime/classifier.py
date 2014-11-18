@@ -18,6 +18,7 @@ from abc import ABCMeta, abstractmethod
 import subprocess
 import multiprocessing
 import re
+import pickle
 from tempfile import NamedTemporaryFile
 
 from crf_utilities.scale_factors import get_scale_factors
@@ -61,56 +62,140 @@ class WapitiClassifier(Classifier):
         self.model = model
 
 
-    def train(self, documents, model_name, pre_existing_model=None,
-              post_processing_pipeline=False):
+    def train(self, documents, model_name, pre_existing_model=None):
         """ It returns a ClassificationModel object."""
         # TO-DO: feature extractor deve yieldare anziche' ritornare
         assert type(documents) == list, 'Wrong type for documents.'
         assert len(documents) > 0, 'Empty documents list.'
+
         # strictly convert model_name
         model_name = re.sub('\s+', '_', model_name)
         model_name = re.sub('[\W]+', '', model_name)
+
         first_word = documents[0].sentences[0].words[0]
         header = [k for k, _ in sorted(first_word.attributes.items())]
+
+        # save header to model_name.header
+        header_path = PATH_MODEL_FOLDER + '/' + model_name + '.header'
+        with open(header_path, 'w') as header_file:
+            header_file.write('\n'.join(header))
         if self.model:
             model = self.model
         else:
             model = ClassificationModel(header, model_name)
-        with NamedTemporaryFile(delete=False) as trainingset:
-            for document in enumerate(documents):
-                for sentence in enumerate(document.sentences):
-                    for word in enumerate(sentence.words):
+            model.name = model_name
+            self.model = model
+
+        # save trainingset to model_name.trainingset
+        trainingset_path = PATH_MODEL_FOLDER + '/' + model_name + '.trainingset'
+        with open(trainingset_path, 'w') as trainingset:
+            for document in documents:
+                for sentence in document.sentences:
+                    for word in sentence.words:
                         row = [v for _, v in sorted(word.attributes.items())]
                         trainingset.write('\t'.join(row))
                         trainingset.write('\t' + word.gold_label)
                         trainingset.write('\n')
                     trainingset.write('\n')
-            trainingset.flush()
-            if post_processing_pipeline:
-                get_scale_factors(trainingset.name)
-            crf_command = [PATH_CRF_ENGINE, 'train',
-                           '-T', 'crf',
-                           '-a', 'l-bfgs',
-                           '-p', model.topology_path,
-                           '-t', str(multiprocessing.cpu_count()),
-                           trainingset.name,
-                           PATH_MODEL_FOLDER + '/' + model_name]
-            with Mute_stderr():
-                process = subprocess.Popen(crf_command)
-                process.wait()
+
+        # post-processing pipeline
+        # scale_factors = get_scale_factors(trainingset_path)
+        # factors_path = PATH_MODEL_FOLDER + '/' + model_name + '.factors'
+        # pickle.dump(scale_factors, open(factors_path, 'w'))
+
+        # run external CRF resource (Wapiti)
+        crf_command = [PATH_CRF_ENGINE, 'train',
+                       '-T', 'crf',
+                       '-a', 'l-bfgs',
+                       '-p', model.topology_path,
+                       '-t', str(multiprocessing.cpu_count()),
+                       trainingset_path,
+                       PATH_MODEL_FOLDER + '/' + model_name + '.model']
+        with Mute_stderr():
+            process = subprocess.Popen(crf_command)
+            process.wait()
+
         # TO-DO: Check if the script saves a model or returns an error
-        model.model_path = PATH_MODEL_FOLDER + '/' + model_name
+        model.path = PATH_MODEL_FOLDER + '/' + model_name + '.model'
         model.extractors_md5 = extractors_timestamp()
         return model
 
-    def test(self, document):
+    def test(self, documents, post_processing_pipeline=False):
         """ It returns the sequence of labels from the Wapiti classifier.
 
         It returns the same data structure (list of documents, of sentences,
         of words with the right labels.
-
         """
-        pass
+        assert self.model, 'No model loaded for CRF.'
+        assert type(documents) == list, 'Wrong type for documents.'
+        assert len(documents) > 0, 'Empty documents list.'
+
+        # temporary saves the test set
+        with NamedTemporaryFile(delete=True) as testset:
+            for num_doc, document in enumerate(documents):
+                for num_sent, sentence in enumerate(document.sentences):
+                    for num_word, word in enumerate(sentence.words):
+                        row = [v for _, v in sorted(word.attributes.items())]
+                        testset.write('\t'.join(row))
+                        # Adding an extra-column with word coordinates
+                        testset.write('\t{}_{}_{}'.format(num_doc,
+                                                          num_sent,
+                                                          num_word))
+                        testset.write('\n')
+                    testset.write('\n')
+                    testset.flush()
+
+            # run external CRF resource (Wapiti)
+            crf_command = [PATH_CRF_ENGINE, 'label', '-m', self.model.path,
+                           '-l', testset.name]
+            with Mute_stderr():
+                process = subprocess.Popen(crf_command, stdout=subprocess.PIPE)
+
+            # TO-DO: A bit inopportune, I need to make it more efficient and
+            #        compact. Right now it's surfing among the documents saving
+            #        the addresses (n_doc, n_sent, n_word) and using these to
+            #        directly point to the right word. Since we know the output
+            #        is a sequence we can just iterating over them.
+            # addresses = {}
+            # counter = 0
+            # for n_doc, doc in enumerate(documents):
+            #     for n_sent, sent in enumerate(doc.sentences):
+            #         for n_word, word in enumerate(sent.words):
+            #             addresses[counter] = (n_doc, n_sent, n_word)
+            #             counter += 1
+            # counter = 0
+            # for label in iter(process.stdout.readline, ''):
+            #     if label.strip():
+            #         n_doc, n_sent, n_word = addresses[counter]
+            #         documents[n_doc].sentences[n_sent].words[n_word].predicted_label = label.strip()
+            #         counter += 1
+            # del addresses
+            # assert max(addresses.keys()) == counter -1
+
+            n_doc, n_sent, n_word = 0, 0, 0
+            for label in iter(process.stdout.readline, ''):
+                label = label.strip()
+                if label:
+                    documents[n_doc].sentences[n_sent].words[n_word]\
+                        .predicted_label = label
+                    n_word += 1
+                    if len(documents[n_doc].sentences[n_sent].words) == n_word:
+                        n_word = 0
+                        n_sent += 1
+                        if len(documents[n_doc].sentences) == n_sent:
+                            n_word, n_sent = 0, 0
+                            n_doc += 1
+
+        # post-processing pipeline
+        if post_processing_pipeline:
+            try:
+                factors_path = PATH_MODEL_FOLDER + '/' + self.model.name + '.factors'
+                factors = pickle.load(open(factors_path))
+            except IOError:
+                print 'WARNING: Scale factors not found.'
+
+        # for 
+        return documents
 
 
 class ClassificationModel(object):
@@ -124,11 +209,12 @@ class ClassificationModel(object):
     """
 
     def __init__(self, header, model_name):
+        self.name = model_name
         self.header = header
         self.topology_path = None
         self.topology = self._generate_template(model_name)
         self.pipeline_factors = None
-        self.model_path = None
+        self.path = None
         self.extractors_md5 = None
 
     def _generate_template(self, model_name):

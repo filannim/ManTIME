@@ -150,11 +150,17 @@ def main():
     from readers import TempEval3FileReader
     file_reader = TempEval3FileReader(annotation_format='IO')
     document = file_reader.parse(sys.argv[1])
-    extractor = FullExtractor()
-    extractor.extract(document)
+    #extractor = FullExtractor()
+    #extractor.extract(document)
+    pprint.pprint(document.gold_annotations)
     for sentence in document.sentences:
         for word in sentence.words:
-            pprint.pprint(sorted(word.attributes.items()))
+            #pprint.pprint(sorted(word.attributes.items()))
+            pprint.pprint('({:5},{:5}) {:>20} > {:>10}'.format(
+                word.character_offset_begin,
+                word.character_offset_end,
+                word.word_form,
+                word.gold_label))
 
 if __name__ == '__main__':
     main()

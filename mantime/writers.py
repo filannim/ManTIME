@@ -58,7 +58,7 @@ class SimpleWriter(Writer):
     def write(self, documents):
         """
         """
-        return [document.predicted_annotations for document in documents]
+        pass
 
 
 class SimpleXMLFileWriter(FileWriter):
@@ -67,12 +67,13 @@ class SimpleXMLFileWriter(FileWriter):
     def __init__(self):
         super(SimpleXMLFileWriter, self).__init__()
 
-    def write(self, save_to):
+    def write(self, documents):
         """
         """
-        if not save_to.endswith('.xml'):
-            save_to += '.xml'
-        open(save_to, 'w').close()
+        return [word.predicted_label
+                for doc in documents
+                for sent in doc.sentences
+                for word in sent.words]
 
 
 Writer.register(FileWriter)

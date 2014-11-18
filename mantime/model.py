@@ -13,7 +13,6 @@
 
 """It contains the classes for the document data model of ManTIME."""
 
-
 def format_annotation(start_token, end_token, annotations, annotation_format):
     '''It returns the correct sequence class label for the given token.'''
     sequence_label = None
@@ -189,6 +188,7 @@ class Word(object):
         self.attributes = dict()
         self.id_token = id_token
         self.gold_label = None
+        self.predicted_label = None
 
     def __str__(self):
         return str(self.__dict__)

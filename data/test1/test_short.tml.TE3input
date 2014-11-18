@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<TimeML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://timeml.org/timeMLdocs/TimeML_1.2.1.xsd">
+
+<DOCID>CNN_20130321_821</DOCID>
+
+<DCT><TIMEX3 tid="t0" type="DATE" value="2013-03-21" temporalFunction="false" functionInDocument="CREATION_TIME">March 21, 2013</TIMEX3></DCT>
+
+<TITLE>How Obama has weaponized wit</TITLE>
+
+
+<TEXT>
+Barack Obama would make a great stand-up comic, not because he's the funniest president ever but because he uses jokes the same way many of us comedians do: as a weapon.
+
+Traditionally, the (intentionally) funny lines by our presidents have had one thing in common: They were self-deprecating. Sure, some presidents have used jokes to take jabs at their opponents, but not to the extent of Obama.
+
+During his tenure, he has increasingly unleashed biting comedic barbs against his critics and political adversaries. These jokes are intended to do more than simply entertain you. They have an agenda.
+
+Obama's humor is often delivered the way a comedian dealing with a heckler would do it. He tries to undermine his opponents with it and get the crowd -- in this case the public -- on his side. I can assure you that having a crowd laugh at your critic/heckler is not only effective in dominating them, it's also very satisfying.
+
+</TEXT>
+
+
+</TimeML>
