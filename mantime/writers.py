@@ -11,13 +11,13 @@
 #
 #   For details, see www.cs.man.ac.uk/~filannim/
 
-"""It contains all the readers for ManTIME.
+"""It contains all the writers for ManTIME.
 
-   A reader must have a parse() method which is responsible for reading the
-   input file and return a Document object, which is our internal
-   representation of any input document (whetever the format is).
+   A writer must have a write() method which is responsible for returning a
+   string representation of each document (Writer) or writing on a file
+   (FileWriter). In any case a writer always takes in input a single document.
 
-   In order to force the existence of the parse() method I preferred Python
+   In order to force the existence of the write() method I preferred Python
    interfaces to the duck typing practice.
 """
 
@@ -31,7 +31,7 @@ class Writer(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def write(self, documents):
+    def write(self, document):
         pass
 
 
@@ -43,7 +43,7 @@ class FileWriter(Writer):
         pass
 
     @abstractmethod
-    def write(self, documents, save_to):
+    def write(self, document, save_to):
         pass
 
 
@@ -53,10 +53,10 @@ class SimpleXMLFileWriter(FileWriter):
     def __init__(self):
         super(SimpleXMLFileWriter, self).__init__()
 
-    def write(self, documents, save_to):
+    def write(self, document, save_to):
         """
         """
-        return [word.predicted_label
+        return [(word.word_form, word.predicted_label)
                 for doc in documents
                 for sent in doc.sentences
                 for word in sent.words]
@@ -64,7 +64,27 @@ class SimpleXMLFileWriter(FileWriter):
 
 class TempEval3Writer(FileWriter):
     """This class is a writer in the TempEval-3 format."""
-    pass
+
+    def __init__(self):
+        super(TempEval3Writer, self).__init__()
+
+    def write(self, document, save_to):
+        """It writes on an external file in the TempEval-3 format.
+
+        """
+        with open(os.path.abspath(save_to), 'w') as output:
+            output.write('<?xml version="1.0" ?>\n')
+            output.write('<TimeML xmlns:xsi="http://www.w3.org/2001/XMLSchem' +
+                         'a-instance" xsi:noNamespaceSchemaLocation="http://' +
+                         'timeml.org/timeMLdocs/TimeML_1.2.1.xsd">\n')
+            output.write('\n')
+            output.write('<DOCID>CNN_20130322_248</DOCID>\n')
+            output.write('\n')
+            output.write(str('<DCT><TIMEX3 tid="t0" type="DATE" value="{dct_' +
+                         'value}" temporalFunction="false" functionInDocumen' +
+                         't="CREATION_TIME">{dct_text}</TIMEX3></DCT>\n'
+                         ).format(dct_value=, dct_text=))
+
 
 
 class AttributeMatrixWriter(Writer):
