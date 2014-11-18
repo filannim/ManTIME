@@ -22,10 +22,8 @@
 """
 
 from abc import ABCMeta, abstractmethod
-import xml.etree.cElementTree as etree
-from StringIO import StringIO
-
-from model import Document
+import logging
+import os
 
 
 class Writer(object):
@@ -49,25 +47,13 @@ class FileWriter(Writer):
         pass
 
 
-class SimpleWriter(Writer):
-    """This class is a simple writer for ManTIME."""
-
-    def __init__(self):
-        super(SimpleWriter, self).__init__()
-
-    def write(self, documents):
-        """
-        """
-        pass
-
-
 class SimpleXMLFileWriter(FileWriter):
-    """This class is a reader for TempEval-3 files."""
+    """This class is a simple XML writer."""
 
     def __init__(self):
         super(SimpleXMLFileWriter, self).__init__()
 
-    def write(self, documents):
+    def write(self, documents, save_to):
         """
         """
         return [word.predicted_label
@@ -76,8 +62,41 @@ class SimpleXMLFileWriter(FileWriter):
                 for word in sent.words]
 
 
+class TempEval3Writer(FileWriter):
+    """This class is a writer in the TempEval-3 format."""
+    pass
+
+
+class AttributeMatrixWriter(Writer):
+    """This class writes the attribute matrix taken by ML algorithms."""
+
+    def __init__(self, separator='\t', include_header=False):
+        super(AttributeMatrixWriter, self).__init__()
+        self.separator = separator
+        self.header = include_header
+
+    def write(self, documents, save_to):
+        save_to = os.path.abspath(save_to)
+        with open(save_to, 'w') as output:
+            if self.header:
+                first_word = documents[0].sentences[0].words[0]
+                header = [k for k, _ in sorted(first_word.attributes.items())]
+                output.write(self.separator.join(header))
+                output.write('\n')
+            for document in documents:
+                for sentence in document.sentences:
+                    for word in sentence.words:
+                        row = [v for _, v in sorted(word.attributes.items())]
+                        output.write(self.separator.join(row))
+                        output.write(self.separator + word.gold_label)
+                        output.write('\n')
+                    output.write('\n')
+        logging.info('{} exported.'.format(save_to))
+
 Writer.register(FileWriter)
 FileWriter.register(SimpleXMLFileWriter)
+FileWriter.register(TempEval3Writer)
+FileWriter.register(AttributeMatrixWriter)
 
 
 def main():

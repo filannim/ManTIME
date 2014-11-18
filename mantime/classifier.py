@@ -16,14 +16,15 @@
 from __future__ import division
 from abc import ABCMeta, abstractmethod
 import subprocess
-import multiprocessing
 import re
-import pickle
+import cPickle
+import logging
 from tempfile import NamedTemporaryFile
 
 from crf_utilities.scale_factors import get_scale_factors
-from settings import PATH_CRF_ENGINE
 from settings import PATH_MODEL_FOLDER
+from settings import PATH_CRF_PP_ENGINE_TEST
+from settings import PATH_CRF_PP_ENGINE_TRAIN
 from utilities import Mute_stderr
 from utilities import extractors_timestamp
 
@@ -53,10 +54,10 @@ class Classifier(object):
             print 'WARNING: The feature extractor component has changed!'
 
 
-class WapitiClassifier(Classifier):
-    """This class is a Wapiti CRF interface."""
+class CRFClassifier(Classifier):
+    """This class is a CRF interface."""
     def __init__(self, model=None):
-        super(WapitiClassifier, self).__init__()
+        super(CRFClassifier, self).__init__()
         if model:
             assert type(model) == ClassificationModel, 'Wrong model type.'
         self.model = model
@@ -67,27 +68,31 @@ class WapitiClassifier(Classifier):
         # TO-DO: feature extractor deve yieldare anziche' ritornare
         assert type(documents) == list, 'Wrong type for documents.'
         assert len(documents) > 0, 'Empty documents list.'
-
         # strictly convert model_name
         model_name = re.sub('\s+', '_', model_name)
         model_name = re.sub('[\W]+', '', model_name)
 
-        first_word = documents[0].sentences[0].words[0]
-        header = [k for k, _ in sorted(first_word.attributes.items())]
+        path_and_modelname = (PATH_MODEL_FOLDER, model_name)
+        header_path = '{}/{}.header'.format(*path_and_modelname)
+        trainingset_path = '{}/{}.trainingset'.format(*path_and_modelname)
+        model_path = '{}/{}.model'.format(*path_and_modelname)
 
         # save header to model_name.header
-        header_path = PATH_MODEL_FOLDER + '/' + model_name + '.header'
+        first_word = documents[0].sentences[0].words[0]
+        header = [k for k, _ in sorted(first_word.attributes.items())]
         with open(header_path, 'w') as header_file:
             header_file.write('\n'.join(header))
+
         if self.model:
             model = self.model
         else:
             model = ClassificationModel(header, model_name)
             model.name = model_name
+            model.path = model_path
+            model.extractors_md5 = extractors_timestamp()
             self.model = model
 
         # save trainingset to model_name.trainingset
-        trainingset_path = PATH_MODEL_FOLDER + '/' + model_name + '.trainingset'
         with open(trainingset_path, 'w') as trainingset:
             for document in documents:
                 for sentence in document.sentences:
@@ -104,20 +109,20 @@ class WapitiClassifier(Classifier):
         # pickle.dump(scale_factors, open(factors_path, 'w'))
 
         # run external CRF resource (Wapiti)
-        crf_command = [PATH_CRF_ENGINE, 'train',
-                       '-T', 'crf',
-                       '-a', 'l-bfgs',
-                       '-p', model.topology_path,
-                       '-t', str(multiprocessing.cpu_count()),
-                       trainingset_path,
-                       PATH_MODEL_FOLDER + '/' + model_name + '.model']
+        # crf_command = [PATH_CRF_ENGINE, 'train',
+        #                '-T', 'crf',
+        #                '-a', 'l-bfgs',
+        #                '-p', model.topology_path,
+        #                '-t', str(multiprocessing.cpu_count()),
+        #                trainingset_path,
+        #                PATH_MODEL_FOLDER + '/' + model_name + '.model']
+        crf_command = [PATH_CRF_PP_ENGINE_TRAIN, model.topology_path,
+                       trainingset_path, model_path]
         with Mute_stderr():
             process = subprocess.Popen(crf_command)
             process.wait()
 
         # TO-DO: Check if the script saves a model or returns an error
-        model.path = PATH_MODEL_FOLDER + '/' + model_name + '.model'
-        model.extractors_md5 = extractors_timestamp()
         return model
 
     def test(self, documents, post_processing_pipeline=False):
@@ -146,35 +151,17 @@ class WapitiClassifier(Classifier):
                     testset.flush()
 
             # run external CRF resource (Wapiti)
-            crf_command = [PATH_CRF_ENGINE, 'label', '-m', self.model.path,
-                           '-l', testset.name]
+            # crf_command = [PATH_CRF_ENGINE, 'label', '-m', self.model.path,
+            #                '-l', testset.name]
+
+            crf_command = [PATH_CRF_PP_ENGINE_TEST, '-m', self.model.path,
+                           testset.name]
             with Mute_stderr():
                 process = subprocess.Popen(crf_command, stdout=subprocess.PIPE)
 
-            # TO-DO: A bit inopportune, I need to make it more efficient and
-            #        compact. Right now it's surfing among the documents saving
-            #        the addresses (n_doc, n_sent, n_word) and using these to
-            #        directly point to the right word. Since we know the output
-            #        is a sequence we can just iterating over them.
-            # addresses = {}
-            # counter = 0
-            # for n_doc, doc in enumerate(documents):
-            #     for n_sent, sent in enumerate(doc.sentences):
-            #         for n_word, word in enumerate(sent.words):
-            #             addresses[counter] = (n_doc, n_sent, n_word)
-            #             counter += 1
-            # counter = 0
-            # for label in iter(process.stdout.readline, ''):
-            #     if label.strip():
-            #         n_doc, n_sent, n_word = addresses[counter]
-            #         documents[n_doc].sentences[n_sent].words[n_word].predicted_label = label.strip()
-            #         counter += 1
-            # del addresses
-            # assert max(addresses.keys()) == counter -1
-
             n_doc, n_sent, n_word = 0, 0, 0
             for label in iter(process.stdout.readline, ''):
-                label = label.strip()
+                label = label.strip().split('\t')[-1]
                 if label:
                     documents[n_doc].sentences[n_sent].words[n_word]\
                         .predicted_label = label
@@ -190,11 +177,11 @@ class WapitiClassifier(Classifier):
         if post_processing_pipeline:
             try:
                 factors_path = PATH_MODEL_FOLDER + '/' + self.model.name + '.factors'
-                factors = pickle.load(open(factors_path))
+                factors = cPickle.load(open(factors_path))
             except IOError:
-                print 'WARNING: Scale factors not found.'
+                logging.warning('Scale factors not found.')
 
-        # for 
+        # for
         return documents
 
 

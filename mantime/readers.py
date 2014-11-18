@@ -45,7 +45,6 @@ class BatchedCoreNLP(object):
         self.batch_parse = batch_parse
 
     def parse(self, text):
-        import os
         import tempfile
         dirname = tempfile.mkdtemp()
         with tempfile.NamedTemporaryFile('w', dir=dirname) as tmp:
@@ -123,9 +122,11 @@ class TempEval3FileReader(FileReader):
                                 text=sentence_text)
             for num_word, (word_form, attr) in\
                     enumerate(stanford_sentence['words']):
+                offset_begin = int(attr['CharacterOffsetBegin'])+l_strip_chars
+                offset_end = int(attr['CharacterOffsetEnd'])+l_strip_chars
                 word = Word(word_form=word_form,
-                            char_offset_begin=int(attr['CharacterOffsetBegin'])+l_strip_chars,
-                            char_offset_end=int(attr['CharacterOffsetEnd'])+l_strip_chars,
+                            char_offset_begin=offset_begin,
+                            char_offset_end=offset_end,
                             lemma=attr['Lemma'],
                             named_entity_tag=attr['NamedEntityTag'],
                             part_of_speech=attr['PartOfSpeech'],
@@ -168,7 +169,6 @@ FileReader.register(TempEval3FileReader)
 
 def main():
     '''Simple ugly non-elegant test.'''
-    import sys
     import json
     file_reader = TempEval3FileReader(annotation_format='IO')
     document = file_reader.parse(sys.argv[1])
