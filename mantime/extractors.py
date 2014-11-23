@@ -673,8 +673,10 @@ class WordBasedResult(object):
         assert type(value) in (types.NoneType, str, unicode, bool, int, float)
         if isinstance(value, types.NoneType):
             self.value = '_'
-        elif type(value) in (str, unicode, bool):
+        elif type(value) in (str, bool):
             self.value = '"{}"'.format(str(value))
+        elif type(value) == unicode:
+            self.value = '"{}"'.format(str(value.replace(u'\xa0', u' ')))
         else:
             self.value = '{}'.format(str(value))
 

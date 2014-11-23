@@ -24,7 +24,7 @@ import logging
 
 from readers import TempEval3FileReader
 from attributes_extractor import FullExtractor
-from writers import SimpleXMLFileWriter
+from writers import TempEval3Writer
 from classifier import CRFClassifier
 from settings import PATH_MODEL_FOLDER
 
@@ -46,13 +46,14 @@ class ManTIME(object):
         folder = os.path.abspath(folder)
         classifier = CRFClassifier(pre_existing_model)
         for input_file in glob.glob(folder + '/*.tml'):
-            try:
+            # try:
+                print input_file
                 document = self.reader.parse(input_file)
                 self.extractor.extract(document)
                 self.documents.append(document)
                 logging.info('{} done.'.format(input_file))
-            except:
-                logging.error('{} skipped.'.format(input_file))
+            # except Exception as excp:
+            #   logging.error('{} skipped.'.format(input_file))
         model = classifier.train(self.documents,
                                  self.model_name,
                                  pre_existing_model)
@@ -69,7 +70,7 @@ class ManTIME(object):
         # try:
         document = self.reader.parse(file_name)
         self.extractor.extract(document)
-        return self.writer.write(classifier.test([document], model), None)
+        return self.writer.write(classifier.test([document], model)[0])
         # except:
         logging.info('{} skipped.'.format(file_name))
 
@@ -90,11 +91,11 @@ def main():
 
     # Expected usage of ManTIME
     mantime = ManTIME(TempEval3FileReader(),
-                      SimpleXMLFileWriter(),
+                      TempEval3Writer(os.path.abspath('./pippo.xml')),
                       FullExtractor(),
                       'tempeval3')
-    #print mantime.train(args.folder[0])
-    print mantime.label(args.folder[0])
+    print mantime.train(args.folder[0])
+    #print mantime.label(args.folder[0])
 
 
 if __name__ == '__main__':

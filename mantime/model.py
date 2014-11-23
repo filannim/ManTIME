@@ -120,8 +120,12 @@ class Document(object):
 
     def __init__(self, name, file_path='', dct=None):
         self.name = name
+        self.text_offset = 0
         self.file_path = file_path
+        self.doc_id = None
         self.dct = dct
+        self.dct_text = None
+        self.title = None
         self.text = ''
         self.sentences = []
         self.coref = None

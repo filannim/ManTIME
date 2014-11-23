@@ -93,20 +93,30 @@ class TempEval3FileReader(FileReader):
         from a TempEval-3 annotated file. Those information are packed in a
         Document object, which is our internal representation.
         """
-        xml_document = etree.parse(file_path)
-        text_node = xml_document.findall(".//TEXT")[0]
-        text = etree.tostring(text_node, method='text')
-        xml = etree.tostring(text_node)
-        xpath_dct = ".//TIMEX3[@functionInDocument='CREATION_TIME']"
+        xml = etree.parse(file_path)
+        docid = xml.findall(".//DOCID")[0]
+        dct = xml.findall(".//TIMEX3[@functionInDocument='CREATION_TIME']")[0]
+        title = xml.findall(".//TITLE")[0]
+        text_node = xml.findall(".//TEXT")[0]
+        text_string = etree.tostring(text_node, method='text')
+        text_xml = etree.tostring(text_node, method='xml')
+        right_chars = len(text_xml.split('</TEXT>')[1])
+        text_string = text_string[:-right_chars]
+        text_xml = etree.tostring(text_node)
         # StanfordParser strips internally the text :(
-        l_strip_chars = len(text.lstrip()) - len(text)
+        left_chars = len(text_string) - len(text_string.lstrip())
+
         with Mute_stderr():
-            stanford_tree = CORENLP.parse(text)
+            stanford_tree = CORENLP.parse(text_string)
         document = Document(file_path)
-        document.dct = xml_document.findall(xpath_dct)[0].attrib['value']
-        document.text = text
+        document.text_offset = left_chars
         document.file_path = os.path.abspath(file_path)
-        document.gold_annotations = self.__get_annotations(xml, l_strip_chars)
+        document.doc_id = etree.tostring(docid, method='text').strip()
+        document.dct = dct.attrib['value']
+        document.dct_text = etree.tostring(dct, method='text')
+        document.title = etree.tostring(title, method='text').strip()
+        document.text = text_string
+        document.gold_annotations = self._get_annotations(text_xml, -left_chars)
         document.coref = stanford_tree.get('coref', None)
 
         for stanford_sentence in stanford_tree['sentences']:
@@ -122,8 +132,8 @@ class TempEval3FileReader(FileReader):
                                 text=sentence_text)
             for num_word, (word_form, attr) in\
                     enumerate(stanford_sentence['words']):
-                offset_begin = int(attr['CharacterOffsetBegin'])+l_strip_chars
-                offset_end = int(attr['CharacterOffsetEnd'])+l_strip_chars
+                offset_begin = int(attr['CharacterOffsetBegin'])-left_chars
+                offset_end = int(attr['CharacterOffsetEnd'])-left_chars
                 word = Word(word_form=word_form,
                             char_offset_begin=offset_begin,
                             char_offset_end=offset_end,
@@ -135,10 +145,9 @@ class TempEval3FileReader(FileReader):
             document.sentences.append(sentence)
 
         document.store_gold_annotations(self.annotation_format)
-        del stanford_tree, l_strip_chars, text, text_node, xml_document
         return document
 
-    def __get_annotations(self, source, start_offset=0):
+    def _get_annotations(self, source, start_offset=0):
         '''It returns the annotations found in the document in the following
            format:
            [
