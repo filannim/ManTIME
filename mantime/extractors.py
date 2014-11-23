@@ -517,7 +517,12 @@ class SentenceBasedExtractors(object):
         for idx in parsetree.treepositions(order='leaves'):
             tree = parsetree[idx[:-1]]
             steps_up = 1
-            while not tree.node.startswith('S'):
+            # there are some leaves which are not necessarily child of S
+            # all the leaves are always child of ROOT)
+            # Don't believe me? Try to parse this sentence:
+            # -  "And Rosneft benefits from BP's expertise in exploring in
+            #     difficult and potentially hazardous conditions."
+            while not (tree.node.startswith('S') or tree.node == 'ROOT'):
                 tree = tree.parent()
                 steps_up += 1
             position_under_s = idx[(len(idx) - steps_up)]
@@ -534,9 +539,15 @@ class SentenceBasedExtractors(object):
         for idx in parsetree.treepositions(order='leaves'):
             tree = parsetree[idx[:-1]]
             steps_up = 1
-            while not tree.node.startswith('S'):
+            # there are some leaves which are not necessarily child of S
+            # all the leaves are always child of ROOT)
+            # Don't believe me? Try to parse this sentence:
+            # -  "And Rosneft benefits from BP's expertise in exploring in
+            #     difficult and potentially hazardous conditions."
+            while not (tree.node.startswith('S') or tree.node == 'ROOT'):
                 tree = tree.parent()
                 steps_up += 1
+
             result.append(WordBasedResult(steps_up))
         return SentenceBasedResult(tuple(result))
 

@@ -1,0 +1,38 @@
+<?xml version="1.0" ?>
+<TimeML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://timeml.org/timeMLdocs/TimeML_1.2.1.xsd">
+
+<DOCID>bbc_20130322_332</DOCID>
+
+<DCT><TIMEX3 tid="t0" type="DATE" value="2013-03-22" temporalFunction="false" functionInDocument="CREATION_TIME">2013-03-22</TIMEX3></DCT>
+
+<TITLE>BP to buy back $8bn in shares after Russian sale</TITLE>
+
+<TEXT>
+
+Oil giant BP has said it will buy back $8bn of shares, returning to shareholders the money they had put into a complicated Russian venture.
+
+It said it "expected to return to BP shareholders an amount equivalent to the value of the company's original investment in TNK-BP".
+
+BP agreed to sell back its 50% stake in TNK-BP to Russia's Rosneft in <TIMEX3 tid="t1" type="DATE" value="2013-10">October</TIMEX3> in return for $17.1bn in cash and shares.
+
+It invested in TNK-BP in <TIMEX3 tid="t2" type="DATE" value="2003">2003.</TIMEX3>
+
+BP chairman Carl-Henric Svanberg said: "We expect our stake in Rosneft will generate long-term value for BP and its shareholders. But this buyback programme should also allow our shareholders to see benefits in the near-term from the value we have realised by reshaping our Russian business."
+
+BP expects the share buyback programme could take between <TIMEX3 tid="t3" type="DURATION" value="P12M">12 and 18 months</TIMEX3> to complete.
+
+"In 2003 BP invested around $8bn in cash, shares and assets in the formation of TNK-BP," the oil giant said. "Over the following decade BP received a total of $19bn in dividends from the joint venture."
+
+Although BP's involvement in the Russian joint venture has been lucrative, relations with its partners have often been fraught with disagreement. In <TIMEX3 tid="t4" type="DATE" value="2011">2011</TIMEX3>, the AAR consortium attempted to block a drilling joint venture in the Arctic between BP and Rosneft through the courts and the plan was eventually dropped.
+
+As well as internal wrangles, BP employees at TNK-BP have fallen foul of Russian authorities.
+
+While serving as head of TNK-BP, Bob Dudley - <TIMEX3 tid="t5" type="DATE" value="PRESENT_REF">now</TIMEX3> the head of BP as a whole - had his office bugged and raided by the police and met with onerous back-tax demands, legal action and visa problems.
+
+He eventually fled the country in <TIMEX3 tid="t6" type="DATE" value="2008">2008.</TIMEX3>
+
+But the tie-up with Rosneft will keep BP in Russia, allowing it to continue to explore and exploit the country's vast energy resources, including in the Arctic region. And Rosneft benefits from BP's expertise in exploring in difficult and potentially hazardous conditions.
+
+</TEXT>
+
+</TimeML>
