@@ -190,8 +190,8 @@ class Word(object):
         self.part_of_speech = part_of_speech
         self.attributes = dict()
         self.id_token = id_token
-        self.gold_label = None
-        self.predicted_label = None
+        self.gold_label = 'O'
+        self.predicted_label = 'O'
         self.tag_attributes = dict()
 
     def __str__(self):

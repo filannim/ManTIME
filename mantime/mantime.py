@@ -57,11 +57,12 @@ class ManTIME(object):
 
         # corpus collection
         for input_file in glob.glob(folder + '/*.tml'):
-            #try:
-            doc = self.extractor.extract(self.reader.parse(input_file))
-            self.documents.append(doc)
-            #except:
-            #    logging.error('{} skipped.'.format(input_file))
+            try:
+                doc = self.extractor.extract(self.reader.parse(input_file))
+                self.documents.append(doc)
+            except:
+                logging.error('{} skipped.'.format(
+                    os.path.relpath(input_file)))
 
         # training models (identification and normalisation)
         modl = identifier.train(self.documents, self.model_name)
@@ -110,7 +111,7 @@ def main():
                       TempEval3Writer(),
                       FullExtractor(),
                       'tempeval3')
-    print mantime.train(args.folder[0])
+    #print mantime.train(args.folder[0])
     print mantime.label('/Users/michele/Dropbox/Workspace/ManTIME_refactoring/ManTIME/data/test1/test_short.tml.TE3input')
 
 

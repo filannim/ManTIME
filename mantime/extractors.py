@@ -690,6 +690,7 @@ class WordBasedResult(object):
             self.value = '"{}"'.format(str(value.replace(u'\xa0', u'_')))
         else:
             self.value = '{}'.format(str(value).replace(' ', '_'))
+        self.value = self.value.replace(' ', '_')
 
     def apply(self, word, name):
         assert type(word) == Word, 'Wrong word type'
