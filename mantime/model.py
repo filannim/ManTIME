@@ -137,7 +137,7 @@ class Document(object):
         """Enriching the Stanford Parser output with gold annotations."""
         for sentence in self.sentences:
             for word in sentence.words:
-                word.gold_label, word.attributes = format_annotation(
+                word.gold_label, word.tag_attributes = format_annotation(
                     int(word.character_offset_begin),
                     int(word.character_offset_end),
                     self.gold_annotations,
@@ -192,6 +192,7 @@ class Word(object):
         self.id_token = id_token
         self.gold_label = None
         self.predicted_label = None
+        self.tag_attributes = dict()
 
     def __str__(self):
         return str(self.__dict__)

@@ -15,6 +15,7 @@
 
 from __future__ import division
 import inspect
+import logging
 
 from extractors import WordBasedResult
 from extractors import WordBasedResults
@@ -111,6 +112,8 @@ class AttributesExtractor(object):
             for word in sentence.words:
                 # word-based extractors
                 self.__extract_from_word(word, sent_attr_number)
+        logging.info('Attributes: extracted.')
+        return document
 
 
 class TimexesExtractor(AttributesExtractor):

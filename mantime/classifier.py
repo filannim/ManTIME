@@ -29,26 +29,6 @@ from utilities import Mute_stderr
 from utilities import extractors_timestamp
 
 
-def normalisation_attribute_matrix(documents, dest, include_class=True):
-    assert type(documents) == list, 'Wrong type for documents.'
-    assert len(documents) > 0, 'Empty documents list.'
-
-    # It stores the attribute matrix
-    with open(dest, 'w') as matrix:
-        for document in documents:
-            for sentence in document.sentences:
-                for word in sentence.words:
-                    if word.gold_label.split('-')[1] == 'EVENT':
-                        row = [v for _, v
-                               in sorted(word.attributes.items())]
-                        matrix.write('\t'.join(row))
-                        if include_class:
-                            matrix.write('\t' + word.attributes['class'])
-                        # I am using CRFs with singleton sequences
-                        # (a small trick) ;)
-                        matrix.write('\n\n')
-
-
 def identification_attribute_matrix(documents, dest, include_class=True):
     assert type(documents) == list, 'Wrong type for documents.'
     assert len(documents) > 0, 'Empty documents list.'
@@ -64,6 +44,36 @@ def identification_attribute_matrix(documents, dest, include_class=True):
                         matrix.write('\t' + word.gold_label)
                     matrix.write('\n')
                 matrix.write('\n')
+
+
+def normalisation_attribute_matrix(documents, dest, source,
+                                   include_class=True):
+    assert type(documents) == list, 'Wrong type for documents.'
+    assert len(documents) > 0, 'Empty documents list.'
+    assert source in ('gold', 'prediction')
+
+    if source == 'gold':
+        get_label = lambda word: word.gold_label
+    else:
+        get_label = lambda word: word.predicted_label
+
+    # It stores the attribute matrix
+    with open(dest, 'w') as matrix:
+        for ndoc, document in enumerate(documents):
+            for nsen, sentence in enumerate(document.sentences):
+                for nwor, word in enumerate(sentence.words):
+                    if get_label(word) != 'O':
+                        if get_label(word).split('-')[1] == 'EVENT':
+                            row = [v for _, v
+                                   in sorted(word.attributes.items())]
+                            matrix.write('\t'.join(row))
+                            matrix.write('\t{}_{}_{}'.format(ndoc, nsen, nwor))
+                            if include_class:
+                                matrix.write('\t' +
+                                             word.tag_attributes['class'])
+                            # I am using CRFs with singleton sequences
+                            # (a small trick) ;)
+                            matrix.write('\n\n')
 
 
 class Classifier(object):
@@ -142,7 +152,7 @@ class IdentificationClassifier(Classifier):
         testset_path = NamedTemporaryFile(delete=False).name
         identification_attribute_matrix(documents, testset_path, False)
         crf_command = [PATH_CRF_PP_ENGINE_TEST, '-m', model.path,
-                       testset_path.name]
+                       testset_path]
         with Mute_stderr():
             process = subprocess.Popen(crf_command, stdout=subprocess.PIPE)
 
@@ -166,6 +176,7 @@ class IdentificationClassifier(Classifier):
                 factors = cPickle.load(open(model.path_factors))
             except IOError:
                 logging.warning('Scale factors not found.')
+        return documents
 
 
 class NormalisationClassifier(Classifier):
@@ -187,7 +198,7 @@ class NormalisationClassifier(Classifier):
         path_and_model = (PATH_MODEL_FOLDER, model.name)
         trainingset_path = '{}/{}.normalisation.trainingset'.format(
             *path_and_model)
-        normalisation_attribute_matrix(documents, trainingset_path)
+        normalisation_attribute_matrix(documents, trainingset_path, 'gold')
 
         crf_command = [PATH_CRF_PP_ENGINE_TRAIN, model.path_topology,
                        trainingset_path, model.path_normalisation]
@@ -207,25 +218,22 @@ class NormalisationClassifier(Classifier):
 
         """
         testset_path = NamedTemporaryFile(delete=False).name
-        normalisation_attribute_matrix(documents, testset_path, False)
+        normalisation_attribute_matrix(documents, testset_path, 'prediction',
+                                       False)
         crf_command = [PATH_CRF_PP_ENGINE_TEST, '-m', model.path_normalisation,
-                       testset_path.name]
+                       testset_path]
         with Mute_stderr():
             process = subprocess.Popen(crf_command, stdout=subprocess.PIPE)
 
-        n_doc, n_sent, n_word = 0, 0, 0
-        for label in iter(process.stdout.readline, ''):
-            label = label.strip().split('\t')[-1]
-            if label:
-                documents[n_doc].sentences[n_sent].words[n_word]\
-                    .attributes = {'class': label}
-                n_word += 1
-                if len(documents[n_doc].sentences[n_sent].words) == n_word:
-                    n_word = 0
-                    n_sent += 1
-                    if len(documents[n_doc].sentences) == n_sent:
-                        n_word, n_sent = 0, 0
-                        n_doc += 1
+        for line in iter(process.stdout.readline, ''):
+            line = line.strip()
+            if line:
+                label = line.split('\t')[-1]
+                location = line.split('\t')[-2]
+                n_doc, n_sent, n_word = location.split('_')
+                documents[int(n_doc)].sentences[int(n_sent)]\
+                    .words[int(n_word)].tag_attributes = {'class': label}
+        return documents
 
 
 class ClassificationModel(object):
@@ -250,7 +258,7 @@ class ClassificationModel(object):
         self.path_factors = '{}/{}.factors'.format(*path_and_model)
 
         self.num_of_features = 0
-        self.topology = self._generate_template()
+        self.topology = None
         self.extractors_md5 = extractors_timestamp()
 
         logging.info('Classification model: initialised.')
@@ -263,6 +271,7 @@ class ClassificationModel(object):
         with open(self.path_header, 'w') as header_file:
             header_file.write('\n'.join(header))
         logging.info('Header: stored.')
+        self._generate_template()
 
     def _generate_template(self):
         """It generates and dumps the CRF template for CRF++.

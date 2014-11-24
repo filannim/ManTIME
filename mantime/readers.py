@@ -26,6 +26,7 @@ import xml.etree.cElementTree as etree
 from StringIO import StringIO
 import sys
 import os
+import logging
 
 from nltk import ParentedTree
 
@@ -146,6 +147,7 @@ class TempEval3FileReader(FileReader):
             document.sentences.append(sentence)
 
         document.store_gold_annotations(self.annotation_format)
+        logging.info('{}: parsed.'.format(os.path.relpath(file_path)))
         return document
 
     def _get_annotations(self, source, start_offset=0):

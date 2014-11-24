@@ -41,7 +41,12 @@ class ManTIME(object):
         self.model_name = model_name
         self.model_path = '{}/{}.model.pickle'.format(PATH_MODEL_FOLDER,
                                                       self.model_name)
-        self.model = cPickle.load(open(self.model_path))
+        try:
+            self.model = cPickle.load(open(self.model_path))
+            logging.info('{} model: loaded.'.format(self.model.name))
+        except IOError:
+            self.model = None
+            logging.info('{} model: built.'.format(model_name))
 
     def train(self, folder):
         folder = os.path.abspath(folder)
@@ -55,13 +60,13 @@ class ManTIME(object):
             #try:
             doc = self.extractor.extract(self.reader.parse(input_file))
             self.documents.append(doc)
-            logging.info('{} done.'.format(input_file))
             #except:
             #    logging.error('{} skipped.'.format(input_file))
 
         # training models (identification and normalisation)
         modl = identifier.train(self.documents, self.model_name)
-        modl = normaliser.train(self.documents, self.model)
+        modl = normaliser.train(self.documents, modl)
+        self.model = modl
         # dumping models
         cPickle.dump(modl, open(self.model_path, 'w'))
 
@@ -70,7 +75,7 @@ class ManTIME(object):
     def label(self, file_name):
         # according to the type
         assert os.path.isfile(file_name), 'Input file does not exist.'
-        assert os.path.isfile(self.model_path), 'Model file does not exist.'
+        assert self.model, 'Model not loaded.'
 
         identifier = IdentificationClassifier()
         normaliser = NormalisationClassifier()
@@ -100,7 +105,7 @@ def main():
 
     # Expected usage of ManTIME
     mantime = ManTIME(TempEval3FileReader(),
-                      AttributeMatrixWriter(),
+                      TempEval3Writer(),
                       FullExtractor(),
                       'tempeval3')
     print mantime.train(args.folder[0])

@@ -78,7 +78,7 @@ class TempEval3Writer(FileWriter):
             annotated_text = text[memory['start']:memory['end']]
             attribs = ''
             if memory['tag'] == 'EVENT':
-                event_class = ''
+                event_class = memory['event_class']
                 event_eid = memory['tag_ids'].get(memory['tag'], 1)
                 memory['tag_ids'][memory['tag']] = event_eid + 1
                 attribs = 'class="{}" eid="e{}"'.format(event_class, event_eid)
@@ -97,6 +97,7 @@ class TempEval3Writer(FileWriter):
             memory['start'] = 0
             memory['end'] = 0
             memory['tag'] = None
+            memory['event_class'] = None
 
         outputs = []
         for document in documents:
@@ -115,7 +116,7 @@ class TempEval3Writer(FileWriter):
 
             text = list(document.text)
             memory = {'start': 0, 'end': 0, 'tag': None, 'offset': 0,
-                      'tag_ids': Counter()}
+                      'tag_ids': Counter(), 'event_class': None}
             # TO-DO: This works properly only for IO annotation schema!
             for sentence in document.sentences:
                 for word in sentence.words:
@@ -123,6 +124,7 @@ class TempEval3Writer(FileWriter):
                         document.text_offset + memory['offset']
                     current_end = word.character_offset_end + \
                         document.text_offset + memory['offset']
+                    event_class = word.tag_attributes.get('class', None)
                     if word.predicted_label != 'O':
                         # Labelled token
                         if memory['start']:
@@ -130,15 +132,18 @@ class TempEval3Writer(FileWriter):
                             if memory['tag'] == word.predicted_label:
                                 # Continuing previous annotation
                                 memory['end'] = current_end
+                                memory['event_class'] = event_class
                             else:
                                 # Starting a new annotation
                                 write_tag(word, memory, text)
                                 memory['start'] = current_start
+                                memory['event_class'] = event_class
                         else:
                             # First labelled token
                             memory['start'] = current_start
                             memory['end'] = current_end
                             _, memory['tag'] = word.predicted_label.split('-')
+                            memory['event_class'] = event_class
                     else:
                         # Unlabelled token
                         if memory['start']:
