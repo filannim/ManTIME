@@ -44,7 +44,7 @@ class FileWriter(Writer):
         pass
 
     @abstractmethod
-    def write(self, document, save_to):
+    def write(self, document):
         pass
 
 
@@ -65,11 +65,10 @@ class SimpleXMLFileWriter(FileWriter):
 class TempEval3Writer(FileWriter):
     """This class is a writer in the TempEval-3 format."""
 
-    def __init__(self, save_to):
+    def __init__(self):
         super(TempEval3Writer, self).__init__()
-        self.save_to = save_to
 
-    def write(self, document):
+    def write(self, documents):
         """It writes on an external file in the TempEval-3 format.
 
         """
@@ -77,6 +76,7 @@ class TempEval3Writer(FileWriter):
 
         def write_tag(word, memory, text):
             annotated_text = text[memory['start']:memory['end']]
+            attribs = ''
             if memory['tag'] == 'EVENT':
                 event_class = ''
                 event_eid = memory['tag_ids'].get(memory['tag'], 1)
@@ -89,15 +89,17 @@ class TempEval3Writer(FileWriter):
                 attribs = 'type="{}" value="{}" tid="t{}"'.format(timex3_type,
                                                                   timex3_value,
                                                                   timex3_tid)
-            text.insert(memory['start'], '<{} {}>'.format(memory['tag'],
-                                                          attribs))
-            text.insert(memory['end']+1, '</{}>'.format(memory['tag']))
+            if memory['tag']:
+                text.insert(memory['start'], '<{} {}>'.format(memory['tag'],
+                                                              attribs))
+                text.insert(memory['end']+1, '</{}>'.format(memory['tag']))
+                memory['offset'] += 2
             memory['start'] = 0
             memory['end'] = 0
             memory['tag'] = None
-            memory['offset'] += 2
 
-        with open(os.path.abspath(self.save_to), 'w') as output:
+        outputs = []
+        for document in documents:
             output = []
             output.append('<?xml version="1.0" ?>')
             output.append('<TimeML xmlns:xsi="http://www.w3.org/2001/XMLSche' +
@@ -114,7 +116,7 @@ class TempEval3Writer(FileWriter):
             text = list(document.text)
             memory = {'start': 0, 'end': 0, 'tag': None, 'offset': 0,
                       'tag_ids': Counter()}
-        # TO-DO: This works properly only for IO annotation schema!
+            # TO-DO: This works properly only for IO annotation schema!
             for sentence in document.sentences:
                 for word in sentence.words:
                     current_start = word.character_offset_begin + \
@@ -144,12 +146,13 @@ class TempEval3Writer(FileWriter):
             # An annotation can possibly end on the very last token
             if memory['start']:
                 write_tag(word, memory, text)
-        # TO-DO: end.
+            # TO-DO: end.
             output.append('<TEXT>{}</TEXT>\n\n'.format(''.join(text)))
             # MAKEINSTANCEs
             # TLINKs
             output.append('</TimeML>\n')
-        return '\n'.join(output)
+            outputs.append('\n'.join(output))
+        return '\n----------\n'.join(outputs)
 
 
 class AttributeMatrixWriter(Writer):
@@ -160,23 +163,23 @@ class AttributeMatrixWriter(Writer):
         self.separator = separator
         self.header = include_header
 
-    def write(self, documents, save_to):
-        save_to = os.path.abspath(save_to)
-        with open(save_to, 'w') as output:
-            if self.header:
-                first_word = documents[0].sentences[0].words[0]
-                header = [k for k, _ in sorted(first_word.attributes.items())]
-                output.write(self.separator.join(header))
-                output.write('\n')
-            for document in documents:
-                for sentence in document.sentences:
-                    for word in sentence.words:
-                        row = [v for _, v in sorted(word.attributes.items())]
-                        output.write(self.separator.join(row))
-                        output.write(self.separator + word.gold_label)
-                        output.write('\n')
-                    output.write('\n')
-        logging.info('{} exported.'.format(save_to))
+    def write(self, documents):
+        # save_to = os.path.abspath(save_to)
+        # with open(save_to, 'w') as output:
+        output = []
+        if self.header:
+            first_word = documents[0].sentences[0].words[0]
+            header = [k for k, _ in sorted(first_word.attributes.items())]
+            output.append(self.separator.join(header))
+        for document in documents:
+            for sentence in document.sentences:
+                for word in sentence.words:
+                    row = [v for _, v in sorted(word.attributes.items())]
+                    row.append(word.predicted_label)
+                    output.append(self.separator.join(row))
+                output.append('')
+        # logging.info('{} exported.'.format(save_to))
+        return '\n'.join(output)
 
 Writer.register(FileWriter)
 FileWriter.register(SimpleXMLFileWriter)

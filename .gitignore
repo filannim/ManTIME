@@ -1,5 +1,5 @@
 # Mac OSX's metadata
-**/.DS_Store
+*.DS_Store
 
 # Machine learning models (for size reasons)
 # [you can download them at http://cs.man.ac.uk/~filannim/projects/tempeval-3]

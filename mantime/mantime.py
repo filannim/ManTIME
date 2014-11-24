@@ -24,8 +24,9 @@ import logging
 
 from readers import TempEval3FileReader
 from attributes_extractor import FullExtractor
-from writers import TempEval3Writer
-from classifier import CRFClassifier
+from writers import TempEval3Writer, AttributeMatrixWriter
+from classifier import IdentificationClassifier
+from classifier import NormalisationClassifier
 from settings import PATH_MODEL_FOLDER
 
 class ManTIME(object):
@@ -40,40 +41,48 @@ class ManTIME(object):
         self.model_name = model_name
         self.model_path = '{}/{}.model.pickle'.format(PATH_MODEL_FOLDER,
                                                       self.model_name)
+        self.model = cPickle.load(open(self.model_path))
 
-    def train(self, folder, pre_existing_model=None):
-        assert os.path.isdir(folder), 'Folder doesn\' exist.'
+    def train(self, folder):
         folder = os.path.abspath(folder)
-        classifier = CRFClassifier(pre_existing_model)
-        for input_file in glob.glob(folder + '/*.tml'):
-            # try:
-                print input_file
-                document = self.reader.parse(input_file)
-                self.extractor.extract(document)
-                self.documents.append(document)
-                logging.info('{} done.'.format(input_file))
-            # except Exception as excp:
-            #   logging.error('{} skipped.'.format(input_file))
-        model = classifier.train(self.documents,
-                                 self.model_name,
-                                 pre_existing_model)
-        cPickle.dump(model, open(self.model_path, 'w'))
-        return model
+        assert os.path.isdir(folder), 'Folder doesn\' exist.'
 
-    def label(self, file_name, type=None):
+        identifier = IdentificationClassifier()
+        normaliser = NormalisationClassifier()
+
+        # corpus collection
+        for input_file in glob.glob(folder + '/*.tml'):
+            #try:
+            doc = self.extractor.extract(self.reader.parse(input_file))
+            self.documents.append(doc)
+            logging.info('{} done.'.format(input_file))
+            #except:
+            #    logging.error('{} skipped.'.format(input_file))
+
+        # training models (identification and normalisation)
+        modl = identifier.train(self.documents, self.model_name)
+        modl = normaliser.train(self.documents, self.model)
+        # dumping models
+        cPickle.dump(modl, open(self.model_path, 'w'))
+
+        return modl
+
+    def label(self, file_name):
         # according to the type
         assert os.path.isfile(file_name), 'Input file does not exist.'
         assert os.path.isfile(self.model_path), 'Model file does not exist.'
 
-        model = cPickle.load(open(self.model_path))
-        classifier = CRFClassifier(model)
-        # try:
-        document = self.reader.parse(file_name)
-        self.extractor.extract(document)
-        return self.writer.write(classifier.test([document], model)[0])
-        # except:
-        logging.info('{} skipped.'.format(file_name))
+        identifier = IdentificationClassifier()
+        normaliser = NormalisationClassifier()
 
+        #try:
+        doc = self.extractor.extract(self.reader.parse(file_name))
+        annotated_docs = identifier.test([doc], self.model)
+        annotated_docs = normaliser.test([doc], self.model)
+        output = self.writer.write(annotated_docs)
+        return output
+        #except:
+        #    logging.info('{} skipped.'.format(file_name))
 
 
 def main():
@@ -91,11 +100,11 @@ def main():
 
     # Expected usage of ManTIME
     mantime = ManTIME(TempEval3FileReader(),
-                      TempEval3Writer(os.path.abspath('./pippo.xml')),
+                      AttributeMatrixWriter(),
                       FullExtractor(),
                       'tempeval3')
     print mantime.train(args.folder[0])
-    #print mantime.label(args.folder[0])
+    print mantime.label('/Users/michele/Dropbox/Workspace/ManTIME_refactoring/ManTIME/data/test1/test_short.tml.TE3input')
 
 
 if __name__ == '__main__':

@@ -17,8 +17,9 @@ def format_annotation(start_token, end_token, annotations, annotation_format):
     '''It returns the correct sequence class label for the given token.'''
     sequence_label = None
     tag_fired = ''
+    attribs = None
     if annotations:
-        for tag, _, (start_offset, end_offset) in annotations:
+        for tag, attribs, (start_offset, end_offset) in annotations:
             tag_fired = tag
             if (start_offset, end_offset) == (start_token, end_token):
                 sequence_label = 'W'
@@ -37,11 +38,11 @@ def format_annotation(start_token, end_token, annotations, annotation_format):
         if sequence_label not in list(annotation_format):
             sequence_label = 'I'
         if sequence_label == 'O':
-            return sequence_label
+            return sequence_label, {}
         else:
-            return sequence_label + '-' + tag_fired
+            return sequence_label + '-' + tag_fired, attribs
     else:
-        return 'O'
+        return 'O', {}
 
 
 class DependencyGraphNode(object):
@@ -131,18 +132,16 @@ class Document(object):
         self.coref = None
         self.gold_annotations = []
         self.predicted_annotations = []
-        self.annotation_format = ''
 
     def store_gold_annotations(self, annotation_format):
         """Enriching the Stanford Parser output with gold annotations."""
         for sentence in self.sentences:
             for word in sentence.words:
-                word.gold_label = format_annotation(
+                word.gold_label, word.attributes = format_annotation(
                     int(word.character_offset_begin),
                     int(word.character_offset_end),
                     self.gold_annotations,
                     annotation_format)
-        self.annotation_format = annotation_format
 
     def __str__(self):
         return str(self.__dict__)

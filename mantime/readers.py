@@ -116,7 +116,8 @@ class TempEval3FileReader(FileReader):
         document.dct_text = etree.tostring(dct, method='text')
         document.title = etree.tostring(title, method='text').strip()
         document.text = text_string
-        document.gold_annotations = self._get_annotations(text_xml, -left_chars)
+        document.gold_annotations = self._get_annotations(text_xml,
+                                                          -left_chars)
         document.coref = stanford_tree.get('coref', None)
 
         for stanford_sentence in stanford_tree['sentences']:
