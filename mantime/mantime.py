@@ -93,7 +93,9 @@ class ManTIME(object):
 def main():
     '''It annotates documents in a specific folder.'''
 
-    logging.getLogger().setLevel(logging.INFO)
+    logging.basicConfig(format='%(asctime)s: %(message)s',
+                        level=logging.INFO,
+                        datefmt='%m/%d/%Y %I:%M:%S %p')
     # Parse input
     parser = argparse.ArgumentParser(
         description='ManTIME: temporal information extraction')
