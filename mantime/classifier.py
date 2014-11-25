@@ -25,6 +25,7 @@ from crf_utilities.scale_factors import get_scale_factors
 from settings import PATH_MODEL_FOLDER
 from settings import PATH_CRF_PP_ENGINE_TEST
 from settings import PATH_CRF_PP_ENGINE_TRAIN
+from settings import EVENT_ATTRIBUTES
 from utilities import Mute_stderr
 from utilities import extractors_timestamp
 
@@ -46,10 +47,11 @@ def identification_attribute_matrix(documents, dest, include_class=True):
                 matrix.write('\n')
 
 
-def normalisation_attribute_matrix(documents, dest, source,
+def normalisation_attribute_matrix(documents, dest, subject, source,
                                    include_class=True):
     assert type(documents) == list, 'Wrong type for documents.'
     assert len(documents) > 0, 'Empty documents list.'
+    assert subject in EVENT_ATTRIBUTES
     assert source in ('gold', 'prediction')
 
     if source == 'gold':
@@ -64,16 +66,20 @@ def normalisation_attribute_matrix(documents, dest, source,
                 for nwor, word in enumerate(sentence.words):
                     if get_label(word) != 'O':
                         if get_label(word).split('-')[1] == 'EVENT':
-                            row = [v for _, v
-                                   in sorted(word.attributes.items())]
-                            matrix.write('\t'.join(row))
-                            matrix.write('\t{}_{}_{}'.format(ndoc, nsen, nwor))
-                            if include_class:
-                                matrix.write('\t' +
-                                             word.tag_attributes['class'])
-                            # I am using CRFs with singleton sequences
-                            # (a small trick) ;)
-                            matrix.write('\n\n')
+                            if (source == 'gold' and
+                                subject in word.tag_attributes.keys()) or \
+                                    source == 'prediction':
+                                row = [v for _, v
+                                       in sorted(word.attributes.items())]
+                                matrix.write('\t'.join(row))
+                                matrix.write('\t{}_{}_{}'.format(ndoc, nsen,
+                                                                 nwor))
+                                if include_class:
+                                    matrix.write('\t' +
+                                                 word.tag_attributes[subject])
+                                # I am using CRFs with singleton sequences
+                                # (a small trick) ;)
+                                matrix.write('\n\n')
 
 
 class Classifier(object):
@@ -185,6 +191,7 @@ class NormalisationClassifier(Classifier):
     """
     def __init__(self):
         super(NormalisationClassifier, self).__init__()
+        self.attributes = EVENT_ATTRIBUTES
 
     def train(self, documents, model):
         """It returns a ClassificationModel object for event CLASS attributes.
@@ -194,20 +201,24 @@ class NormalisationClassifier(Classifier):
         assert type(documents) == list, 'Wrong type for documents.'
         assert len(documents) > 0, 'Empty documents list.'
 
-        # save trainingset to model_name.trainingset
-        path_and_model = (PATH_MODEL_FOLDER, model.name)
-        trainingset_path = '{}/{}.normalisation.trainingset'.format(
-            *path_and_model)
-        normalisation_attribute_matrix(documents, trainingset_path, 'gold')
+        # save trainingset to model_name.trainingset.*attribute*
+        for attribute in self.attributes:
+            path_model_attribute = (PATH_MODEL_FOLDER, model.name, attribute)
+            trainingset_path = '{}/{}.normalisation.trainingset.{}'.format(
+                *path_model_attribute)
+            normalisation_attribute_matrix(documents, trainingset_path,
+                                           attribute, 'gold')
 
-        crf_command = [PATH_CRF_PP_ENGINE_TRAIN, model.path_topology,
-                       trainingset_path, model.path_normalisation]
-        with Mute_stderr():
-            process = subprocess.Popen(crf_command)
-            process.wait()
+            crf_command = [PATH_CRF_PP_ENGINE_TRAIN, model.path_topology,
+                           trainingset_path,
+                           '{}.{}'.format(model.path_normalisation, attribute)]
+            with Mute_stderr():
+                process = subprocess.Popen(crf_command)
+                process.wait()
 
-        # TO-DO: Check if the script saves a model or returns an error
-        logging.info('Normalisation CRF model: trained.')
+            # TO-DO: Check if the script saves a model or returns an error
+            logging.info('Normalisation CRF model ({}): trained.'.format(
+                attribute))
         return model
 
     def test(self, documents, model, post_processing_pipeline=False):
@@ -217,22 +228,24 @@ class NormalisationClassifier(Classifier):
         of words with the right labels.
 
         """
-        testset_path = NamedTemporaryFile(delete=False).name
-        normalisation_attribute_matrix(documents, testset_path, 'prediction',
-                                       False)
-        crf_command = [PATH_CRF_PP_ENGINE_TEST, '-m', model.path_normalisation,
-                       testset_path]
-        with Mute_stderr():
-            process = subprocess.Popen(crf_command, stdout=subprocess.PIPE)
+        for attribute in self.attributes:
+            testset_path = NamedTemporaryFile(delete=False).name
+            normalisation_attribute_matrix(documents, testset_path, attribute,
+                                           'prediction', False)
+            crf_command = [PATH_CRF_PP_ENGINE_TEST, '-m',
+                           '{}.{}'.format(model.path_normalisation, attribute),
+                           testset_path]
+            with Mute_stderr():
+                process = subprocess.Popen(crf_command, stdout=subprocess.PIPE)
 
-        for line in iter(process.stdout.readline, ''):
-            line = line.strip()
-            if line:
-                label = line.split('\t')[-1]
-                location = line.split('\t')[-2]
-                n_doc, n_sent, n_word = location.split('_')
-                documents[int(n_doc)].sentences[int(n_sent)]\
-                    .words[int(n_word)].tag_attributes = {'class': label}
+            for line in iter(process.stdout.readline, ''):
+                line = line.strip()
+                if line:
+                    label = line.split('\t')[-1]
+                    location = line.split('\t')[-2]
+                    n_doc, n_sent, n_word = location.split('_')
+                    documents[int(n_doc)].sentences[int(n_sent)]\
+                        .words[int(n_word)].tag_attributes[attribute] = label
         return documents
 
 

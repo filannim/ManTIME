@@ -13,7 +13,9 @@
 
 """It contains the classes for the document data model of ManTIME."""
 
-def format_annotation(start_token, end_token, annotations, annotation_format):
+
+def format_annotation(start_token, end_token, annotations,
+                      annotation_format='IO'):
     '''It returns the correct sequence class label for the given token.'''
     sequence_label = None
     tag_fired = ''
@@ -133,15 +135,14 @@ class Document(object):
         self.gold_annotations = []
         self.predicted_annotations = []
 
-    def store_gold_annotations(self, annotation_format):
+    def store_gold_annotations(self):
         """Enriching the Stanford Parser output with gold annotations."""
         for sentence in self.sentences:
             for word in sentence.words:
                 word.gold_label, word.tag_attributes = format_annotation(
                     int(word.character_offset_begin),
                     int(word.character_offset_end),
-                    self.gold_annotations,
-                    annotation_format)
+                    self.gold_annotations)
 
     def __str__(self):
         return str(self.__dict__)

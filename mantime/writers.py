@@ -26,6 +26,8 @@ import logging
 import os
 from collections import Counter
 
+from settings import EVENT_ATTRIBUTES
+
 
 class Writer(object):
     """This class is an abstract writer for ManTIME."""
@@ -74,14 +76,19 @@ class TempEval3Writer(FileWriter):
         """
         from normalisers.timex_general import normalise as timex_normalise
 
-        def write_tag(word, memory, text):
-            annotated_text = text[memory['start']:memory['end']]
+        def write_tag(memory, text):
+            annotated_text = ''.join(text[memory['start']:memory['end']]).strip()
             attribs = ''
             if memory['tag'] == 'EVENT':
-                event_class = memory['event_class']
+                attrs = memory['event_attributes']
                 event_eid = memory['tag_ids'].get(memory['tag'], 1)
-                memory['tag_ids'][memory['tag']] = event_eid + 1
+                event_class = memory['event_class']
                 attribs = 'class="{}" eid="e{}"'.format(event_class, event_eid)
+                memory['events'].append((event_eid, attrs['pos'],
+                                         attrs['tense'], attrs['aspect'],
+                                         attrs['polarity'], attrs['modality'],
+                                         annotated_text))
+                memory['tag_ids'][memory['tag']] = event_eid + 1
             elif memory['tag'] == 'TIMEX3':
                 timex3_type, timex3_value = '', ''
                 timex3_tid = memory['tag_ids'].get(memory['tag'], 1)
@@ -98,6 +105,7 @@ class TempEval3Writer(FileWriter):
             memory['end'] = 0
             memory['tag'] = None
             memory['event_class'] = None
+            memory['event_attributes'] = {}
 
         outputs = []
         for document in documents:
@@ -116,7 +124,8 @@ class TempEval3Writer(FileWriter):
 
             text = list(document.text)
             memory = {'start': 0, 'end': 0, 'tag': None, 'offset': 0,
-                      'tag_ids': Counter(), 'event_class': None}
+                      'tag_ids': Counter(), 'event_attributes': {},
+                      'events': [], 'event_class': None}
             # TO-DO: This works properly only for IO annotation schema!
             for sentence in document.sentences:
                 for word in sentence.words:
@@ -125,6 +134,8 @@ class TempEval3Writer(FileWriter):
                     current_end = word.character_offset_end + \
                         document.text_offset + memory['offset']
                     event_class = word.tag_attributes.get('class', None)
+                    event_attrs = {a: word.tag_attributes.get(a, None) for a
+                                   in EVENT_ATTRIBUTES}
                     if word.predicted_label != 'O':
                         # Labelled token
                         if memory['start']:
@@ -133,27 +144,39 @@ class TempEval3Writer(FileWriter):
                                 # Continuing previous annotation
                                 memory['end'] = current_end
                                 memory['event_class'] = event_class
+                                memory['event_attributes'].update(event_attrs)
                             else:
                                 # Starting a new annotation
-                                write_tag(word, memory, text)
+                                write_tag(memory, text)
                                 memory['start'] = current_start
                                 memory['event_class'] = event_class
+                                memory['event_attributes'].update(event_attrs)
                         else:
                             # First labelled token
                             memory['start'] = current_start
                             memory['end'] = current_end
                             _, memory['tag'] = word.predicted_label.split('-')
                             memory['event_class'] = event_class
+                            memory['event_attributes'].update(event_attrs)
                     else:
                         # Unlabelled token
                         if memory['start']:
-                            write_tag(word, memory, text)
+                            write_tag(memory, text)
             # An annotation can possibly end on the very last token
             if memory['start']:
-                write_tag(word, memory, text)
+                write_tag(memory, text)
             # TO-DO: end.
             output.append('<TEXT>{}</TEXT>\n\n'.format(''.join(text)))
+
             # MAKEINSTANCEs
+            for eid, pos, tense, aspect, pol, mod, _ in memory['events']:
+                output.append(str('<MAKEINSTANCE eiid="{}" eventID="{}" ' +
+                                  'pos="{}" tense="{}" aspect="{}" ' +
+                                  'polarity="{}" modality="{}" />').format(
+                                    'ei{}'.format(eid), 'e{}'.format(eid),
+                                    pos, tense, aspect, pol, mod))
+            output.append('')
+
             # TLINKs
             output.append('</TimeML>\n')
             outputs.append('\n'.join(output))

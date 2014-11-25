@@ -82,11 +82,10 @@ class FileReader(Reader):
 class TempEval3FileReader(FileReader):
     """This class is a reader for TempEval-3 files."""
 
-    def __init__(self, annotation_format='IO', extension_filter='.tml'):
+    def __init__(self, extension_filter='.tml'):
         super(TempEval3FileReader, self).__init__()
         self.tags_to_spot = {'TIMEX3', 'EVENT', 'SIGNAL'}
         self.annotations = []
-        self.annotation_format = annotation_format
         self.extension_filter = extension_filter
 
     def parse(self, file_path):
@@ -117,7 +116,9 @@ class TempEval3FileReader(FileReader):
         document.dct_text = etree.tostring(dct, method='text')
         document.title = etree.tostring(title, method='text').strip()
         document.text = text_string
+        instances = self._get_event_instances(xml)
         document.gold_annotations = self._get_annotations(text_xml,
+                                                          instances,
                                                           -left_chars)
         document.coref = stanford_tree.get('coref', None)
 
@@ -146,26 +147,32 @@ class TempEval3FileReader(FileReader):
                 sentence.words.append(word)
             document.sentences.append(sentence)
 
-        document.store_gold_annotations(self.annotation_format)
+        document.store_gold_annotations()
         logging.info('{}: parsed.'.format(os.path.relpath(file_path)))
         return document
 
-    def _get_annotations(self, source, start_offset=0):
-        '''It returns the annotations found in the document in the following
-           format:
+    def _get_annotations(self, source, event_instances, start_offset=0):
+        """It returns the annotations found in the document.
+
+        It follows the following format:
            [
             ('TAG', {ATTRIBUTES}, (start_offset, end_offset)),
             ('TAG', {ATTRIBUTES}, (start_offset, end_offset)),
             ...
             ('TAG', {ATTRIBUTES}, (start_offset, end_offset))
            ]
-        '''
+
+        """
         annotations = []
         for event, element in etree.iterparse(
                 StringIO(source), events=('start', 'end')):
             if event == 'start':
                 if element.tag in self.tags_to_spot:
                     end_offset = start_offset + len(element.text)
+                    if element.tag == 'EVENT':
+                        eid = element.attrib['eid']
+                        if eid in event_instances.keys():
+                            element.attrib.update(event_instances[eid])
                     annotations.append((element.tag, element.attrib,
                                         (start_offset, end_offset)))
                 start_offset += len(element.text)
@@ -173,6 +180,27 @@ class TempEval3FileReader(FileReader):
                 if element.text is not None and element.tail is not None:
                     start_offset += len(element.tail)
         return annotations
+
+    def _get_event_instances(self, xml_document):
+        """It returns the event instances found in the document.
+
+            It follows the following format:
+               [
+                ('eiid', {ATTRIBUTES}),
+                ('eiid', {ATTRIBUTES}),
+                ...
+                ('eiid', {ATTRIBUTES})
+               ]
+
+        """
+        event_instance_nodes = xml_document.findall('.//MAKEINSTANCE')
+        result = dict()
+        for instance in event_instance_nodes:
+            eiid = instance.attrib['eventID']
+            atts = {a: v for (a, v) in instance.attrib.items()
+                    if a != 'eventID'}
+            result[eiid] = atts
+        return result
 
 
 Reader.register(FileReader)
@@ -182,7 +210,7 @@ FileReader.register(TempEval3FileReader)
 def main():
     '''Simple ugly non-elegant test.'''
     import json
-    file_reader = TempEval3FileReader(annotation_format='IO')
+    file_reader = TempEval3FileReader()
     document = file_reader.parse(sys.argv[1])
     print json.dumps(document, indent=4)
 
