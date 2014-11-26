@@ -72,7 +72,7 @@ class FileReader(Reader):
     __metaclass__ = ABCMeta
 
     def __init__(self):
-        pass
+        self.file_filter = None
 
     @abstractmethod
     def parse(self, file_path):
@@ -82,11 +82,11 @@ class FileReader(Reader):
 class TempEval3FileReader(FileReader):
     """This class is a reader for TempEval-3 files."""
 
-    def __init__(self, extension_filter='.tml'):
+    def __init__(self, file_filter='*.tml'):
         super(TempEval3FileReader, self).__init__()
         self.tags_to_spot = {'TIMEX3', 'EVENT', 'SIGNAL'}
         self.annotations = []
-        self.extension_filter = extension_filter
+        self.file_filter = file_filter
 
     def parse(self, file_path):
         """It parses the content of file_path and extracts relevant information
@@ -98,8 +98,8 @@ class TempEval3FileReader(FileReader):
         dct = xml.findall(".//TIMEX3[@functionInDocument='CREATION_TIME']")[0]
         title = xml.findall(".//TITLE")[0]
         text_node = xml.findall(".//TEXT")[0]
-        text_string = etree.tostring(text_node, method='text')
-        text_xml = etree.tostring(text_node, method='xml')
+        text_string = etree.tostring(text_node, method='text', encoding='utf8')
+        text_xml = etree.tostring(text_node, method='xml', encoding='utf8')
         right_chars = len(text_xml.split('</TEXT>')[1])
         text_string = text_string[:-right_chars]
         text_xml = etree.tostring(text_node)
@@ -111,10 +111,12 @@ class TempEval3FileReader(FileReader):
         document = Document(file_path)
         document.text_offset = left_chars
         document.file_path = os.path.abspath(file_path)
-        document.doc_id = etree.tostring(docid, method='text').strip()
+        document.doc_id = etree.tostring(docid, method='text',
+                                         encoding='utf8').strip()
         document.dct = dct.attrib['value']
-        document.dct_text = etree.tostring(dct, method='text')
-        document.title = etree.tostring(title, method='text').strip()
+        document.dct_text = etree.tostring(dct, method='text', encoding='utf8')
+        document.title = etree.tostring(title, method='text',
+                                        encoding='utf8').strip()
         document.text = text_string
         instances = self._get_event_instances(xml)
         document.gold_annotations = self._get_annotations(text_xml,
@@ -203,8 +205,113 @@ class TempEval3FileReader(FileReader):
         return result
 
 
+class WikiWarsInLineFileReader(FileReader):
+    """This class is a reader for WikiWars inline xml annotated files."""
+
+    def __init__(self, file_filter='*.xml'):
+        super(WikiWarsInLineFileReader, self).__init__()
+        self.tags_to_spot = {'TIMEX2'}
+        self.annotations = []
+        self.file_filter = file_filter
+
+    def parse(self, file_path):
+        """It parses the input file and extracts relevant information.
+
+        Those information are packed in a Document object, which is our
+        internal representation.
+
+        """
+        xml = etree.parse(file_path)
+        docid = xml.findall(".//DOCID")[0]
+        dct = xml.findall(".//DATETIME/TIMEX2")[0]
+        title = docid
+        text_node = xml.findall(".//TEXT")[0]
+        text_string = etree.tostring(text_node, method='text', encoding='utf8')
+        text_xml = etree.tostring(text_node, method='xml', encoding='utf8')
+        right_chars = len(text_xml.split('</TEXT>')[1])
+        text_string = text_string[:-right_chars]
+        text_xml = etree.tostring(text_node)
+        # StanfordParser strips internally the text :(
+        left_chars = len(text_string) - len(text_string.lstrip())
+
+        with Mute_stderr():
+            stanford_tree = CORENLP.parse(text_string)
+        document = Document(file_path)
+        document.text_offset = left_chars
+        document.file_path = os.path.abspath(file_path)
+        document.doc_id = etree.tostring(docid, method='text',
+                                         encoding='utf8').strip()
+        document.dct = dct.attrib['val']
+        document.dct_text = etree.tostring(dct, method='text', encoding='utf8')
+        document.title = etree.tostring(title, method='text',
+                                        encoding='utf8').strip()
+        document.text = text_string
+        document.gold_annotations = self._get_annotations(text_xml,
+                                                          -left_chars)
+        document.coref = stanford_tree.get('coref', None)
+
+        for stanford_sentence in stanford_tree['sentences']:
+            dependencies = stanford_sentence.get('dependencies', None)
+            i_dependencies = stanford_sentence.get('indexeddependencies', None)
+            i_dependencies = DependencyGraph(i_dependencies)
+            parsetree = ParentedTree(stanford_sentence.get('parsetree', u''))
+            sentence_text = stanford_sentence.get('text', u'')
+
+            sentence = Sentence(dependencies=dependencies,
+                                indexed_dependencies=i_dependencies,
+                                parsetree=parsetree,
+                                text=sentence_text)
+            for num_word, (word_form, attr) in\
+                    enumerate(stanford_sentence['words']):
+                offset_begin = int(attr['CharacterOffsetBegin'])-left_chars
+                offset_end = int(attr['CharacterOffsetEnd'])-left_chars
+                word = Word(word_form=word_form,
+                            char_offset_begin=offset_begin,
+                            char_offset_end=offset_end,
+                            lemma=attr['Lemma'],
+                            named_entity_tag=attr['NamedEntityTag'],
+                            part_of_speech=attr['PartOfSpeech'],
+                            id_token=num_word)
+                sentence.words.append(word)
+            document.sentences.append(sentence)
+
+        document.store_gold_annotations()
+        logging.info('{}: parsed.'.format(os.path.relpath(file_path)))
+        return document
+
+    def _get_annotations(self, source, start_offset=0):
+        """It returns the annotations found in the document.
+
+        It follows the following format:
+           [
+            ('TAG', {ATTRIBUTES}, (start_offset, end_offset)),
+            ('TAG', {ATTRIBUTES}, (start_offset, end_offset)),
+            ...
+            ('TAG', {ATTRIBUTES}, (start_offset, end_offset))
+           ]
+
+        """
+        annotations = []
+        for event, element in etree.iterparse(
+                StringIO(source), events=('start', 'end')):
+            if event == 'start':
+                if element.tag in self.tags_to_spot:
+                    try:
+                        end_offset = start_offset + len(element.text)
+                    except TypeError:
+                        continue
+                    annotations.append((element.tag, element.attrib,
+                                        (start_offset, end_offset)))
+                start_offset += len(element.text)
+            elif event == 'end':
+                if element.text is not None and element.tail is not None:
+                    start_offset += len(element.tail)
+        return annotations
+
+
 Reader.register(FileReader)
 FileReader.register(TempEval3FileReader)
+FileReader.register(WikiWarsInLineFileReader)
 
 
 def main():

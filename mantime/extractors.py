@@ -687,7 +687,7 @@ class WordBasedResult(object):
         elif type(value) in (str, bool):
             self.value = '"{}"'.format(str(value).replace(' ', '_'))
         elif type(value) == unicode:
-            self.value = '"{}"'.format(str(value.replace(u'\xa0', u'_')))
+            self.value = u'"{}"'.format(unicode(value.replace(u'\xa0', u'_')))
         else:
             self.value = '{}'.format(str(value).replace(' ', '_'))
         self.value = self.value.replace(' ', '_')
