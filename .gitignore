@@ -19,4 +19,4 @@ temporal_location/*
 
 data/*/.DS_Store
 
-mantime/models/*
+mantime/models/
