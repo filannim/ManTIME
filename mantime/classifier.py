@@ -185,10 +185,11 @@ class IdentificationClassifier(Classifier):
             logging.warning('The feature extractor component is different' +
                             'from the one used in the training!')
 
-        factors = None
+        verbosity = ''
         if post_processing_pipeline:
             try:
                 factors = cPickle.load(open(model.path_factors))
+                verbosity = '-v2'
             except IOError:
                 post_processing_pipeline = False
                 logging.warning('Scale factors not found.')
@@ -198,8 +199,8 @@ class IdentificationClassifier(Classifier):
             model_path = '{}.{}'.format(model.path, idnt_class)
             identification_attribute_matrix(documents, testset_path,
                                             idnt_class, training=False)
-            crf_command = [PATH_CRF_PP_ENGINE_TEST, '-m', model_path,
-                           testset_path]
+            crf_command = [PATH_CRF_PP_ENGINE_TEST, verbosity, '-m',
+                           model_path, testset_path]
 
             # Draconianly check the input files
             assert os.path.isfile(model_path), 'Model doesn\'t exist at {}'.format(model_path)
@@ -214,17 +215,16 @@ class IdentificationClassifier(Classifier):
             # post-processing pipeline
             if post_processing_pipeline and factors:
                 scale_factors = factors[idnt_class]
-                lines = iter(process.stdout.readline, '')
-                lines = probabilistic_correction(
-                    lines, scale_factors, model.pp_pipeline_attribute_pos, .5)
                 lines = label_switcher(
-                    lines, scale_factors, model.pp_pipeline_attribute_pos, .87)
+                    probabilistic_correction(
+                        iter(process.stdout.readline, ''),
+                        scale_factors, model.pp_pipeline_attribute_pos, .5),
+                    scale_factors, model.pp_pipeline_attribute_pos, .87)
             else:
                 lines = iter(process.stdout.readline, '')
 
             for label in lines:
                 label = label.strip().split('\t')[-1]
-                print label
                 if label:
                     documents[n_doc].sentences[n_sent].words[n_word]\
                         .predicted_label = label

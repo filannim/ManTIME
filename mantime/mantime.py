@@ -14,6 +14,7 @@
 '''It returns the ISO-TimeML-annotated input documents.'''
 __author__ = "Michele Filannino <filannino.m@gmail.com>"
 __version__ = "0.1"
+__codename__ = "purple tempo"
 
 import argparse
 import multiprocessing
@@ -113,7 +114,7 @@ def main():
                       FullExtractor(),
                       'tempeval3',
                       pipeline=True)
-    print mantime.train(args.folder[0])
+    #print mantime.train(args.folder[0])
     print mantime.label('../data/test_all_quickly/unicode_nosentence.tml.TE3input')
 
 

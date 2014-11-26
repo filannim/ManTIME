@@ -159,44 +159,6 @@ def label_switcher(row_iterator, factors, index, threshold):
         pass
 
 
-def bio_fixer(row_iterator, tags):
-    '''It yields consistent sequences of predicted labels in IOB format.'''
-    attributes_values = lambda line: '\t'.join(line.split('\t')[0:-1])
-
-    def predicted_2_next_labels(line, next_line):
-        '''It returns current and next predicted label ('_' for blank line).'''
-        if len(line):
-            current_label = line.split('\t')[-1][0]
-        else:
-            current_label = '_'
-        if len(next_line):
-            next_label = next_line.split('\t')[-1][0]
-        else:
-            next_label = '_'
-        return '{}{}'.format(current_label, next_label)
-
-    try:
-        line = next(row_iterator).strip()
-        next_line = next(row_iterator).strip()
-        while True:
-            label_couple = predicted_2_next_labels(line, next_line)
-            if label_couple == 'OI' and 'OI' in tags:
-                yield '{}\tB-TIMEX3'.format(attributes_values(line))
-            elif (label_couple == 'BB' and 'BB' in tags) or \
-                 (label_couple == 'IB' and 'IB' in tags):
-                yield line
-                next_line = '{}\tI-TIMEX3'.format(attributes_values(next_line))
-            else:
-                yield line
-            line = next_line
-            next_line = next(row_iterator).strip()
-    except StopIteration:  # there aren't two lines
-        try:
-            yield line
-        except UnboundLocalError:  # there weren't lines at all
-            pass
-
-
 def main():
     '''It reads from stdin and adjust or perturbate.'''
     parser = argparse.ArgumentParser(
@@ -211,10 +173,8 @@ def main():
         adjusted_lines = probabilistic_correction(lines, factors,
                                                   135, float(args.option2))
     elif args.algorithm == 'label_switcher':
-        adjusted_lines = label_switcher(lines, factors, 135, float(args.option2))
-    elif args.algorithm == 'bio_fixer':
-        sequence_patterns = args.option2.split(',')
-        adjusted_lines = bio_fixer(lines, sequence_patterns)
+        adjusted_lines = label_switcher(lines, factors, 135,
+                                        float(args.option2))
     else:
         raise NameError('Algorithm name invalid!')
 
