@@ -3,7 +3,6 @@ TO-DO List
 
 This document lists all the things I should look more carefully in the future.
 
-- [ ] Fix and connect the post-processing pipeline.
 - [ ] Implement the feature extractor for Temporal Links.
 - [ ] Implement the classifier for Temporal Links.
 - [ ] Adapt the writers to output temporal links too.
@@ -19,6 +18,7 @@ This document lists all the things I should look more carefully in the future.
 - [ ] Instead of the settings.py file, use OS.ENVIRONS variable.
 - [ ] Comment the code: better and more verbously using Google Commenting Style.
 - [ ] Have a look at argparse ... it's not correct right now.
+- [x] Fix and connect the post-processing pipeline.
 - [x] Attributes models should include identification feature (heavier but hopefully better).
 - [x] Split identification models (TIMEXes and EVENTs).
 - [x] CRF based attributes extraction
