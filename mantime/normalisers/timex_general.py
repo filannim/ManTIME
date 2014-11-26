@@ -1803,7 +1803,13 @@ def check_from_golds(raw_word, golds):
 		return raw_word, most_common(types), most_common(values), 'from golds (most common)'
 
 def normalise(raw_word, raw_date, buffer_file=None):
-	
+	'''It normalises a natural language temporal expression.
+
+	raw_word = string
+	raw_date = yyyymmdd
+	buffer_file = file_path
+
+	'''
 	#if not bufferised:
 	#	try: os.remove('normaliser_buffer.dat')
 	#	except: pass
