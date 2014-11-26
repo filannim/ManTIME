@@ -31,9 +31,9 @@ from settings import PATH_MODEL_FOLDER
 
 class ManTIME(object):
 
-    def __init__(self, reader, writer, extractor, model_name):
+    def __init__(self, reader, writer, extractor, model_name, pipeline=True):
         self.processes = multiprocessing.cpu_count()
-        self.post_processing_pipeline = True
+        self.post_processing_pipeline = pipeline
         self.reader = reader
         self.writer = writer
         self.extractor = extractor
@@ -83,7 +83,8 @@ class ManTIME(object):
 
         #try:
         doc = self.extractor.extract(self.reader.parse(file_name))
-        annotated_docs = identifier.test([doc], self.model)
+        annotated_docs = identifier.test([doc], self.model,
+                                         self.post_processing_pipeline)
         annotated_docs = normaliser.test([doc], self.model)
         output = self.writer.write(annotated_docs)
         return output
@@ -110,7 +111,8 @@ def main():
     mantime = ManTIME(TempEval3FileReader(),
                       TempEval3Writer(),
                       FullExtractor(),
-                      'tempeval3')
+                      'tempeval3',
+                      pipeline=True)
     print mantime.train(args.folder[0])
     print mantime.label('../data/test_all_quickly/unicode_nosentence.tml.TE3input')
 

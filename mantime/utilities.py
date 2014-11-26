@@ -132,7 +132,7 @@ def __format(matching_elements, length):
         return SentenceBasedResult(tuple([WordBasedResult('O')]*length))
 
 
-def extractors_timestamp():
+def extractors_stamp():
     attributes_extractor_content = open('./attributes_extractor.py').read()
     md5_obj = md5.new()
     md5_obj.update(attributes_extractor_content)

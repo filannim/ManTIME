@@ -23,14 +23,16 @@ import logging
 import os
 from tempfile import NamedTemporaryFile
 
-from crf_utilities.scale_factors import get_scale_factors
+from crf_utilities import get_scale_factors
+from crf_utilities import probabilistic_correction
+from crf_utilities import label_switcher
 from settings import PATH_MODEL_FOLDER
 from settings import PATH_CRF_PP_ENGINE_TEST
 from settings import PATH_CRF_PP_ENGINE_TRAIN
 from settings import EVENT_ATTRIBUTES
 from settings import NO_ATTRIBUTE
 from utilities import Mute_stderr
-from utilities import extractors_timestamp
+from utilities import extractors_stamp
 
 
 def identification_attribute_matrix(documents, dest, subject, training=True):
@@ -50,14 +52,14 @@ def identification_attribute_matrix(documents, dest, subject, training=True):
                     # The class of the instances different from the subject are
                     # changed in 'O'
                     if subject == 'EVENT':
-                        if gold_label.find('TIMEX'):
+                        if gold_label.find('TIMEX') > -1:
                             gold_label = 'O'
                     else:
-                        if gold_label.find('EVENT'):
+                        if gold_label.find('EVENT') > -1:
                             gold_label = 'O'
 
                     if training:
-                        matrix.write('\t' + word.gold_label)
+                        matrix.write('\t' + gold_label)
                     matrix.write('\n')
                 matrix.write('\n')
 
@@ -112,9 +114,7 @@ class Classifier(object):
 
             return List of <Document> (with .annotations filled in.)
         """
-        if extractors_timestamp() != model.extractors_md5:
-            # TO-DO: log instead of print
-            print 'WARNING: The feature extractor component has changed!'
+        pass
 
 
 class IdentificationClassifier(Classifier):
@@ -139,7 +139,14 @@ class IdentificationClassifier(Classifier):
         header = [k for k, _ in sorted(first_word.attributes.items())]
         model.load_header(header)
 
+        # search for the token_normalised attribute position
+        token_normalised_pos = [p for p, a in enumerate(header)
+                                if a.find('token_normalised') > -1][0]
+        print token_normalised_pos
+        model.pp_pipeline_attribute_pos = token_normalised_pos
+
         # save trainingset to model_name.trainingset.class
+        scaling_factors = {}
         for idnt_class in ('EVENT', 'TIMEX'):
             path_and_model = (PATH_MODEL_FOLDER, model.name, idnt_class)
             trainingset_path = '{}/{}.identification.trainingset.{}'.format(
@@ -147,10 +154,9 @@ class IdentificationClassifier(Classifier):
             identification_attribute_matrix(documents, trainingset_path,
                                             idnt_class)
 
-            # post-processing pipeline
-            # scale_factors = get_scale_factors(trainingset_path)
-            # factors_path = PATH_MODEL_FOLDER + '/' + model_name + '.factors'
-            # pickle.dump(scale_factors, open(factors_path, 'w'))
+            # save scale factors for post processing pipeline
+            scaling_factors[idnt_class] = get_scale_factors(
+                trainingset_path, token_normalised_pos)
 
             crf_command = [PATH_CRF_PP_ENGINE_TRAIN, model.path_topology,
                            trainingset_path, '{}.{}'.format(model.path,
@@ -162,6 +168,10 @@ class IdentificationClassifier(Classifier):
             # TO-DO: Check if the script saves a model or returns an error
             logging.info('Identification CRF model ({}): trained.'.format(
                 idnt_class))
+
+        # save factors in the model
+        model.load_scaling_factors(scaling_factors)
+
         return model
 
     def test(self, documents, model, post_processing_pipeline=False):
@@ -171,6 +181,18 @@ class IdentificationClassifier(Classifier):
         of words with the right labels.
 
         """
+        if extractors_stamp() != model.extractors_md5:
+            logging.warning('The feature extractor component is different' +
+                            'from the one used in the training!')
+
+        factors = None
+        if post_processing_pipeline:
+            try:
+                factors = cPickle.load(open(model.path_factors))
+            except IOError:
+                post_processing_pipeline = False
+                logging.warning('Scale factors not found.')
+
         for idnt_class in ('EVENT', 'TIMEX'):
             testset_path = NamedTemporaryFile(delete=False).name
             model_path = '{}.{}'.format(model.path, idnt_class)
@@ -188,8 +210,21 @@ class IdentificationClassifier(Classifier):
                 process = subprocess.Popen(crf_command, stdout=subprocess.PIPE)
 
             n_doc, n_sent, n_word = 0, 0, 0
-            for label in iter(process.stdout.readline, ''):
+
+            # post-processing pipeline
+            if post_processing_pipeline and factors:
+                scale_factors = factors[idnt_class]
+                lines = iter(process.stdout.readline, '')
+                lines = probabilistic_correction(
+                    lines, scale_factors, model.pp_pipeline_attribute_pos, .5)
+                lines = label_switcher(
+                    lines, scale_factors, model.pp_pipeline_attribute_pos, .87)
+            else:
+                lines = iter(process.stdout.readline, '')
+
+            for label in lines:
                 label = label.strip().split('\t')[-1]
+                print label
                 if label:
                     documents[n_doc].sentences[n_sent].words[n_word]\
                         .predicted_label = label
@@ -200,13 +235,6 @@ class IdentificationClassifier(Classifier):
                         if len(documents[n_doc].sentences) == n_sent:
                             n_word, n_sent = 0, 0
                             n_doc += 1
-
-            # TO-DO: post-processing pipeline
-            if post_processing_pipeline:
-                try:
-                    factors = cPickle.load(open(model.path_factors))
-                except IOError:
-                    logging.warning('Scale factors not found.')
         return documents
 
 
@@ -316,8 +344,8 @@ class ClassificationModel(object):
         self.num_of_features = 0
         self.topology = None
         self.attribute_topology = None
-        self.extractors_md5 = extractors_timestamp()
-
+        self.pp_pipeline_attribute_pos = None
+        self.extractors_md5 = extractors_stamp()
         logging.info('Classification model: initialised.')
 
     def load_header(self, header):
@@ -330,6 +358,10 @@ class ClassificationModel(object):
         logging.info('Header: stored.')
         self.topology = self._generate_template()
         self.attribute_topology = self._generate_template(True)
+
+    def load_scaling_factors(self, factors):
+        cPickle.dump(factors, open(self.path_factors, 'w'))
+        logging.info('Identification scaling factors: stored.')
 
     def _generate_template(self, attribute=False):
         """It generates and dumps the CRF template for CRF++.
@@ -369,7 +401,11 @@ class ClassificationModel(object):
         topology = ['U{:0>7}:{}'.format(index, pattern)
                     for index, pattern
                     in enumerate(list(sorted(patterns)))]
-        with open(self.path_topology, 'w') as template:
+        if attribute:
+            dest = self.path_attribute_topology
+        else:
+            dest = self.path_topology
+        with open(dest, 'w') as template:
             for pattern in topology:
                 template.write(pattern)
                 template.write('\n')

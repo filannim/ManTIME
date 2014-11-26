@@ -33,35 +33,38 @@ from collections import Counter
 from os.path import isfile
 
 
-def get_scale_factors(file_path):
+def get_scale_factors(source, index):
     '''It returns a dictionary of words with their:
        p_word(label='O-TIMEX3').
     '''
-    assert isfile(file_path), 'Input file doesn\'t exist.'
+    assert isfile(source), 'Input file doesn\'t exist.'
+    assert index > 0, 'Invalid index.'
+
     scale_factors = dict()
-    with open(file_path) as source:
+    with open(source) as source:
         data = csv.reader(source, delimiter='\t')
-        next(data)  # skip header
         for row in data:
             try:
-                word, label = row[0], row[-1]
+                word = row[index]
+                label = row[-1]
+                if label != 'O':
+                    label = 'I'
                 scale_factors.setdefault(word, Counter(label))
                 scale_factors[word][label] += 1.0
             except IndexError:  # skip empty lines which cannot be unpacked.
                 continue
     # normalise scale_factors (counts)
     for word in scale_factors.keys():
-        counts = sum(word.values())
-        is_acceptable = (word['I-TIMEX3'] + word['B-TIMEX3']) >= 2.0
-        if is_acceptable:
-            for label in word.iterkeys():
+        counts = sum(scale_factors[word].values())
+        if scale_factors[word]['I'] >= 2.0:
+            for label in scale_factors[word].iterkeys():
                 scale_factors[word][label] /= counts
         else:
             scale_factors.pop(word)
     return scale_factors
 
 
-def probabilistic_correction(row_iterator, threshold):
+def probabilistic_correction(row_iterator, factors, index, threshold):
     '''It yields perturbated sequences of predicted labels accoding to the
        specified *threshold*.
 
@@ -90,7 +93,6 @@ def probabilistic_correction(row_iterator, threshold):
             reverse=True)[0]
         return (best_prediction[0], best_prediction_confidence)
 
-    factors = pickle.load(open('factors.pickle'))
     try:
         line = next(row_iterator).strip().split('\t')
         while True:
@@ -98,11 +100,11 @@ def probabilistic_correction(row_iterator, threshold):
             # this happens when we use crf_test -v2 (verbose mode)
             # the second condition makes sure it's not a data line with simply
             # has a word starting by '#'.
-            current_word = line[0]
-            if not (current_word.startswith('#') and len(line) == 1):
+            if not (line[0].startswith('#') or len(line) == 1):
+                current_word = line[index]
                 predictions = '\t'.join(line[-3:])
                 prediction = predictions.split('/', 1)[0]
-                if prediction in ('O', 'B', 'I'):
+                if prediction[0] in list('OBIW'):
                     data = '\t'.join(line[:-4])
                     if current_word in factors.keys():
                         perturbated_label, confidence = \
@@ -116,13 +118,16 @@ def probabilistic_correction(row_iterator, threshold):
                         yield '{}\t{}'.format(data, prediction)
                 else:
                     yield ''
+            else:
+                if line[0].startswith('#'):
+                    yield ''
             line = next(row_iterator).strip().split('\t')
     except StopIteration:
         pass
 
 
-def label_switcher(row_iterator, threshold):
-    '''It yields adjusted sequences of predicted labels accoding to the
+def label_switcher(row_iterator, factors, index, threshold):
+    '''It yields adjusted sequences of predicted labels according to the
        specified *threshold*.
 
        It takes in input an attribute values matrix (N instances x M columns)
@@ -130,23 +135,25 @@ def label_switcher(row_iterator, threshold):
     '''
     assert 0. <= threshold <= 1., 'Invalid threshold.'
 
-    factors = pickle.load(open('factors.pickle'))
     try:
         line = next(row_iterator).strip().split('\t')
         while True:
-            current_word = line[0]
-            prediction = line[-1]
-            data = '\t'.join(line[:-1])
-            if current_word in factors.keys():
-                most_likely_label, confidence = \
-                    factors[current_word].most_common(1)[0]
-                if confidence >= threshold:
-                    yield '{}\t{}'.format(
-                        data, most_likely_label)
+            if len(line) > 1:
+                current_word = line[index]
+                prediction = line[-1]
+                data = '\t'.join(line[:-1])
+                if current_word in factors.keys():
+                    most_likely_label, confidence = \
+                        factors[current_word].most_common(1)[0]
+                    if confidence >= threshold:
+                        yield '{}\t{}'.format(
+                            data, most_likely_label)
+                    else:
+                        yield '{}\t{}'.format(data, prediction)
                 else:
                     yield '{}\t{}'.format(data, prediction)
             else:
-                yield '{}\t{}'.format(data, prediction)
+                yield ''
             line = next(row_iterator).strip().split('\t')
     except StopIteration:
         pass
@@ -199,10 +206,12 @@ def main():
     args = parser.parse_args()
 
     lines = sys.stdin.xreadlines()
+    factors = pickle.load(open('models/tempeval3.factors'))['TIMEX']
     if args.algorithm == 'probabilistic_correction':
-        adjusted_lines = probabilistic_correction(lines, float(args.option2))
+        adjusted_lines = probabilistic_correction(lines, factors,
+                                                  135, float(args.option2))
     elif args.algorithm == 'label_switcher':
-        adjusted_lines = label_switcher(lines, float(args.option2))
+        adjusted_lines = label_switcher(lines, factors, 135, float(args.option2))
     elif args.algorithm == 'bio_fixer':
         sequence_patterns = args.option2.split(',')
         adjusted_lines = bio_fixer(lines, sequence_patterns)
