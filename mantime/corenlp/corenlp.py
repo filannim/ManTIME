@@ -332,7 +332,7 @@ def parse_parser_xml_results(xml, file_name="", raw_output=False):
         sent['dependencies'] = []
         sent['indexeddependencies'] = []
         for dep in raw_sent_list[id]['dependencies']:
-            for i, _ in enumerate(enforceList(dep['dep'])):
+            for i, _ in enumerate(enforceList(dep.get('dep', []))):
                 if dep['@type'] == 'basic-dependencies':
                     current_dep = enforceList(dep['dep'])[i]
                     dep_type = current_dep['@type']
