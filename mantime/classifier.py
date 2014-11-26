@@ -21,6 +21,7 @@ import codecs
 import cPickle
 import logging
 import os
+import shutil
 from tempfile import NamedTemporaryFile
 
 from crf_utilities import get_scale_factors
@@ -149,7 +150,7 @@ class IdentificationClassifier(Classifier):
         scaling_factors = {}
         for idnt_class in ('EVENT', 'TIMEX'):
             path_and_model = (PATH_MODEL_FOLDER, model.name, idnt_class)
-            trainingset_path = '{}/{}.identification.trainingset.{}'.format(
+            trainingset_path = '{}/{}/identification.trainingset.{}'.format(
                 *path_and_model)
             identification_attribute_matrix(documents, trainingset_path,
                                             idnt_class)
@@ -226,8 +227,9 @@ class IdentificationClassifier(Classifier):
             for label in lines:
                 label = label.strip().split('\t')[-1]
                 if label:
-                    documents[n_doc].sentences[n_sent].words[n_word]\
-                        .predicted_label = label
+                    if label != 'O':
+                        documents[n_doc].sentences[n_sent].words[n_word]\
+                            .predicted_label = label
                     n_word += 1
                     if len(documents[n_doc].sentences[n_sent].words) == n_word:
                         n_word = 0
@@ -257,7 +259,7 @@ class NormalisationClassifier(Classifier):
         # save trainingset to model_name.trainingset.*attribute*
         for attribute in self.attributes:
             path_model_attribute = (PATH_MODEL_FOLDER, model.name, attribute)
-            trainingset_path = '{}/{}.normalisation.trainingset.{}'.format(
+            trainingset_path = '{}/{}/normalisation.trainingset.{}'.format(
                 *path_model_attribute)
             normalisation_attribute_matrix(documents, trainingset_path,
                                            attribute, training=True)
@@ -332,15 +334,16 @@ class ClassificationModel(object):
         simplify = lambda name: re.sub(r'[\W]+', '', re.sub(r'\s+', '_', name))
         self.name = simplify(model_name)
         path_and_model = (PATH_MODEL_FOLDER, self.name)
-        self.path = '{}/{}.identification.model'.format(*path_and_model)
-        self.path_normalisation = '{}/{}.normalisation.model'.format(
+        self.path = '{}/{}/identification.model'.format(*path_and_model)
+        self.path_normalisation = '{}/{}/normalisation.model'.format(
             *path_and_model)
-        self.path_topology = '{}/{}.template'.format(*path_and_model)
-        self.path_attribute_topology = '{}/{}.attribute.template'.format(
+        self.path_topology = '{}/{}/template'.format(*path_and_model)
+        self.path_attribute_topology = '{}/{}/attribute.template'.format(
             *path_and_model)
-        self.path_header = '{}/{}.header'.format(*path_and_model)
-        self.path_factors = '{}/{}.factors'.format(*path_and_model)
-
+        self.path_header = '{}/{}/header'.format(*path_and_model)
+        self.path_factors = '{}/{}/factors'.format(*path_and_model)
+        shutil.rmtree('{}/{}'.format(*path_and_model), ignore_errors=True)
+        os.makedirs('{}/{}'.format(*path_and_model))
         self.num_of_features = 0
         self.topology = None
         self.attribute_topology = None

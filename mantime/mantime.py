@@ -40,7 +40,7 @@ class ManTIME(object):
         self.extractor = extractor
         self.documents = []
         self.model_name = model_name
-        self.model_path = '{}/{}.model.pickle'.format(PATH_MODEL_FOLDER,
+        self.model_path = '{}/{}/model.pickle'.format(PATH_MODEL_FOLDER,
                                                       self.model_name)
         try:
             self.model = cPickle.load(open(self.model_path))
@@ -114,7 +114,7 @@ def main():
                       FullExtractor(),
                       'tempeval3',
                       pipeline=True)
-    #print mantime.train(args.folder[0])
+    print mantime.train(args.folder[0])
     print mantime.label('../data/test_all_quickly/unicode_nosentence.tml.TE3input')
 
 

@@ -9,7 +9,6 @@ This document lists all the things I should look more carefully in the future.
 - [ ] Implement the add-on for clinical domain.
 - [ ] Look carefully at all the features and possibly cut them.
 - [ ] Make the features as lighter as possible (in terms of storage space)
-- [ ] Introduce model folders instead of files.
 - [ ] Correct some morphological gazetteer features according to the English grammar. Are all the things called prepositions actually prepositions?
 - [ ] Do I really need to load Stanford Core NLP everytime for every document? Once (the problem)[https://github.com/dasmith/stanford-corenlp-python/issues/13] with long texts is solved I should switch to the new stanford-core-nlp.
 - [ ] Remove the output produced by CRF++ in the training phase.
@@ -18,6 +17,7 @@ This document lists all the things I should look more carefully in the future.
 - [ ] Instead of the settings.py file, use OS.ENVIRONS variable.
 - [ ] Comment the code: better and more verbously using Google Commenting Style.
 - [ ] Have a look at argparse ... it's not correct right now.
+- [x] Introduce model folders instead of files.
 - [x] Fix and connect the post-processing pipeline.
 - [x] Attributes models should include identification feature (heavier but hopefully better).
 - [x] Split identification models (TIMEXes and EVENTs).
@@ -25,7 +25,12 @@ This document lists all the things I should look more carefully in the future.
 - [x] There are some print statement somewhere (WARNING cases). I should use
   something more appropriate for them (log).
 - [x] Remove the output produced from Stanford Parser in the stdout/stderr (if
-  everything goes ok).  
+  everything goes ok).
+- [x] Implement AttributeDataMatrix writer.  
+- [x] Implement TempEval-3 writer.
+- [x] Implement TempEval-3 reader.
+- [x] Implement the classifier for events and timexes.
+- [x] Implement the universal feature extractor for events and timexes.
 - [x] Find documentation about how to comment the code so that nice Python-doc
   style web pages can be automatically generated.
-- [x] Love ManTIME!
+- [x] Love ManTIME and refactor it!
