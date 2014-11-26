@@ -234,8 +234,8 @@ class NormalisationClassifier(Classifier):
             normalisation_attribute_matrix(documents, trainingset_path,
                                            attribute, training=True)
 
-            crf_command = [PATH_CRF_PP_ENGINE_TRAIN, model.path_topology,
-                           trainingset_path,
+            crf_command = [PATH_CRF_PP_ENGINE_TRAIN,
+                           model.path_attribute_topology, trainingset_path,
                            '{}.{}'.format(model.path_normalisation, attribute)]
             with Mute_stderr():
                 process = subprocess.Popen(crf_command)
@@ -308,11 +308,14 @@ class ClassificationModel(object):
         self.path_normalisation = '{}/{}.normalisation.model'.format(
             *path_and_model)
         self.path_topology = '{}/{}.template'.format(*path_and_model)
+        self.path_attribute_topology = '{}/{}.attribute.template'.format(
+            *path_and_model)
         self.path_header = '{}/{}.header'.format(*path_and_model)
         self.path_factors = '{}/{}.factors'.format(*path_and_model)
 
         self.num_of_features = 0
         self.topology = None
+        self.attribute_topology = None
         self.extractors_md5 = extractors_timestamp()
 
         logging.info('Classification model: initialised.')
@@ -325,16 +328,21 @@ class ClassificationModel(object):
         with open(self.path_header, 'w') as header_file:
             header_file.write('\n'.join(header))
         logging.info('Header: stored.')
-        self._generate_template()
+        self.topology = self._generate_template()
+        self.attribute_topology = self._generate_template(True)
 
-    def _generate_template(self):
+    def _generate_template(self, attribute=False):
         """It generates and dumps the CRF template for CRF++.
 
         """
         assert self.num_of_features > 0, 'Header not loaded yet.'
 
+        n_of_features = self.num_of_features
+        if attribute:
+            n_of_features += 1
+
         patterns = set()
-        for i in xrange(self.num_of_features):
+        for i in xrange(n_of_features):
             patterns.add('%x[0,{}]'.format(i))
             patterns.add('%x[-1,{}]'.format(i))
             patterns.add('%x[1,{}]'.format(i))
@@ -358,11 +366,12 @@ class ClassificationModel(object):
             #   template.add('%%x[0,%d]/%%x[1,%d]' % (m,i))
             #   template.add('%%x[1,%d]/%%x[2,%d]' % (i,m))
             #   template.add('%%x[1,%d]/%%x[2,%d]' % (m,i))
-        self.topology = ['U{:0>7}:{}'.format(index, pattern)
-                         for index, pattern
-                         in enumerate(list(sorted(patterns)))]
+        topology = ['U{:0>7}:{}'.format(index, pattern)
+                    for index, pattern
+                    in enumerate(list(sorted(patterns)))]
         with open(self.path_topology, 'w') as template:
-            for pattern in self.topology:
+            for pattern in topology:
                 template.write(pattern)
                 template.write('\n')
         logging.info('CRF topology template: stored.')
+        return topology
