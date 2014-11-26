@@ -114,7 +114,7 @@ def main():
                       FullExtractor(),
                       'tempeval3',
                       pipeline=True)
-    #mantime.train(args.folder[0])
+    mantime.train(args.folder[0])
     print mantime.label('../data/test_all_quickly/unicode_nosentence.tml.TE3input')
 
 
