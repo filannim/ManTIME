@@ -17,6 +17,6 @@ pipeline.py
 # folders outside the scope of this project
 temporal_location/*
 
-data/test/.DS_Store
+data/*/.DS_Store
 
 mantime/models/*
