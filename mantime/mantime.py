@@ -22,7 +22,7 @@ import os
 import cPickle
 import logging
 
-from readers import TempEval3FileReader
+from readers import TempEval3FileReader, WikiWarsInLineFileReader
 from attributes_extractor import FullExtractor
 from writers import TempEval3Writer, AttributeMatrixWriter
 from classifier import IdentificationClassifier
@@ -56,7 +56,7 @@ class ManTIME(object):
         normaliser = NormalisationClassifier()
 
         # corpus collection
-        for input_file in glob.glob(folder + '/*.tml'):
+        for input_file in glob.glob(folder + '/' + self.reader.file_filter):
             #try:
             doc = self.extractor.extract(self.reader.parse(input_file))
             self.documents.append(doc)
@@ -111,8 +111,8 @@ def main():
                       TempEval3Writer(),
                       FullExtractor(),
                       'tempeval3')
-    # print mantime.train(args.folder[0])
-    print mantime.label('/Users/michele/Dropbox/Workspace/ManTIME_refactoring/ManTIME/data/test1/test_short.tml.TE3input')
+    print mantime.train(args.folder[0])
+    print mantime.label('../data/test_all_quickly/unicode_nosentence.tml.TE3input')
 
 
 if __name__ == '__main__':

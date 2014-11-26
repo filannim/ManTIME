@@ -17,8 +17,10 @@ from __future__ import division
 from abc import ABCMeta, abstractmethod
 import subprocess
 import re
+import codecs
 import cPickle
 import logging
+import os
 from tempfile import NamedTemporaryFile
 
 from crf_utilities.scale_factors import get_scale_factors
@@ -30,17 +32,30 @@ from utilities import Mute_stderr
 from utilities import extractors_timestamp
 
 
-def identification_attribute_matrix(documents, dest, include_class=True):
+def identification_attribute_matrix(documents, dest, subject,
+                                    include_class=True):
     assert type(documents) == list, 'Wrong type for documents.'
     assert len(documents) > 0, 'Empty documents list.'
+    assert subject in ('EVENT', 'TIMEX'), 'Wrong identification subject.'
 
     # It stores the attribute matrix
-    with open(dest, 'w') as matrix:
+    with codecs.open(dest, 'w', encoding='utf8') as matrix:
         for document in documents:
             for sentence in document.sentences:
                 for word in sentence.words:
                     row = [v for _, v in sorted(word.attributes.items())]
                     matrix.write('\t'.join(row))
+                    gold_label = word.gold_label
+
+                    # The class of the instances different from the subject are
+                    # changed in 'O'
+                    if subject == 'EVENT':
+                        if gold_label.find('TIMEX'):
+                            gold_label = 'O'
+                    else:
+                        if gold_label.find('EVENT'):
+                            gold_label = 'O'
+
                     if include_class:
                         matrix.write('\t' + word.gold_label)
                     matrix.write('\n')
@@ -60,7 +75,7 @@ def normalisation_attribute_matrix(documents, dest, subject, source,
         get_label = lambda word: word.predicted_label
 
     # It stores the attribute matrix
-    with open(dest, 'w') as matrix:
+    with codecs.open(dest, 'w', encoding='utf8') as matrix:
         for ndoc, document in enumerate(documents):
             for nsen, sentence in enumerate(document.sentences):
                 for nwor, word in enumerate(sentence.words):
@@ -128,60 +143,74 @@ class IdentificationClassifier(Classifier):
         header = [k for k, _ in sorted(first_word.attributes.items())]
         model.load_header(header)
 
-        # save trainingset to model_name.trainingset
-        path_and_model = (PATH_MODEL_FOLDER, model.name)
-        trainingset_path = '{}/{}.trainingset'.format(*path_and_model)
-        identification_attribute_matrix(documents, trainingset_path)
+        # save trainingset to model_name.trainingset.class
+        for idnt_class in ('EVENT', 'TIMEX'):
+            path_and_model = (PATH_MODEL_FOLDER, model.name, idnt_class)
+            trainingset_path = '{}/{}.identification.trainingset.{}'.format(
+                *path_and_model)
+            identification_attribute_matrix(documents, trainingset_path,
+                                            idnt_class)
 
-        # post-processing pipeline
-        # scale_factors = get_scale_factors(trainingset_path)
-        # factors_path = PATH_MODEL_FOLDER + '/' + model_name + '.factors'
-        # pickle.dump(scale_factors, open(factors_path, 'w'))
+            # post-processing pipeline
+            # scale_factors = get_scale_factors(trainingset_path)
+            # factors_path = PATH_MODEL_FOLDER + '/' + model_name + '.factors'
+            # pickle.dump(scale_factors, open(factors_path, 'w'))
 
-        crf_command = [PATH_CRF_PP_ENGINE_TRAIN, model.path_topology,
-                       trainingset_path, model.path]
-        with Mute_stderr():
-            process = subprocess.Popen(crf_command)
-            process.wait()
+            crf_command = [PATH_CRF_PP_ENGINE_TRAIN, model.path_topology,
+                           trainingset_path, '{}.{}'.format(model.path,
+                                                            idnt_class)]
+            with Mute_stderr():
+                process = subprocess.Popen(crf_command)
+                process.wait()
 
-        # TO-DO: Check if the script saves a model or returns an error
-        logging.info('Identification CRF model: trained.')
+            # TO-DO: Check if the script saves a model or returns an error
+            logging.info('Identification CRF model ({}): trained.'.format(
+                idnt_class))
         return model
 
     def test(self, documents, model, post_processing_pipeline=False):
-        """It returns the sequence of labels from the Wapiti classifier.
+        """It returns the sequence of labels from the CRF classifier.
 
         It returns the same data structure (list of documents, of sentences,
         of words with the right labels.
 
         """
-        testset_path = NamedTemporaryFile(delete=False).name
-        identification_attribute_matrix(documents, testset_path, False)
-        crf_command = [PATH_CRF_PP_ENGINE_TEST, '-m', model.path,
-                       testset_path]
-        with Mute_stderr():
-            process = subprocess.Popen(crf_command, stdout=subprocess.PIPE)
+        for idnt_class in ('EVENT', 'TIMEX'):
+            testset_path = NamedTemporaryFile(delete=False).name
+            model_path = '{}.{}'.format(model.path, idnt_class)
+            identification_attribute_matrix(documents, testset_path,
+                                            idnt_class, False)
+            crf_command = [PATH_CRF_PP_ENGINE_TEST, '-m', model_path,
+                           testset_path]
 
-        n_doc, n_sent, n_word = 0, 0, 0
-        for label in iter(process.stdout.readline, ''):
-            label = label.strip().split('\t')[-1]
-            if label:
-                documents[n_doc].sentences[n_sent].words[n_word]\
-                    .predicted_label = label
-                n_word += 1
-                if len(documents[n_doc].sentences[n_sent].words) == n_word:
-                    n_word = 0
-                    n_sent += 1
-                    if len(documents[n_doc].sentences) == n_sent:
-                        n_word, n_sent = 0, 0
-                        n_doc += 1
+            # Draconianly check the input files
+            assert os.path.isfile(model_path), 'Model doesn\'t exist at {}'.format(model_path)
+            assert os.stat(model_path).st_size > 0, 'Model is empty!'
+            assert os.path.isfile(testset_path), 'Test set doesn\'t exist!'
 
-        # TO-DO: post-processing pipeline
-        if post_processing_pipeline:
-            try:
-                factors = cPickle.load(open(model.path_factors))
-            except IOError:
-                logging.warning('Scale factors not found.')
+            with Mute_stderr():
+                process = subprocess.Popen(crf_command, stdout=subprocess.PIPE)
+
+            n_doc, n_sent, n_word = 0, 0, 0
+            for label in iter(process.stdout.readline, ''):
+                label = label.strip().split('\t')[-1]
+                if label:
+                    documents[n_doc].sentences[n_sent].words[n_word]\
+                        .predicted_label = label
+                    n_word += 1
+                    if len(documents[n_doc].sentences[n_sent].words) == n_word:
+                        n_word = 0
+                        n_sent += 1
+                        if len(documents[n_doc].sentences) == n_sent:
+                            n_word, n_sent = 0, 0
+                            n_doc += 1
+
+            # TO-DO: post-processing pipeline
+            if post_processing_pipeline:
+                try:
+                    factors = cPickle.load(open(model.path_factors))
+                except IOError:
+                    logging.warning('Scale factors not found.')
         return documents
 
 
@@ -230,11 +259,23 @@ class NormalisationClassifier(Classifier):
         """
         for attribute in self.attributes:
             testset_path = NamedTemporaryFile(delete=False).name
+            model_path = '{}.{}'.format(model.path_normalisation, attribute)
             normalisation_attribute_matrix(documents, testset_path, attribute,
                                            'prediction', False)
-            crf_command = [PATH_CRF_PP_ENGINE_TEST, '-m',
-                           '{}.{}'.format(model.path_normalisation, attribute),
+            crf_command = [PATH_CRF_PP_ENGINE_TEST, '-m', model_path,
                            testset_path]
+
+            # Weakly check the input files
+            if not os.path.isfile(model_path):
+                logging.error('Model doesn\'t exist at {}'.format(model_path))
+            else:
+                if os.stat(model_path).st_size > 0:
+                    msg = 'Normalisation model for {} is empty!'
+                    logging.error(msg.format(attribute.lower()))
+            if not os.path.isfile(testset_path):
+                msg = 'Normalisation test set for {} doesn\'t exist at {}.'
+                logging.error(msg.format(attribute.lower(), testset_path))
+
             with Mute_stderr():
                 process = subprocess.Popen(crf_command, stdout=subprocess.PIPE)
 
@@ -263,7 +304,7 @@ class ClassificationModel(object):
         simplify = lambda name: re.sub(r'[\W]+', '', re.sub(r'\s+', '_', name))
         self.name = simplify(model_name)
         path_and_model = (PATH_MODEL_FOLDER, self.name)
-        self.path = '{}/{}.model'.format(*path_and_model)
+        self.path = '{}/{}.identification.model'.format(*path_and_model)
         self.path_normalisation = '{}/{}.normalisation.model'.format(
             *path_and_model)
         self.path_topology = '{}/{}.template'.format(*path_and_model)
