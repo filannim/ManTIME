@@ -19,4 +19,5 @@ temporal_location/*
 
 data/*/.DS_Store
 
+# no models on GitHub
 mantime/models/
