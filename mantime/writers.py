@@ -114,13 +114,13 @@ class TempEval3Writer(FileWriter):
             output.append('<TimeML xmlns:xsi="http://www.w3.org/2001/XMLSche' +
                           'ma-instance" xsi:noNamespaceSchemaLocation="http:' +
                           '//timeml.org/timeMLdocs/TimeML_1.2.1.xsd">\n')
-            output.append('<DOCID>{doc_id}</DOCID>\n'.format(
+            output.append(u'<DOCID>{doc_id}</DOCID>\n'.format(
                 doc_id=document.doc_id))
             output.append(str('<DCT><TIMEX3 tid="t0" type="DATE" value="{}" ' +
                               'temporalFunction="false" functionInDocument="' +
                               'CREATION_TIME">{}</TIMEX3></DCT>\n'
                               ).format(document.dct, document.dct_text))
-            output.append('<TITLE>{}</TITLE>\n'.format(document.title))
+            output.append(u'<TITLE>{}</TITLE>\n'.format(document.title))
 
             text = list(document.text)
             memory = {'start': 0, 'end': 0, 'tag': None, 'offset': 0,
@@ -166,7 +166,7 @@ class TempEval3Writer(FileWriter):
             if memory['start']:
                 write_tag(memory, text)
             # TO-DO: end.
-            output.append('<TEXT>{}</TEXT>\n\n'.format(''.join(text)))
+            output.append(u'<TEXT>{}</TEXT>\n\n'.format(''.join(text)))
 
             # MAKEINSTANCEs
             for eid, pos, tense, aspect, pol, mod, _ in memory['events']:

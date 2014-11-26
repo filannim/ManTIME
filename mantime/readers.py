@@ -27,6 +27,7 @@ from StringIO import StringIO
 import sys
 import os
 import logging
+import codecs
 
 from nltk import ParentedTree
 
@@ -48,7 +49,9 @@ class BatchedCoreNLP(object):
     def parse(self, text):
         import tempfile
         dirname = tempfile.mkdtemp()
-        with tempfile.NamedTemporaryFile('w', dir=dirname) as tmp:
+        with tempfile.NamedTemporaryFile('w', dir=dirname, delete=False) as f:
+            filename = f.name
+        with codecs.open(filename, 'w', encoding='utf8') as tmp:
             tmp.write(text)
             tmp.flush()
             result = self.batch_parse(os.path.dirname(tmp.name), self.DIR)
@@ -84,7 +87,7 @@ class TempEval3FileReader(FileReader):
 
     def __init__(self, file_filter='*.tml'):
         super(TempEval3FileReader, self).__init__()
-        self.tags_to_spot = {'TIMEX3', 'EVENT', 'SIGNAL'}
+        self.tags_to_spot = {'TIMEX3', 'EVENT'}
         self.annotations = []
         self.file_filter = file_filter
 
@@ -100,6 +103,8 @@ class TempEval3FileReader(FileReader):
         text_node = xml.findall(".//TEXT")[0]
         text_string = etree.tostring(text_node, method='text', encoding='utf8')
         text_xml = etree.tostring(text_node, method='xml', encoding='utf8')
+        text_string = unicode(text_string, 'UTF-8')
+        text_xml = unicode(text_xml, 'UTF-8')
         right_chars = len(text_xml.split('</TEXT>')[1])
         text_string = text_string[:-right_chars]
         text_xml = etree.tostring(text_node)
@@ -228,6 +233,8 @@ class WikiWarsInLineFileReader(FileReader):
         text_node = xml.findall(".//TEXT")[0]
         text_string = etree.tostring(text_node, method='text', encoding='utf8')
         text_xml = etree.tostring(text_node, method='xml', encoding='utf8')
+        text_string = unicode(text_string, 'UTF-8')
+        text_xml = unicode(text_xml, 'UTF-8')
         right_chars = len(text_xml.split('</TEXT>')[1])
         text_string = text_string[:-right_chars]
         text_xml = etree.tostring(text_node)
