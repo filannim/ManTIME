@@ -27,6 +27,7 @@ import os
 from collections import Counter
 
 from settings import EVENT_ATTRIBUTES
+from settings import NO_ATTRIBUTE
 
 
 class Writer(object):
@@ -170,11 +171,15 @@ class TempEval3Writer(FileWriter):
 
             # MAKEINSTANCEs
             for eid, pos, tense, aspect, pol, mod, _ in memory['events']:
-                output.append(str('<MAKEINSTANCE eiid="{}" eventID="{}" ' +
-                                  'pos="{}" tense="{}" aspect="{}" ' +
-                                  'polarity="{}" modality="{}" />').format(
+                instance = str('<MAKEINSTANCE eiid="{}" eventID="{}" pos="{}' +
+                               ' tense="{}" aspect="{} polarity="{}" ').format(
                                     'ei{}'.format(eid), 'e{}'.format(eid),
-                                    pos, tense, aspect, pol, mod))
+                                    pos, tense, aspect, pol)
+                if mod != NO_ATTRIBUTE:
+                    instance += 'modality="{}" />'
+                else:
+                    instance += '/>'
+                output.append(instance)
             output.append('')
 
             # TLINKs

@@ -28,12 +28,12 @@ from settings import PATH_MODEL_FOLDER
 from settings import PATH_CRF_PP_ENGINE_TEST
 from settings import PATH_CRF_PP_ENGINE_TRAIN
 from settings import EVENT_ATTRIBUTES
+from settings import NO_ATTRIBUTE
 from utilities import Mute_stderr
 from utilities import extractors_timestamp
 
 
-def identification_attribute_matrix(documents, dest, subject,
-                                    include_class=True):
+def identification_attribute_matrix(documents, dest, subject, training=True):
     assert type(documents) == list, 'Wrong type for documents.'
     assert len(documents) > 0, 'Empty documents list.'
     assert subject in ('EVENT', 'TIMEX'), 'Wrong identification subject.'
@@ -56,20 +56,18 @@ def identification_attribute_matrix(documents, dest, subject,
                         if gold_label.find('EVENT'):
                             gold_label = 'O'
 
-                    if include_class:
+                    if training:
                         matrix.write('\t' + word.gold_label)
                     matrix.write('\n')
                 matrix.write('\n')
 
 
-def normalisation_attribute_matrix(documents, dest, subject, source,
-                                   include_class=True):
+def normalisation_attribute_matrix(documents, dest, subject, training=True):
     assert type(documents) == list, 'Wrong type for documents.'
     assert len(documents) > 0, 'Empty documents list.'
     assert subject in EVENT_ATTRIBUTES
-    assert source in ('gold', 'prediction')
 
-    if source == 'gold':
+    if training:
         get_label = lambda word: word.gold_label
     else:
         get_label = lambda word: word.predicted_label
@@ -79,22 +77,20 @@ def normalisation_attribute_matrix(documents, dest, subject, source,
         for ndoc, document in enumerate(documents):
             for nsen, sentence in enumerate(document.sentences):
                 for nwor, word in enumerate(sentence.words):
-                    if get_label(word) != 'O':
-                        if get_label(word).split('-')[1] == 'EVENT':
-                            if (source == 'gold' and
-                                subject in word.tag_attributes.keys()) or \
-                                    source == 'prediction':
-                                row = [v for _, v
-                                       in sorted(word.attributes.items())]
-                                matrix.write('\t'.join(row))
-                                matrix.write('\t{}_{}_{}'.format(ndoc, nsen,
-                                                                 nwor))
-                                if include_class:
-                                    matrix.write('\t' +
-                                                 word.tag_attributes[subject])
-                                # I am using CRFs with singleton sequences
-                                # (a small trick) ;)
-                                matrix.write('\n\n')
+                    row = [v for _, v
+                           in sorted(word.attributes.items())]
+                    row.append(get_label(word))
+                    if training:
+                        row.append(word.tag_attributes.get(subject,
+                                                           NO_ATTRIBUTE))
+                    else:
+                        # I sneak in the coordinates of each token
+                        row.append('{}_{}_{}'.format(ndoc, nsen, nwor))
+                    matrix.write('\t'.join(row))
+
+                    # I am using CRFs with singleton sequences
+                    # (a small trick) ;)
+                    matrix.write('\n\n')
 
 
 class Classifier(object):
@@ -179,7 +175,7 @@ class IdentificationClassifier(Classifier):
             testset_path = NamedTemporaryFile(delete=False).name
             model_path = '{}.{}'.format(model.path, idnt_class)
             identification_attribute_matrix(documents, testset_path,
-                                            idnt_class, False)
+                                            idnt_class, training=False)
             crf_command = [PATH_CRF_PP_ENGINE_TEST, '-m', model_path,
                            testset_path]
 
@@ -236,7 +232,7 @@ class NormalisationClassifier(Classifier):
             trainingset_path = '{}/{}.normalisation.trainingset.{}'.format(
                 *path_model_attribute)
             normalisation_attribute_matrix(documents, trainingset_path,
-                                           attribute, 'gold')
+                                           attribute, training=True)
 
             crf_command = [PATH_CRF_PP_ENGINE_TRAIN, model.path_topology,
                            trainingset_path,
@@ -261,7 +257,7 @@ class NormalisationClassifier(Classifier):
             testset_path = NamedTemporaryFile(delete=False).name
             model_path = '{}.{}'.format(model.path_normalisation, attribute)
             normalisation_attribute_matrix(documents, testset_path, attribute,
-                                           'prediction', False)
+                                           training=False)
             crf_command = [PATH_CRF_PP_ENGINE_TEST, '-m', model_path,
                            testset_path]
 
@@ -269,7 +265,7 @@ class NormalisationClassifier(Classifier):
             if not os.path.isfile(model_path):
                 logging.error('Model doesn\'t exist at {}'.format(model_path))
             else:
-                if os.stat(model_path).st_size > 0:
+                if os.stat(model_path).st_size == 0:
                     msg = 'Normalisation model for {} is empty!'
                     logging.error(msg.format(attribute.lower()))
             if not os.path.isfile(testset_path):
@@ -282,11 +278,15 @@ class NormalisationClassifier(Classifier):
             for line in iter(process.stdout.readline, ''):
                 line = line.strip()
                 if line:
-                    label = line.split('\t')[-1]
-                    location = line.split('\t')[-2]
-                    n_doc, n_sent, n_word = location.split('_')
-                    documents[int(n_doc)].sentences[int(n_sent)]\
-                        .words[int(n_word)].tag_attributes[attribute] = label
+                    line = line.split('\t')
+                    label = line[-1]
+                    location = line[-2]
+                    is_event = line[-3] == 'I-EVENT'
+                    if is_event:
+                        n_doc, n_sent, n_word = location.split('_')
+                        documents[int(n_doc)]\
+                            .sentences[int(n_sent)].words[int(n_word)]\
+                            .tag_attributes[attribute] = label
         return documents
 
 
