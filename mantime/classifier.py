@@ -143,7 +143,6 @@ class IdentificationClassifier(Classifier):
         # search for the token_normalised attribute position
         token_normalised_pos = [p for p, a in enumerate(header)
                                 if a.find('token_normalised') > -1][0]
-        print token_normalised_pos
         model.pp_pipeline_attribute_pos = token_normalised_pos
 
         # save trainingset to model_name.trainingset.class
@@ -163,8 +162,8 @@ class IdentificationClassifier(Classifier):
                            trainingset_path, '{}.{}'.format(model.path,
                                                             idnt_class)]
             with Mute_stderr():
-                process = subprocess.Popen(crf_command)
-                process.wait()
+                process = subprocess.Popen(crf_command, stdout=subprocess.PIPE)
+                _, _ = process.communicate()
 
             # TO-DO: Check if the script saves a model or returns an error
             logging.info('Identification CRF model ({}): trained.'.format(
@@ -268,8 +267,8 @@ class NormalisationClassifier(Classifier):
                            model.path_attribute_topology, trainingset_path,
                            '{}.{}'.format(model.path_normalisation, attribute)]
             with Mute_stderr():
-                process = subprocess.Popen(crf_command)
-                process.wait()
+                process = subprocess.Popen(crf_command, stdout=subprocess.PIPE)
+                _, _ = process.communicate()
 
             # TO-DO: Check if the script saves a model or returns an error
             logging.info('Normalisation CRF model ({}): trained.'.format(
@@ -412,5 +411,6 @@ class ClassificationModel(object):
             for pattern in topology:
                 template.write(pattern)
                 template.write('\n')
-        logging.info('CRF topology template: stored.')
+        logging.info('CRF topology template (attribute={}): stored.'.format(
+            attribute))
         return topology
