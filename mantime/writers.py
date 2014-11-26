@@ -176,7 +176,7 @@ class TempEval3Writer(FileWriter):
                                     'ei{}'.format(eid), 'e{}'.format(eid),
                                     pos, tense, aspect, pol)
                 if mod != NO_ATTRIBUTE:
-                    instance += 'modality="{}" />'
+                    instance += 'modality="{}" />'.format(mod)
                 else:
                     instance += '/>'
                 output.append(instance)
