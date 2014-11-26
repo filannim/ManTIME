@@ -20,27 +20,27 @@ And Rosneft benefits from BP's expertise in exploring in difficult and potential
 </TEXT>
 
 
-<MAKEINSTANCE eiid="ei1"  eventID="e1" pos="VERB" tense="PAST" aspect="NONE" polarity="POS" />
+<MAKEINSTANCE eiid="ei1"  eventID="e1" pos="VERB" tense="PAST" aspect="NONE" polarity="POS" modality="NONE" />
 <MAKEINSTANCE eiid="ei2"  eventID="e2" pos="VERB" tense="PRESPART" aspect="NONE" polarity="POS" />
 <MAKEINSTANCE eiid="ei2012"  eventID="e2012" pos="NOUN" tense="NONE" aspect="NONE" polarity="POS" />
 <MAKEINSTANCE eiid="ei3"  eventID="e3" pos="VERB" tense="PAST" aspect="NONE" polarity="POS" />
 <MAKEINSTANCE eiid="ei5"  eventID="e5" pos="VERB" tense="PAST" aspect="NONE" polarity="POS" />
 <MAKEINSTANCE eiid="ei6"  eventID="e6" pos="VERB" tense="PAST" aspect="NONE" polarity="POS" />
-<MAKEINSTANCE eiid="ei7"  eventID="e7" pos="VERB" tense="PRESPART" aspect="NONE" polarity="POS" />
+<MAKEINSTANCE eiid="ei7"  eventID="e7" pos="VERB" tense="PRESPART" aspect="NONE" polarity="POS" modality="NONE" />
 <MAKEINSTANCE eiid="ei8"  eventID="e8" pos="NOUN" tense="PRESENT" aspect="NONE" polarity="POS" />
 <MAKEINSTANCE eiid="ei9"  eventID="e9" pos="VERB" tense="PAST" aspect="NONE" polarity="POS" />
 <MAKEINSTANCE eiid="ei10"  eventID="e10" pos="VERB" tense="PAST" aspect="NONE" polarity="POS" />
 <MAKEINSTANCE eiid="ei11"  eventID="e11" pos="VERB" tense="PAST" aspect="PERFECTIVE" polarity="POS" />
 <MAKEINSTANCE eiid="ei12"  eventID="e12" pos="VERB" tense="PAST" aspect="NONE" polarity="POS" />
 <MAKEINSTANCE eiid="ei13"  eventID="e13" pos="VERB" tense="PAST" aspect="NONE" polarity="POS" />
-<MAKEINSTANCE eiid="ei14"  eventID="e14" pos="VERB" tense="PAST" aspect="PERFECTIVE" polarity="POS" />
+<MAKEINSTANCE eiid="ei14"  eventID="e14" pos="VERB" tense="PAST" aspect="PERFECTIVE" polarity="POS" modality="NONE" />
 <MAKEINSTANCE eiid="ei15"  eventID="e15" pos="VERB" tense="PAST" aspect="NONE" polarity="POS" />
 <MAKEINSTANCE eiid="ei2001"  eventID="e2001" pos="NOUN" tense="NONE" aspect="NONE" polarity="POS" />
 <MAKEINSTANCE eiid="ei16"  eventID="e16" pos="NOUN" tense="PAST" aspect="NONE" polarity="POS" />
 <MAKEINSTANCE eiid="ei17"  eventID="e17" pos="VERB" tense="PAST" aspect="NONE" polarity="POS" />
 <MAKEINSTANCE eiid="ei18"  eventID="e18" pos="VERB" tense="INFINITIVE" aspect="NONE" polarity="POS" />
 <MAKEINSTANCE eiid="ei19"  eventID="e19" pos="VERB" tense="PAST" aspect="NONE" polarity="POS" />
-<MAKEINSTANCE eiid="ei20"  eventID="e20" pos="VERB" tense="PAST" aspect="NONE" polarity="POS" />
+<MAKEINSTANCE eiid="ei20"  eventID="e20" pos="VERB" tense="PAST" aspect="NONE" polarity="POS" modality="NONE" />
 
 <TLINK lid="l1" relType="IS_INCLUDED" eventInstanceID="ei2" relatedToTime="t1" />
 <TLINK lid="l4" relType="BEFORE" eventInstanceID="ei1" relatedToEventInstance="ei5" />
