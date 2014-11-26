@@ -51,7 +51,7 @@ class WordBasedExtractors(object):
 
     @staticmethod
     def token_normalised(word):
-        return WordBasedResult(re.sub(r'\d', 'D', word.word_form.strip()))
+        return WordBasedResult(re.sub(r'\d', 'D', word.lemma.strip()))
 
     @staticmethod
     def lexical_lemma(word):
