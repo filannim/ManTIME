@@ -91,12 +91,13 @@ class TempEval3Writer(FileWriter):
                                          annotated_text))
                 memory['tag_ids'][memory['tag']] = event_eid + 1
             elif memory['tag'] == 'TIMEX3':
-                timex3_type, timex3_value = '', ''
-                timex3_tid = memory['tag_ids'].get(memory['tag'], 1)
-                memory['tag_ids'][memory['tag']] = timex3_tid + 1
-                attribs = 'type="{}" value="{}" tid="t{}"'.format(timex3_type,
-                                                                  timex3_value,
-                                                                  timex3_tid)
+                _, ttype, tvalue, _ = timex_normalise(annotated_text,
+                                                      memory['dct'])
+                ttid = memory['tag_ids'].get(memory['tag'], 1)
+                memory['tag_ids'][memory['tag']] = ttid + 1
+                attribs = 'type="{}" value="{}" tid="t{}"'.format(ttype,
+                                                                  tvalue,
+                                                                  ttid)
             if memory['tag']:
                 text.insert(memory['start'], '<{} {}>'.format(memory['tag'],
                                                               attribs))
@@ -126,7 +127,8 @@ class TempEval3Writer(FileWriter):
             text = list(document.text)
             memory = {'start': 0, 'end': 0, 'tag': None, 'offset': 0,
                       'tag_ids': Counter(), 'event_attributes': {},
-                      'events': [], 'event_class': None}
+                      'events': [], 'event_class': None,
+                      'dct': document.dct.replace('-', '')}
             # TO-DO: This works properly only for IO annotation schema!
             for sentence in document.sentences:
                 for word in sentence.words:
