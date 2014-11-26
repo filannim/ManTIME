@@ -28,6 +28,37 @@ from __future__ import division
 import argparse
 import pickle
 import sys
+import csv
+from collections import Counter
+from os.path import isfile
+
+
+def get_scale_factors(file_path):
+    '''It returns a dictionary of words with their:
+       p_word(label='O-TIMEX3').
+    '''
+    assert isfile(file_path), 'Input file doesn\'t exist.'
+    scale_factors = dict()
+    with open(file_path) as source:
+        data = csv.reader(source, delimiter='\t')
+        next(data)  # skip header
+        for row in data:
+            try:
+                word, label = row[0], row[-1]
+                scale_factors.setdefault(word, Counter(label))
+                scale_factors[word][label] += 1.0
+            except IndexError:  # skip empty lines which cannot be unpacked.
+                continue
+    # normalise scale_factors (counts)
+    for word in scale_factors.keys():
+        counts = sum(word.values())
+        is_acceptable = (word['I-TIMEX3'] + word['B-TIMEX3']) >= 2.0
+        if is_acceptable:
+            for label in word.iterkeys():
+                scale_factors[word][label] /= counts
+        else:
+            scale_factors.pop(word)
+    return scale_factors
 
 
 def probabilistic_correction(row_iterator, threshold):
