@@ -3,6 +3,7 @@ TO-DO List
 
 This document lists all the things I should look more carefully in the future.
 
+- [ ] Integrate (Norma)[https://github.com/filannim/timex-normaliser].
 - [ ] Implement the feature extractor for Temporal Links.
 - [ ] Implement the classifier for Temporal Links.
 - [ ] Adapt the writers to output temporal links too.
@@ -17,6 +18,7 @@ This document lists all the things I should look more carefully in the future.
 - [ ] Instead of the settings.py file, use OS.ENVIRONS variable.
 - [ ] Comment the code: better and more verbously using Google Commenting Style.
 - [ ] Have a look at argparse ... it's not correct right now.
+- [ ] Implement a HTML (CSS3) writer.
 - [x] Introduce model folders instead of files.
 - [x] Fix and connect the post-processing pipeline.
 - [x] Attributes models should include identification feature (heavier but hopefully better).
