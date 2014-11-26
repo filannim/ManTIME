@@ -18,3 +18,5 @@ pipeline.py
 temporal_location/*
 
 data/test/.DS_Store
+
+mantime/models/*
