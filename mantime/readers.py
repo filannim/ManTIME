@@ -155,7 +155,7 @@ class TempEval3FileReader(FileReader):
             document.sentences.append(sentence)
 
         document.store_gold_annotations()
-        logging.info('{}: parsed.'.format(os.path.relpath(file_path)))
+        logging.info('Document {}: parsed.'.format(os.path.relpath(file_path)))
         return document
 
     def _get_annotations(self, source, event_instances, start_offset=0):
