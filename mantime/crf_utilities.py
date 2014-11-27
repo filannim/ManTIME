@@ -28,37 +28,37 @@ from __future__ import division
 import argparse
 import pickle
 import sys
-import csv
 from collections import Counter
 from os.path import isfile
 
 
-def get_scale_factors(source, index):
+def get_scale_factors(source, column_index):
     '''It returns a dictionary of words with their:
        p_word(label='O-TIMEX3').
     '''
     assert isfile(source), 'Input file doesn\'t exist.'
-    assert index > 0, 'Invalid index.'
+    assert column_index > 0, 'Invalid index.'
 
     scale_factors = dict()
     with open(source) as source:
-        data = csv.reader(source, delimiter='\t')
+        data = source.xreadlines()
         for row in data:
-            try:
-                word = row[index]
+            row = row.strip().split('\t')
+            if len(row) > 1:
+                word = row[column_index]
+                if word.startswith('"') and word.endswith('"'):
+                    word = word[1:-1]
                 label = row[-1]
                 if label != 'O':
                     label = 'I'
                 scale_factors.setdefault(word, Counter(label))
                 scale_factors[word][label] += 1.0
-            except IndexError:  # skip empty lines which cannot be unpacked.
-                continue
     # normalise scale_factors (counts)
     for word in scale_factors.keys():
-        counts = sum(scale_factors[word].values())
+        freq = sum(scale_factors[word].values())
         if scale_factors[word]['I'] >= 2.0:
             for label in scale_factors[word].iterkeys():
-                scale_factors[word][label] /= counts
+                scale_factors[word][label] /= freq
         else:
             scale_factors.pop(word)
     return scale_factors

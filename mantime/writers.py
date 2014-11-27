@@ -140,10 +140,11 @@ class TempEval3Writer(FileWriter):
                     event_attrs = {a: word.tag_attributes.get(a, None) for a
                                    in EVENT_ATTRIBUTES}
                     if word.predicted_label != 'O':
+                        current_tag = word.predicted_label.split('-')[1]
                         # Labelled token
                         if memory['start']:
                             # Next labelled token
-                            if memory['tag'] == word.predicted_label:
+                            if memory['tag'] == current_tag:
                                 # Continuing previous annotation
                                 memory['end'] = current_end
                                 memory['event_class'] = event_class
@@ -158,7 +159,7 @@ class TempEval3Writer(FileWriter):
                             # First labelled token
                             memory['start'] = current_start
                             memory['end'] = current_end
-                            _, memory['tag'] = word.predicted_label.split('-')
+                            memory['tag'] = current_tag
                             memory['event_class'] = event_class
                             memory['event_attributes'].update(event_attrs)
                     else:

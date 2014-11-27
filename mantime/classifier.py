@@ -211,7 +211,6 @@ class IdentificationClassifier(Classifier):
             assert os.stat(model_path).st_size > 0, 'Model is empty!'
             assert os.path.isfile(testset_path), 'Test set doesn\'t exist!'
 
-            #print ' '.join(crf_command)
             with Mute_stderr():
                 process = subprocess.Popen(crf_command, stdout=subprocess.PIPE)
 
