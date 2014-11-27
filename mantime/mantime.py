@@ -109,11 +109,11 @@ def main():
     args = parser.parse_args()
 
     # Expected usage of ManTIME
-    mantime = ManTIME(TempEval3FileReader(),
+    mantime = ManTIME(WikiWarsInLineFileReader(),
                       TempEval3Writer(),
                       FullExtractor(),
-                      'tempeval3',
-                      pipeline=True)
+                      'wikiwars',
+                      pipeline=False)
     mantime.train(args.folder[0])
     print mantime.label('../data/test_all_quickly/unicode_nosentence.tml.TE3input')
 

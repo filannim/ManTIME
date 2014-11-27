@@ -84,8 +84,10 @@ def normalisation_attribute_matrix(documents, dest, subject, training=True):
                            in sorted(word.attributes.items())]
                     row.append(get_label(word))
                     if training:
-                        row.append(word.tag_attributes.get(subject,
-                                                           NO_ATTRIBUTE))
+                        label = word.tag_attributes.get(subject, NO_ATTRIBUTE)
+                        if not label:
+                            label = NO_ATTRIBUTE
+                        row.append(label)
                     else:
                         # I sneak in the coordinates of each token
                         row.append('{}_{}_{}'.format(ndoc, nsen, nwor))
@@ -189,7 +191,7 @@ class IdentificationClassifier(Classifier):
         if post_processing_pipeline:
             try:
                 factors = cPickle.load(open(model.path_factors))
-                verbosity = '-v2'
+                verbosity = '-v2 '
             except IOError:
                 post_processing_pipeline = False
                 logging.warning('Scale factors not found.')
@@ -199,7 +201,7 @@ class IdentificationClassifier(Classifier):
             model_path = '{}.{}'.format(model.path, idnt_class)
             identification_attribute_matrix(documents, testset_path,
                                             idnt_class, training=False)
-            crf_command = [PATH_CRF_PP_ENGINE_TEST, verbosity, '-m',
+            crf_command = [PATH_CRF_PP_ENGINE_TEST, '{}-m'.format(verbosity),
                            model_path, testset_path]
 
             # Draconianly check the input files
@@ -207,6 +209,7 @@ class IdentificationClassifier(Classifier):
             assert os.stat(model_path).st_size > 0, 'Model is empty!'
             assert os.path.isfile(testset_path), 'Test set doesn\'t exist!'
 
+            #print ' '.join(crf_command)
             with Mute_stderr():
                 process = subprocess.Popen(crf_command, stdout=subprocess.PIPE)
 
@@ -225,6 +228,7 @@ class IdentificationClassifier(Classifier):
 
             for label in lines:
                 label = label.strip().split('\t')[-1]
+                print label
                 if label:
                     if label != 'O':
                         documents[n_doc].sentences[n_sent].words[n_word]\
@@ -275,7 +279,7 @@ class NormalisationClassifier(Classifier):
                 attribute))
         return model
 
-    def test(self, documents, model, post_processing_pipeline=False):
+    def test(self, documents, model):
         """It returns the sequence of labels from the classifier.
 
         It returns the same data structure (list of documents, of sentences,
