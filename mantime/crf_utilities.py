@@ -119,7 +119,7 @@ def probabilistic_correction(row_iterator, factors, index, threshold):
                 else:
                     yield ''
             else:
-                if line[0].startswith('#'):
+                if line[0] == '':
                     yield ''
             line = next(row_iterator).strip().split('\t')
     except StopIteration:
@@ -168,7 +168,7 @@ def main():
     args = parser.parse_args()
 
     lines = sys.stdin.xreadlines()
-    factors = pickle.load(open('models/tempeval3.factors'))['TIMEX']
+    factors = pickle.load(open('models/tempeval3/factors'))['TIMEX']
     if args.algorithm == 'probabilistic_correction':
         adjusted_lines = probabilistic_correction(lines, factors,
                                                   135, float(args.option2))

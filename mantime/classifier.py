@@ -229,7 +229,6 @@ class IdentificationClassifier(Classifier):
 
             for label in lines:
                 label = label.strip().split('\t')[-1]
-                print label
                 if label:
                     if label != 'O':
                         documents[n_doc].sentences[n_sent].words[n_word]\
@@ -278,7 +277,7 @@ class NormalisationClassifier(Classifier):
 
             # Weakly check the output models
             if not os.path.isfile(model_path):
-                msg = 'Normalisation CRF model ({}): \e[1mnot\e[21m trained.'
+                msg = 'Normalisation CRF model ({}): *not* trained.'
                 logging.error(msg.format(attribute))
             else:
                 msg = 'Normalisation CRF model ({}): trained.'
