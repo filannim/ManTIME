@@ -21,6 +21,7 @@ import glob
 import os
 import cPickle
 import logging
+import sys
 
 from readers import TempEval3FileReader, WikiWarsInLineFileReader
 from attributes_extractor import FullExtractor
@@ -98,22 +99,23 @@ def main():
                         level=logging.INFO,
                         datefmt='%m/%d/%Y %I:%M:%S %p')
     # Parse input
-    parser = argparse.ArgumentParser(
-        description='ManTIME: temporal information extraction')
-    parser.add_argument(dest='folder', metavar='input folder', nargs='*')
-    parser.add_argument('-ppp', '--post_processing_pipeline', dest='pipeline',
-                        action='store_true',
-                        help='it uses the post processing pipeline.')
-    args = parser.parse_args()
+    # parser = argparse.ArgumentParser(
+    #     description='ManTIME: temporal information extraction')
+    # parser.add_argument(dest='folder', metavar='input folder', nargs='*')
+    # parser.add_argument(dest='model_name', metavar='model name', nargs='*')
+    # parser.add_argument('-ppp', '--post_processing_pipeline', dest='pipeline',
+    #                     action='store_true',
+    #                     help='it uses the post processing pipeline.')
+    # args = parser.parse_args()
 
     # Expected usage of ManTIME
     mantime = ManTIME(TempEval3FileReader(),
                       TempEval3Writer(),
                       FullExtractor(),
-                      'te3_and_wikiwars',
+                      sys.argv[1],
                       pipeline=False)
-    mantime.train(args.folder[0])
-    print mantime.label('../data/test_all_quickly/unicode_nosentence.tml.TE3input')
+    #mantime.train(args.folder[0])
+    print mantime.label('../data/test_all_quickly/my_test.tml.TE3input')
 
 
 if __name__ == '__main__':
