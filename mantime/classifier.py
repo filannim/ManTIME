@@ -22,6 +22,7 @@ import cPickle
 import logging
 import os
 import shutil
+import multiprocessing
 from tempfile import NamedTemporaryFile
 
 from crf_utilities import get_scale_factors
@@ -103,7 +104,7 @@ class Classifier(object):
     __metaclass__ = ABCMeta
 
     def __init__(self):
-        pass
+        self.num_cores = multiprocessing.cpu_count()
 
     @abstractmethod
     def train(self, documents, model_name):
@@ -160,7 +161,8 @@ class IdentificationClassifier(Classifier):
             scaling_factors[idnt_class] = get_scale_factors(
                 trainingset_path, token_normalised_pos)
 
-            crf_command = [PATH_CRF_PP_ENGINE_TRAIN, model.path_topology,
+            crf_command = [PATH_CRF_PP_ENGINE_TRAIN,
+                           '-p', str(self.num_cores), model.path_topology,
                            trainingset_path, '{}.{}'.format(model.path,
                                                             idnt_class)]
             with Mute_stderr():
@@ -266,17 +268,22 @@ class NormalisationClassifier(Classifier):
                 *path_model_attribute)
             normalisation_attribute_matrix(documents, trainingset_path,
                                            attribute, training=True)
-
-            crf_command = [PATH_CRF_PP_ENGINE_TRAIN,
+            model_path = '{}.{}'.format(model.path_normalisation, attribute)
+            crf_command = [PATH_CRF_PP_ENGINE_TRAIN, '-p', str(self.num_cores),
                            model.path_attribute_topology, trainingset_path,
-                           '{}.{}'.format(model.path_normalisation, attribute)]
+                           model_path]
+
             with Mute_stderr():
                 process = subprocess.Popen(crf_command, stdout=subprocess.PIPE)
                 _, _ = process.communicate()
 
-            # TO-DO: Check if the script saves a model or returns an error
-            logging.info('Normalisation CRF model ({}): trained.'.format(
-                attribute))
+            # Weakly check the output models
+            if not os.path.isfile(model_path):
+                msg = 'Normalisation CRF model ({}): \e[1mnot\e[21m trained.'
+                logging.error(msg.format(attribute))
+            else:
+                msg = 'Normalisation CRF model ({}): trained.'
+                logging.info(msg.format(attribute))
         return model
 
     def test(self, documents, model):

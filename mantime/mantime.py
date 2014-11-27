@@ -17,7 +17,6 @@ __version__ = "0.1"
 __codename__ = "purple tempo"
 
 import argparse
-import multiprocessing
 import glob
 import os
 import cPickle
@@ -33,7 +32,6 @@ from settings import PATH_MODEL_FOLDER
 class ManTIME(object):
 
     def __init__(self, reader, writer, extractor, model_name, pipeline=True):
-        self.processes = multiprocessing.cpu_count()
         self.post_processing_pipeline = pipeline
         self.reader = reader
         self.writer = writer
@@ -109,10 +107,10 @@ def main():
     args = parser.parse_args()
 
     # Expected usage of ManTIME
-    mantime = ManTIME(WikiWarsInLineFileReader(),
+    mantime = ManTIME(TempEval3FileReader(),
                       TempEval3Writer(),
                       FullExtractor(),
-                      'wikiwars',
+                      'te3_and_wikiwars',
                       pipeline=False)
     mantime.train(args.folder[0])
     print mantime.label('../data/test_all_quickly/unicode_nosentence.tml.TE3input')
