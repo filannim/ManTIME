@@ -189,11 +189,9 @@ class IdentificationClassifier(Classifier):
             logging.warning('The feature extractor component is different' +
                             'from the one used in the training!')
 
-        verbosity = ''
         if post_processing_pipeline:
             try:
                 factors = cPickle.load(open(model.path_factors))
-                verbosity = '-v2 '
             except IOError:
                 post_processing_pipeline = False
                 logging.warning('Scale factors not found.')
@@ -203,8 +201,12 @@ class IdentificationClassifier(Classifier):
             model_path = '{}.{}'.format(model.path, idnt_class)
             identification_attribute_matrix(documents, testset_path,
                                             idnt_class, training=False)
-            crf_command = [PATH_CRF_PP_ENGINE_TEST, '{}-m'.format(verbosity),
-                           model_path, testset_path]
+            if post_processing_pipeline:
+                crf_command = [PATH_CRF_PP_ENGINE_TEST, '-v2', '-m',
+                               model_path, testset_path]
+            else:
+                crf_command = [PATH_CRF_PP_ENGINE_TEST, '-m',
+                               model_path, testset_path]
 
             # Draconianly check the input files
             assert os.path.isfile(model_path), 'Model doesn\'t exist at {}'.format(model_path)
