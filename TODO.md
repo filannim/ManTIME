@@ -3,6 +3,7 @@ TO-DO List
 
 This document lists all the things I should look more carefully in the future.
 
+- [ ] Implement a caching system for Stanford Core NLP.
 - [ ] Fix unicode-related bug at utilities.py:76.
 - [ ] Implement the feature extractor for Temporal Links.
 - [ ] Implement the classifier for Temporal Links.
