@@ -330,6 +330,22 @@ class NormalisationClassifier(Classifier):
         return documents
 
 
+class LinkingClassifier(Classifier):
+    """This class is a CRF interface for the temporal linking classification.
+
+    """
+    def __init__(self):
+        super(LinkingClassifier, self).__init__()
+
+    def train(self, documents, model):
+        # TO-DO: feature extractor deve yieldare anziche' ritornare
+        assert type(documents) == list, 'Wrong type for documents.'
+        assert len(documents) > 0, 'Empty documents list.'
+
+    def test(self, documents, model):
+        pass
+
+
 class ClassificationModel(object):
     """Classification model.
 
