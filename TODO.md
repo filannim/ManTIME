@@ -3,7 +3,6 @@ TO-DO List
 
 This document lists all the things I should look more carefully in the future.
 
-- [ ] Implement a caching system for Stanford Core NLP.
 - [ ] Fix unicode-related bug at utilities.py:76.
 - [ ] Implement the feature extractor for Temporal Links.
 - [ ] Implement the classifier for Temporal Links.
@@ -21,6 +20,7 @@ This document lists all the things I should look more carefully in the future.
 - [ ] Comment the code: better and more verbously using Google Commenting Style.
 - [ ] Have a look at argparse ... it's not correct right now.
 - [ ] Implement a HTML (CSS3) writer.
+- [x] Implement a caching system for Stanford Core NLP.
 - [x] Remove the output produced by CRF++ in the training phase.
 - [x] Integrate (Norma)[https://github.com/filannim/timex-normaliser].
 - [x] Introduce model folders instead of files.

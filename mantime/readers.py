@@ -28,6 +28,8 @@ import sys
 import os
 import logging
 import codecs
+import hashlib
+import cPickle
 
 from nltk import ParentedTree
 
@@ -46,7 +48,21 @@ class BatchedCoreNLP(object):
         self.DIR = stanford_dir
         self.batch_parse = batch_parse
 
-    def parse(self, text):
+    def parse(self, text, folder):
+        '''Returns the parsing from file (if already parsed), or computes it.
+
+        '''
+        text_md5_id = hashlib.md5(text).digest()
+        dest_file = os.path.join(folder, text_md5_id)
+        try:
+            return cPickle.load(open(dest_file))
+        except IOError:
+            return self._parse(text, dest_file)
+
+    def _parse(self, text, dest_file):
+        '''Computes the parsing calling Stanford NLP api.
+
+        '''
         import tempfile
         dirname = tempfile.mkdtemp()
         with tempfile.NamedTemporaryFile('w', dir=dirname, delete=False) as f:
@@ -56,7 +72,9 @@ class BatchedCoreNLP(object):
             tmp.flush()
             result = self.batch_parse(os.path.dirname(tmp.name), self.DIR)
             result = list(result)[0]
+        cPickle.dump(result, open(dest_file, 'w'))
         return result
+
 
 with Mute_stderr():
     CORENLP = BatchedCoreNLP(PATH_CORENLP_FOLDER)
@@ -112,7 +130,8 @@ class TempEval3FileReader(FileReader):
         left_chars = len(text_string) - len(text_string.lstrip())
 
         with Mute_stderr():
-            stanford_tree = CORENLP.parse(text_string)
+            folder = os.path.dirname(file_path)
+            stanford_tree = CORENLP.parse(text_string, folder)
         document = Document(file_path)
         document.text_offset = left_chars
         document.file_path = os.path.abspath(file_path)
