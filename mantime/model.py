@@ -11,7 +11,12 @@
 #
 #   For details, see www.cs.man.ac.uk/~filannim/
 
-"""It contains the classes for the document data model of ManTIME."""
+"""It contains the classes for the document data model of ManTIME.
+
+"""
+
+from normalisers.timex_general import normalise as normalise_general
+from normalisers.timex_clinical import normalise as normalise_clinical
 
 
 def format_annotation(start_token, end_token, annotations,
@@ -129,11 +134,15 @@ class Document(object):
         self.dct = dct
         self.dct_text = None
         self.title = None
+        self.sec_times = []
         self.text = ''
         self.sentences = []
         self.coref = None
         self.gold_annotations = []
         self.predicted_annotations = []
+
+    def get_text(self, start, end):
+        return self.text[start+self.text_offset:end+self.text_offset]
 
     def store_gold_annotations(self):
         """Enriching the Stanford Parser output with gold annotations."""
@@ -200,3 +209,119 @@ class Word(object):
 
     def __repr__(self):
         return repr(self.__dict__)
+
+    def __eq__(self, other):
+        return (isinstance(self, type(other)) and
+                self.word_form == other.word_form and
+                self.character_offset_begin == other.character_offset_begin and
+                self.character_offset_end == other.character_offset_end)
+
+
+class TemporalExpression(object):
+    """It represents an annotated temporal expression in the TimeML standard.
+
+    """
+    def __init__(self, tid, words, ttype=None, value=None, mod=None):
+        assert isinstance(tid, int)
+        assert isinstance(words, list)
+        self.tid = 't{}'.format(tid)
+        self.words = words
+        self.start = words[0].character_offset_begin
+        self.end = words[-1].character_offset_end
+        self.ttype = ttype
+        self.value = value
+        self.mod = mod
+        self.text = ''
+
+    def append_word(self, word):
+        assert isinstance(word, Word)
+        self.words.append(word)
+        self.end = self.words[-1].character_offset_end
+
+    def normalise(self, document, dct, domain='general'):
+        """ It calls the normalisation component and provides the ISO-8601
+        representation.
+
+        """
+        assert self.words
+        assert domain in ('general', 'clinical')
+        start = self.words[0].character_offset_begin + document.text_offset
+        end = self.words[-1].character_offset_end + document.text_offset
+        text = document.text[start:end]
+        mod = ''
+        if domain == 'general':
+            timex_normalise = normalise_general
+            _, ttype, value, _ = timex_normalise(text, dct)
+        else:
+            timex_normalise = normalise_clinical
+            _, ttype, value, _, mod = timex_normalise(text, dct)
+        self.text = text
+        self.ttype = ttype
+        self.value = value
+        self.mod = mod
+
+
+class Event(object):
+    """It represents an annotated event in the TimeML standard.
+
+    """
+    def __init__(self, eid, words, eclass=None, pos=None, tense=None,
+                 aspect=None, polarity=None, modality=None, sec_time_rel=None):
+        assert isinstance(eid, int)
+        assert isinstance(words, list)
+        self.eid = 'e{}'.format(eid)
+        self.words = words
+        self.eclass = eclass
+        self.text = ''
+        self.pos = pos
+        self.tense = tense
+        self.aspect = aspect
+        self.polarity = polarity
+        self.modality = modality
+        self.sec_time_rel = sec_time_rel
+        self.start = words[0].character_offset_begin
+        self.end = words[-1].character_offset_end
+
+    def append_word(self, word):
+        assert isinstance(word, Word)
+        self.words.append(word)
+        self.end = self.words[-1].character_offset_end
+
+    def normalise(self):
+        self.eclass = [w.tag_attributes['type'] for w in self.words][0]
+        self.modality = [w.tag_attributes['modality'] for w in self.words][0]
+        self.polarity = [w.tag_attributes['polarity'] for w in self.words][0]
+        self.sec_time_rel = ''#[w.tag_attributes['sec_time_rel'] for w in self.words][0]
+
+
+class EventInstance(object):
+    """It represents an instance for an annotated event.
+
+    """
+    def __init__(self, eiid, event):
+        assert isinstance(eiid, int)
+        assert isinstance(event, Event)
+        self.eiid = 'ei{}'.format(eiid)
+
+
+class TemporalLink(object):
+    """It represents an annotated temporal link in the TimeML standard.
+
+    """
+    def __init__(self, lid, element1, element2, reltype=None):
+        assert isinstance(lid, int)
+        assert type(element1) in (TemporalExpression, Event, EventInstance)
+        assert type(element2) in (TemporalExpression, Event, EventInstance)
+        self.lid = 'l{}'.format(lid)
+        self.element1 = element1
+        self.element2 = element2
+        self.reltype = reltype
+
+# class AnnotationStandard(object):
+#     """ It represents an annotation standard.
+
+#     """
+#     def __init__(self, structure):
+#         """ Structure = {TAG1: [ATTR1, ATTR2], TAG2: [ATTR1, ATTR2]} """
+#         self.identification_tags = structure.keys()
+
