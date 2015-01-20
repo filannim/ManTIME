@@ -18,6 +18,7 @@ pipeline.py
 temporal_location/*
 datasets/*
 buffer/*
+mantime/output/*
 
 data/*/.DS_Store
 
