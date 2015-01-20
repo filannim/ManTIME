@@ -28,6 +28,8 @@ from tempfile import NamedTemporaryFile
 from crf_utilities import get_scale_factors
 from crf_utilities import probabilistic_correction
 from crf_utilities import label_switcher
+from model import Event
+from model import TemporalExpression
 from settings import PATH_MODEL_FOLDER
 from settings import PATH_CRF_PP_ENGINE_TEST
 from settings import PATH_CRF_PP_ENGINE_TRAIN
@@ -88,6 +90,9 @@ def normalisation_attribute_matrix(documents, dest, subject, training=True):
                         label = word.tag_attributes.get(subject, NO_ATTRIBUTE)
                         if not label:
                             label = NO_ATTRIBUTE
+                        if label == 'None':
+                            label == 'N/A'
+                        label = label.replace(' ', '_').upper()
                         row.append(label)
                     else:
                         # I sneak in the coordinates of each token
@@ -229,13 +234,36 @@ class IdentificationClassifier(Classifier):
             else:
                 lines = iter(process.stdout.readline, '')
 
+            last_element = None
+            last_prediction = None
+            n_timex, n_event = 1, 1
             for label in lines:
-                label = label.strip().split('\t')[-1]
-                if label:
-                    if label != 'O':
+                curr_prediction = label.strip().split('\t')[-1]
+                if curr_prediction:
+                    curr_word = documents[n_doc].sentences[n_sent].words[n_word]
+                    if (curr_prediction != last_prediction):
+                        if last_element:
+                            documents[n_doc].predicted_annotations.append(
+                                last_element)
+                        if curr_prediction == 'I-EVENT':
+                            last_element = Event(n_event, [curr_word])
+                            n_event += 1
+                        elif curr_prediction == 'I-TIMEX3':
+                            last_element = TemporalExpression(n_timex, [curr_word])
+                            n_timex += 1
+                        else:
+                            last_element = None
+                    else:
+                        if curr_prediction != 'O':
+                            last_element.append_word(curr_word)
+
+                    if curr_prediction != 'O':
                         documents[n_doc].sentences[n_sent].words[n_word]\
-                            .predicted_label = label
+                            .predicted_label = curr_prediction
+                    last_prediction = curr_prediction
+
                     n_word += 1
+
                     if len(documents[n_doc].sentences[n_sent].words) == n_word:
                         n_word = 0
                         n_sent += 1

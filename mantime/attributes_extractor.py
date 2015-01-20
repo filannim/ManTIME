@@ -34,7 +34,6 @@ class AttributesExtractor(object):
        An AttributeExtractor contains sentence attributes extractors and word
        attributes extractor.
     """
-
     def __init__(self):
         self.sentence_extractors = []
         self.word_extractors = []
