@@ -17,6 +17,7 @@ pipeline.py
 # folders outside the scope of this project
 temporal_location/*
 datasets/*
+buffer/*
 
 data/*/.DS_Store
 
