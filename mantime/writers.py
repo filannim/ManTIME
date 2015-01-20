@@ -172,11 +172,11 @@ class TempEval3Writer(FileWriter):
             if memory['start']:
                 write_tag(memory, text)
             # TO-DO: end.
-            output.append(u'<TEXT>{}</TEXT>\n\n'.format(''.join(text)))
+            output.append(u'<TEXT><![CDATA[\n{}]]></TEXT>\n\n'.format(''.join(text)))
 
             # MAKEINSTANCEs
             for eid, pos, tense, aspect, pol, mod, _ in memory['events']:
-                instance = str('<MAKEINSTANCE eiid="{}" eventID="{}" pos="{}' +
+                instance = str('<MAKEINSTANCE eiid="{}" eventID="{}" pos="{}"' +
                                ' tense="{}" aspect="{}" ' +
                                'polarity="{}" ').format(
                                     'ei{}'.format(eid), 'e{}'.format(eid),
@@ -205,44 +205,12 @@ class i2b2Writer(FileWriter):
 
         """
 
-        def write_tag(memory, text):
-            annotated_text = ''.join(text[memory['start']:memory['end']]).strip()
-            attribs = ''
-            if memory['tag'] == 'EVENT':
-                attrs = memory['event_attributes']
-                event_eid = memory['tag_ids'].get(memory['tag'], 1)
-                event_class = memory['event_class']
-                attribs = 'class="{}" eid="e{}"'.format(event_class, event_eid)
-                memory['events'].append((event_eid, attrs['pos'],
-                                         attrs['tense'], attrs['aspect'],
-                                         attrs['polarity'], attrs['modality'],
-                                         annotated_text))
-                memory['tag_ids'][memory['tag']] = event_eid + 1
-            elif memory['tag'] == 'TIMEX3':
-                _, ttype, tvalue, _ = timex_normalise(annotated_text,
-                                                      memory['dct'])
-                ttid = memory['tag_ids'].get(memory['tag'], 1)
-                memory['tag_ids'][memory['tag']] = ttid + 1
-                attribs = 'type="{}" value="{}" tid="t{}"'.format(ttype,
-                                                                  tvalue,
-                                                                  ttid)
-            if memory['tag']:
-                text.insert(memory['start'], '<{} {}>'.format(memory['tag'],
-                                                              attribs))
-                text.insert(memory['end']+1, '</{}>'.format(memory['tag']))
-                memory['offset'] += 2
-            memory['start'] = 0
-            memory['end'] = 0
-            memory['tag'] = None
-            memory['event_class'] = None
-            memory['event_attributes'] = {}
-
         outputs = []
         for document in documents:
             output = []
             output.append('<?xml version="1.0" ?>')
             output.append('<ClinicalNarrativeTemporalAnnotation>\n')
-            output.append(u'<TEXT>{}</TEXT>\n\n'.format(document.text))
+            output.append(u'<TEXT><![CDATA[\n{}]]></TEXT>\n\n'.format(document.text))
 
             output.append(u'<TAGS>')
             # TIMEX3s and EVENTs
@@ -251,13 +219,13 @@ class i2b2Writer(FileWriter):
                 if isinstance(element, TemporalExpression):
                     element.normalise(document, document.dct_text, 'clinical')
                     xml_tag = str('<TIMEX3 id="{tid}" start="{start}" ' +
-                                  'end="{end} text="{text}" type="{ttype}" ' +
+                                  'end="{end}" text="{text}" type="{ttype}" ' +
                                   'val="{value}" mod="{mod}" />').format(
                         **element.__dict__)
                 elif isinstance(element, Event):
                     element.normalise()
                     xml_tag = str('<EVENT id="{eid}" start="{start}" ' +
-                                  'end="{end} text="{text}" type="{eclass}" ' +
+                                  'end="{end}" text="{text}" type="{eclass}" ' +
                                   'modality="{modality}" ' +
                                   'polarity="{polarity}" ' +
                                   'sec_time_rel="{sec_time_rel}" />').format(
