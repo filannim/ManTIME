@@ -28,7 +28,6 @@ import sys
 import os
 import logging
 import codecs
-import hashlib
 import cPickle
 
 from nltk import ParentedTree
@@ -39,21 +38,34 @@ from model import Word
 from model import DependencyGraph
 from utilities import Mute_stderr
 from settings import PATH_CORENLP_FOLDER
+from normalisers.clinical_doc_analyser import DocumentAnalyser
 
 
 class BatchedCoreNLP(object):
+    """It provides an interface to StanfordCoreNLP parser.
+
+    Attributes:
+        folder: a string containing the folder path of StanfordCoreNLP
+    """
 
     def __init__(self, stanford_dir):
-        from corenlp import batch_parse
-        self.DIR = stanford_dir
-        self.batch_parse = batch_parse
+        self.folder = stanford_dir
 
-    def parse(self, text, folder):
-        '''Returns the parsing from file (if already parsed), or computes it.
+    def parse(self, text, folder='../buffer/'):
+        """Returns the parsing from file (if already parsed), or computes it.
 
-        '''
-        text_md5_id = hashlib.md5(text).digest()
-        dest_file = os.path.join(folder, text_md5_id)
+        Long description...
+
+        Args:
+            text: a string containing the text to be parsed
+            folder: a string representing the destination folder where the
+                caching system dumps the parsing.
+
+        Returns:
+
+        """
+        hash_value = str(hash(text))
+        dest_file = os.path.join(os.path.abspath(folder), hash_value)
         try:
             return cPickle.load(open(dest_file))
         except IOError:
@@ -64,13 +76,14 @@ class BatchedCoreNLP(object):
 
         '''
         import tempfile
+        from corenlp import batch_parse
         dirname = tempfile.mkdtemp()
         with tempfile.NamedTemporaryFile('w', dir=dirname, delete=False) as f:
             filename = f.name
         with codecs.open(filename, 'w', encoding='utf8') as tmp:
             tmp.write(text)
             tmp.flush()
-            result = self.batch_parse(os.path.dirname(tmp.name), self.DIR)
+            result = batch_parse(os.path.dirname(tmp.name), self.folder)
             result = list(result)[0]
         cPickle.dump(result, open(dest_file, 'w'))
         return result
@@ -114,10 +127,15 @@ class TempEval3FileReader(FileReader):
         from a TempEval-3 annotated file. Those information are packed in a
         Document object, which is our internal representation.
         """
+        logging.info('Document {}: parsing...'.format(
+            os.path.relpath(file_path)))
         xml = etree.parse(file_path)
         docid = xml.findall(".//DOCID")[0]
         dct = xml.findall(".//TIMEX3[@functionInDocument='CREATION_TIME']")[0]
-        title = xml.findall(".//TITLE")[0]
+        try:
+            title = xml.findall(".//TITLE")[0]
+        except IndexError:
+            title = xml.findall(".//DOCID")[0]
         text_node = xml.findall(".//TEXT")[0]
         text_string = etree.tostring(text_node, method='text', encoding='utf8')
         text_xml = etree.tostring(text_node, method='xml', encoding='utf8')
@@ -131,7 +149,7 @@ class TempEval3FileReader(FileReader):
 
         with Mute_stderr():
             folder = os.path.dirname(file_path)
-            stanford_tree = CORENLP.parse(text_string, folder)
+            stanford_tree = CORENLP.parse(text_string)
         document = Document(file_path)
         document.text_offset = left_chars
         document.file_path = os.path.abspath(file_path)
@@ -192,19 +210,22 @@ class TempEval3FileReader(FileReader):
         annotations = []
         for event, element in etree.iterparse(
                 StringIO(source), events=('start', 'end')):
-            if event == 'start':
-                if element.tag in self.tags_to_spot:
-                    end_offset = start_offset + len(element.text)
-                    if element.tag == 'EVENT':
-                        eid = element.attrib['eid']
-                        if eid in event_instances.keys():
-                            element.attrib.update(event_instances[eid])
-                    annotations.append((element.tag, element.attrib,
-                                        (start_offset, end_offset)))
-                start_offset += len(element.text)
-            elif event == 'end':
-                if element.text is not None and element.tail is not None:
-                    start_offset += len(element.tail)
+            try:
+                if event == 'start':
+                    if element.tag in self.tags_to_spot:
+                        end_offset = start_offset + len(element.text)
+                        if element.tag == 'EVENT':
+                            eid = element.attrib['eid']
+                            if eid in event_instances.keys():
+                                element.attrib.update(event_instances[eid])
+                        annotations.append((element.tag, element.attrib,
+                                            (start_offset, end_offset)))
+                    start_offset += len(element.text)
+                elif event == 'end':
+                    if element.text is not None and element.tail is not None:
+                        start_offset += len(element.tail)
+            except TypeError:
+                        continue
         return annotations
 
     def _get_event_instances(self, xml_document):
@@ -335,9 +356,122 @@ class WikiWarsInLineFileReader(FileReader):
         return annotations
 
 
+class i2b2FileReader(FileReader):
+    """This class is a reader for TempEval-3 files."""
+
+    def __init__(self, file_filter='*.xml'):
+        super(i2b2FileReader, self).__init__()
+        self.tags_to_spot = {'TIMEX3', 'EVENT', 'TLINK'}
+        self.annotations = []
+        self.file_filter = file_filter
+        self.clinical_doc_analyser = DocumentAnalyser()
+
+    def get_dct(self, file_path):
+        """ It returns the utterance date for the timexes normalisation.
+
+        """
+        path = os.path.dirname(file_path)
+        filename = os.path.basename(file_path)
+        sec_rels = self.clinical_doc_analyser.analyse(path, filename, True)
+        return sec_rels
+
+    def parse(self, file_path):
+        """It parses the content of file_path and extracts relevant information
+        from a TempEval-3 annotated file. Those information are packed in a
+        Document object, which is our internal representation.
+        """
+        logging.info('Document {}: parsing...'.format(
+            os.path.relpath(file_path)))
+        xml = etree.parse(file_path)
+        text_node = xml.findall(".//TEXT")[0]
+        text_string = etree.tostring(text_node, method='text', encoding='utf8')
+        text_xml = etree.tostring(text_node, method='xml', encoding='utf8')
+        text_string = unicode(text_string, 'UTF-8')
+        text_xml = unicode(text_xml, 'UTF-8')
+        right_chars = len(text_xml.split('</TEXT>')[1])
+        text_string = text_string[:-right_chars]
+        text_xml = etree.tostring(text_node)
+
+        # StanfordParser strips internally the text :(
+        left_chars = len(text_string) - len(text_string.lstrip())
+        with Mute_stderr():
+            stanford_tree = CORENLP.parse(text_string)
+
+        document = Document(file_path)
+        document.text_offset = left_chars
+        document.file_path = os.path.abspath(file_path)
+        document.doc_id = os.path.basename(file_path)
+        document.sec_times = self.get_dct(file_path)
+        document.dct = document.sec_times.admission_date
+        document.dct_text = document.dct.replace('-', '')
+        document.title = os.path.basename(file_path)
+        document.text = text_string
+        document.gold_annotations = self._get_annotations(xml, -left_chars)
+        document.coref = stanford_tree.get('coref', None)
+
+        for stanford_sentence in stanford_tree['sentences']:
+            dependencies = stanford_sentence.get('dependencies', None)
+            i_dependencies = stanford_sentence.get('indexeddependencies', None)
+            i_dependencies = DependencyGraph(i_dependencies)
+            parsetree = ParentedTree(stanford_sentence.get('parsetree', u''))
+            sentence_text = stanford_sentence.get('text', u'')
+
+            sentence = Sentence(dependencies=dependencies,
+                                indexed_dependencies=i_dependencies,
+                                parsetree=parsetree,
+                                text=sentence_text)
+            for num_word, (word_form, attr) in\
+                    enumerate(stanford_sentence['words']):
+                offset_begin = int(attr['CharacterOffsetBegin'])-left_chars
+                offset_end = int(attr['CharacterOffsetEnd'])-left_chars
+                word = Word(word_form=word_form,
+                            char_offset_begin=offset_begin,
+                            char_offset_end=offset_end,
+                            lemma=attr['Lemma'],
+                            named_entity_tag=attr['NamedEntityTag'],
+                            part_of_speech=attr['PartOfSpeech'],
+                            id_token=num_word)
+                sentence.words.append(word)
+            document.sentences.append(sentence)
+
+        document.store_gold_annotations()
+
+        # for s in document.sentences:
+        #     for w in s.words:
+        #         print w.tag_attributes
+
+        logging.info('Document {}: parsed.'.format(os.path.relpath(file_path)))
+        return document
+
+    def _get_annotations(self, source, start_offset=0):
+        """It returns the annotations found in the document.
+
+        It follows the following format:
+           [
+            ('TAG', {ATTRIBUTES}, (start_offset, end_offset)),
+            ('TAG', {ATTRIBUTES}, (start_offset, end_offset)),
+            ...
+            ('TAG', {ATTRIBUTES}, (start_offset, end_offset))
+           ]
+
+        """
+        annotations = []
+        elements = source.findall(".//EVENT")
+        elements.extend(source.findall(".//TIMEX3"))
+        for element in elements:
+            try:
+                start = int(element.attrib['start']) + start_offset
+                end = int(element.attrib['end']) + start_offset
+                annotations.append((element.tag, element.attrib, (start, end)))
+            except TypeError:
+                continue
+        return annotations
+
+
 Reader.register(FileReader)
 FileReader.register(TempEval3FileReader)
 FileReader.register(WikiWarsInLineFileReader)
+FileReader.register(i2b2FileReader)
 
 
 def main():

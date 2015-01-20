@@ -28,6 +28,8 @@ from collections import Counter
 
 from settings import EVENT_ATTRIBUTES
 from settings import NO_ATTRIBUTE
+from model import TemporalExpression
+from model import Event
 
 
 class Writer(object):
@@ -175,7 +177,8 @@ class TempEval3Writer(FileWriter):
             # MAKEINSTANCEs
             for eid, pos, tense, aspect, pol, mod, _ in memory['events']:
                 instance = str('<MAKEINSTANCE eiid="{}" eventID="{}" pos="{}' +
-                               ' tense="{}" aspect="{} polarity="{}" ').format(
+                               ' tense="{}" aspect="{}" ' +
+                               'polarity="{}" ').format(
                                     'ei{}'.format(eid), 'e{}'.format(eid),
                                     pos, tense, aspect, pol)
                 if mod != NO_ATTRIBUTE:
@@ -187,6 +190,95 @@ class TempEval3Writer(FileWriter):
 
             # TLINKs
             output.append('</TimeML>\n')
+            outputs.append('\n'.join(output))
+        return '\n----------\n'.join(outputs)
+
+
+class i2b2Writer(FileWriter):
+    """This class is a writer in the TempEval-3 format."""
+
+    def __init__(self):
+        super(i2b2Writer, self).__init__()
+
+    def write(self, documents):
+        """It writes on an external file in the TempEval-3 format.
+
+        """
+
+        def write_tag(memory, text):
+            annotated_text = ''.join(text[memory['start']:memory['end']]).strip()
+            attribs = ''
+            if memory['tag'] == 'EVENT':
+                attrs = memory['event_attributes']
+                event_eid = memory['tag_ids'].get(memory['tag'], 1)
+                event_class = memory['event_class']
+                attribs = 'class="{}" eid="e{}"'.format(event_class, event_eid)
+                memory['events'].append((event_eid, attrs['pos'],
+                                         attrs['tense'], attrs['aspect'],
+                                         attrs['polarity'], attrs['modality'],
+                                         annotated_text))
+                memory['tag_ids'][memory['tag']] = event_eid + 1
+            elif memory['tag'] == 'TIMEX3':
+                _, ttype, tvalue, _ = timex_normalise(annotated_text,
+                                                      memory['dct'])
+                ttid = memory['tag_ids'].get(memory['tag'], 1)
+                memory['tag_ids'][memory['tag']] = ttid + 1
+                attribs = 'type="{}" value="{}" tid="t{}"'.format(ttype,
+                                                                  tvalue,
+                                                                  ttid)
+            if memory['tag']:
+                text.insert(memory['start'], '<{} {}>'.format(memory['tag'],
+                                                              attribs))
+                text.insert(memory['end']+1, '</{}>'.format(memory['tag']))
+                memory['offset'] += 2
+            memory['start'] = 0
+            memory['end'] = 0
+            memory['tag'] = None
+            memory['event_class'] = None
+            memory['event_attributes'] = {}
+
+        outputs = []
+        for document in documents:
+            output = []
+            output.append('<?xml version="1.0" ?>')
+            output.append('<ClinicalNarrativeTemporalAnnotation>\n')
+            output.append(u'<TEXT>{}</TEXT>\n\n'.format(document.text))
+
+            output.append(u'<TAGS>')
+            # TIMEX3s and EVENTs
+            for element in document.predicted_annotations:
+                element.text = document.get_text(element.start, element.end)
+                if isinstance(element, TemporalExpression):
+                    element.normalise(document, document.dct_text, 'clinical')
+                    xml_tag = str('<TIMEX3 id="{tid}" start="{start}" ' +
+                                  'end="{end} text="{text}" type="{ttype}" ' +
+                                  'val="{value}" mod="{mod}" />').format(
+                        **element.__dict__)
+                elif isinstance(element, Event):
+                    element.normalise()
+                    xml_tag = str('<EVENT id="{eid}" start="{start}" ' +
+                                  'end="{end} text="{text}" type="{eclass}" ' +
+                                  'modality="{modality}" ' +
+                                  'polarity="{polarity}" ' +
+                                  'sec_time_rel="{sec_time_rel}" />').format(
+                        **element.__dict__)
+                output.append(xml_tag)
+
+            # SECTIMEs
+            output.append(str('<SECTIME id="S0" start="_" end="_" ' +
+                              'text="_" type="ADMISSION" ' +
+                              'dvalue="{}" />').format(
+                document.sec_times.admission_date))
+            output.append(str('<SECTIME id="S0" start="_" end="_" ' +
+                              'text="_" type="DISCHARGE" ' +
+                              'dvalue="{}" />').format(
+                document.sec_times.discharge_date))
+
+            # TLINKs
+
+            # Ending
+            output.append(u'</TAGS>')
+            output.append(u'</ClinicalNarrativeTemporalAnnotation>\n')
             outputs.append('\n'.join(output))
         return '\n----------\n'.join(outputs)
 
@@ -221,6 +313,7 @@ Writer.register(FileWriter)
 FileWriter.register(SimpleXMLFileWriter)
 FileWriter.register(TempEval3Writer)
 FileWriter.register(AttributeMatrixWriter)
+FileWriter.register(i2b2Writer)
 
 
 def main():
