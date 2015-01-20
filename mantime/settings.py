@@ -26,5 +26,6 @@ PATH_CRF_CONSISTENCY_MODULE = HOME + 'components/make_consistent.py'
 PATH_CRF_ADJUSTMENT_MODULE = HOME + 'components/make_adjusted.py'
 PATH_CORENLP_FOLDER = '/Users/filannim/Downloads/stanford-corenlp-full-2014-08-27'
 PATH_MODEL_FOLDER = 'models'
-EVENT_ATTRIBUTES = ('class', 'pos', 'tense', 'aspect', 'polarity', 'modality')
+#EVENT_ATTRIBUTES = ('class', 'pos', 'tense', 'aspect', 'polarity', 'modality')
+EVENT_ATTRIBUTES = ('type', 'polarity', 'modality', 'sec_time_rel')
 NO_ATTRIBUTE = 'n/a'
