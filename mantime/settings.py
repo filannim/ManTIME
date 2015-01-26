@@ -19,13 +19,12 @@ import os
 HOME = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
 LANGUAGE = 'english'
-PATH_CRF_ENGINE = '/Users/michele/Downloads/wapiti-1.5.0/wapiti'
-PATH_CRF_PP_ENGINE_TRAIN = '/Users/michele/Downloads/CRF++-0.58/crf_learn'
-PATH_CRF_PP_ENGINE_TEST = '/Users/michele/Downloads/CRF++-0.58/crf_test'
+PATH_CRF_PP_ENGINE_TRAIN = os.path.abspath(os.environ['MANTIME_CRF_TRAIN'])
+PATH_CRF_PP_ENGINE_TEST = os.path.abspath(os.environ['MANTIME_CRF_TEST'])
+PATH_CORENLP_FOLDER = os.path.abspath(os.environ['MANTIME_CORENLP_FOLDER'])
 PATH_CRF_CONSISTENCY_MODULE = HOME + 'components/make_consistent.py'
 PATH_CRF_ADJUSTMENT_MODULE = HOME + 'components/make_adjusted.py'
-PATH_CORENLP_FOLDER = '/Users/filannim/Downloads/stanford-corenlp-full-2014-08-27'
 PATH_MODEL_FOLDER = 'models'
-#EVENT_ATTRIBUTES = ('class', 'pos', 'tense', 'aspect', 'polarity', 'modality')
+# EVENT_ATTRIBUTES = ('class', 'pos', 'tense', 'aspect', 'polarity', 'modality')
 EVENT_ATTRIBUTES = ('type', 'polarity', 'modality', 'sec_time_rel')
 NO_ATTRIBUTE = 'n/a'
