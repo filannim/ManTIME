@@ -19,6 +19,7 @@ temporal_location/*
 datasets/*
 buffer/*
 mantime/output/*
+externals/
 
 data/*/.DS_Store
 
