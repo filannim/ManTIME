@@ -123,14 +123,15 @@ def main():
                       pipeline=False)
     #mantime.train(sys.argv[2])
     assert os.path.exists(sys.argv[2])
-    for doc in glob.glob(os.path.join(sys.argv[2], '*.xml')):
+    documents = sorted(glob.glob(os.path.join(sys.argv[2], '*.xml')))
+    for doc in documents:
         basename = os.path.basename(doc)
         writein = os.path.join('./output/', basename)
         if not os.path.exists(writein):
             with codecs.open(writein, 'w', encoding='utf8') as output:
                 try:
                     output.write(mantime.label(doc))
-                except:
+                except cElementTree.ParseError:
                     print 'Doc {} skipped.'.format(basename)
 
 if __name__ == '__main__':
