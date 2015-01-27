@@ -436,10 +436,6 @@ class i2b2FileReader(FileReader):
 
         document.store_gold_annotations()
 
-        # for s in document.sentences:
-        #     for w in s.words:
-        #         print w.tag_attributes
-
         logging.info('Document {}: parsed.'.format(os.path.relpath(file_path)))
         return document
 
