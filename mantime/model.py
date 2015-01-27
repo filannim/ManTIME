@@ -203,6 +203,7 @@ class Word(object):
         self.gold_label = 'O'
         self.predicted_label = 'O'
         self.tag_attributes = dict()
+        self.note = ''
 
     def __str__(self):
         return str(self.__dict__)
@@ -249,12 +250,15 @@ class TemporalExpression(object):
         end = self.words[-1].character_offset_end + document.text_offset
         text = document.text[start:end]
         mod = ''
-        if domain == 'general':
-            timex_normalise = normalise_general
-            _, ttype, value, _ = timex_normalise(text, dct)
-        else:
-            timex_normalise = normalise_clinical
-            _, ttype, value, _, mod = timex_normalise(text, dct)
+        try:
+            if domain == 'general':
+                timex_normalise = normalise_general
+                _, ttype, value, _ = timex_normalise(text, dct)
+            else:
+                timex_normalise = normalise_clinical
+                _, ttype, value, _, mod = timex_normalise(text, dct)
+        except Exception:
+            ttype, value = 'DATE', 'X'
         self.text = text
         self.ttype = ttype
         self.value = value
@@ -288,10 +292,14 @@ class Event(object):
         self.end = self.words[-1].character_offset_end
 
     def normalise(self):
+        assert all(['type' in w.tag_attributes.keys() for w in self.words])
+        assert all(['modality' in w.tag_attributes.keys() for w in self.words])
+        assert all(['polarity' in w.tag_attributes.keys() for w in self.words])
         self.eclass = [w.tag_attributes['type'] for w in self.words][0]
         self.modality = [w.tag_attributes['modality'] for w in self.words][0]
         self.polarity = [w.tag_attributes['polarity'] for w in self.words][0]
-        self.sec_time_rel = ''#[w.tag_attributes['sec_time_rel'] for w in self.words][0]
+        self.sec_time_rel = ''
+        # [w.tag_attributes['sec_time_rel'] for w in self.words][0]
 
 
 class EventInstance(object):

@@ -191,7 +191,7 @@ class TempEval3Writer(FileWriter):
             # TLINKs
             output.append('</TimeML>\n')
             outputs.append('\n'.join(output))
-        return '\n----------\n'.join(outputs)
+        return outputs
 
 
 class i2b2Writer(FileWriter):
@@ -209,27 +209,28 @@ class i2b2Writer(FileWriter):
         for document in documents:
             output = []
             output.append('<?xml version="1.0" ?>')
-            output.append('<ClinicalNarrativeTemporalAnnotation>\n')
-            output.append(u'<TEXT><![CDATA[\n{}]]></TEXT>\n\n'.format(document.text))
+            output.append('<ClinicalNarrativeTemporalAnnotation>')
+            output.append(u'<TEXT><![CDATA[{}]]></TEXT>'.format(document.text))
 
             output.append(u'<TAGS>')
             # TIMEX3s and EVENTs
             for element in document.predicted_annotations:
                 element.text = document.get_text(element.start, element.end)
+                cstart, cend = element.start+1, element.end+1
                 if isinstance(element, TemporalExpression):
                     element.normalise(document, document.dct_text, 'clinical')
-                    xml_tag = str('<TIMEX3 id="{tid}" start="{start}" ' +
-                                  'end="{end}" text="{text}" type="{ttype}" ' +
+                    xml_tag = str('<TIMEX3 id="{tid}" start="{cstart}" ' +
+                                  'end="{cend}" text="{text}" type="{ttype}" ' +
                                   'val="{value}" mod="{mod}" />').format(
-                        **element.__dict__)
+                        cstart=cstart, cend=cend, **element.__dict__)
                 elif isinstance(element, Event):
                     element.normalise()
-                    xml_tag = str('<EVENT id="{eid}" start="{start}" ' +
-                                  'end="{end}" text="{text}" type="{eclass}" ' +
-                                  'modality="{modality}" ' +
+                    xml_tag = str('<EVENT id="{eid}" start="{cstart}" ' +
+                                  'end="{cend}" text="{text}" ' +
+                                  'type="{eclass}" modality="{modality}" ' +
                                   'polarity="{polarity}" ' +
                                   'sec_time_rel="{sec_time_rel}" />').format(
-                        **element.__dict__)
+                        cstart=cstart, cend=cend, **element.__dict__)
                 output.append(xml_tag)
 
             # SECTIMEs
@@ -246,9 +247,10 @@ class i2b2Writer(FileWriter):
 
             # Ending
             output.append(u'</TAGS>')
-            output.append(u'</ClinicalNarrativeTemporalAnnotation>\n')
+            output.append(u'</ClinicalNarrativeTemporalAnnotation>')
+
             outputs.append('\n'.join(output))
-        return '\n----------\n'.join(outputs)
+        return outputs
 
 
 class AttributeMatrixWriter(Writer):

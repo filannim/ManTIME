@@ -89,10 +89,11 @@ class ManTIME(object):
 
         # try:
         doc = self.extractor.extract(self.reader.parse(file_name))
-        annotated_docs = identifier.test([doc], self.model,
+        annotated_doc = identifier.test([doc], self.model,
                                          self.post_processing_pipeline)
-        annotated_docs = normaliser.test([doc], self.model)
-        output = self.writer.write(annotated_docs)
+        annotated_doc = normaliser.test([doc], self.model)
+
+        output = self.writer.write(annotated_doc)
         return output
         # except:
         #    logging.info('{} skipped.'.format(file_name))
@@ -129,10 +130,10 @@ def main():
         writein = os.path.join('./output/', basename)
         if not os.path.exists(writein):
             with codecs.open(writein, 'w', encoding='utf8') as output:
-                try:
-                    output.write(mantime.label(doc))
-                except cElementTree.ParseError:
-                    print 'Doc {} skipped.'.format(basename)
+                #try:
+                output.write(mantime.label(doc)[0])
+                #except:
+                #    print 'Doc {} skipped.'.format(basename)
 
 if __name__ == '__main__':
     main()

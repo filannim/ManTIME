@@ -237,10 +237,19 @@ class IdentificationClassifier(Classifier):
             last_element = None
             last_prediction = None
             n_timex, n_event = 1, 1
-            for label in lines:
-                curr_prediction = label.strip().split('\t')[-1]
+            for line in lines:
+                curr_prediction = line.strip().split('\t')[-1]
                 if curr_prediction:
                     curr_word = documents[n_doc].sentences[n_sent].words[n_word]
+                    curr_word.note = '{}_{}_{}'.format(n_doc, n_sent, n_word)
+                    
+                    # Just consider not annotated the current word if it has been
+                    # already positively annotated by another previous model.
+                    # Notice that the order in the most general for of this
+                    # script have an impact.
+                    if curr_word.predicted_label != 'O':
+                        curr_prediction = 'O'
+                    
                     if (curr_prediction != last_prediction):
                         if last_element:
                             documents[n_doc].predicted_annotations.append(
@@ -249,7 +258,8 @@ class IdentificationClassifier(Classifier):
                             last_element = Event(n_event, [curr_word])
                             n_event += 1
                         elif curr_prediction == 'I-TIMEX3':
-                            last_element = TemporalExpression(n_timex, [curr_word])
+                            last_element = TemporalExpression(n_timex,
+                                                              [curr_word])
                             n_timex += 1
                         else:
                             last_element = None
@@ -258,8 +268,7 @@ class IdentificationClassifier(Classifier):
                             last_element.append_word(curr_word)
 
                     if curr_prediction != 'O':
-                        documents[n_doc].sentences[n_sent].words[n_word]\
-                            .predicted_label = curr_prediction
+                        curr_word.predicted_label = curr_prediction
                     last_prediction = curr_prediction
 
                     n_word += 1
