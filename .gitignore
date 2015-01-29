@@ -20,6 +20,7 @@ datasets/*
 buffer/*
 mantime/output/*
 externals/
+experiments/*
 */screenlog.0
 
 data/*/.DS_Store
