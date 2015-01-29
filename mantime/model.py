@@ -15,6 +15,8 @@
 
 """
 
+import cgi
+
 from normalisers.timex_general import normalise as normalise_general
 from normalisers.timex_clinical import normalise as normalise_clinical
 
@@ -203,7 +205,6 @@ class Word(object):
         self.gold_label = 'O'
         self.predicted_label = 'O'
         self.tag_attributes = dict()
-        self.note = ''
 
     def __str__(self):
         return str(self.__dict__)
@@ -259,7 +260,7 @@ class TemporalExpression(object):
                 _, ttype, value, _, mod = timex_normalise(text, dct)
         except Exception:
             ttype, value = 'DATE', 'X'
-        self.text = text
+        self.text = cgi.escape(self.text.replace('\n', ' '), True)
         self.ttype = ttype
         self.value = value
         self.mod = mod
@@ -299,6 +300,7 @@ class Event(object):
         self.modality = [w.tag_attributes['modality'] for w in self.words][0]
         self.polarity = [w.tag_attributes['polarity'] for w in self.words][0]
         self.sec_time_rel = ''
+        self.text = cgi.escape(self.text.replace('\n', ' '), True)
         # [w.tag_attributes['sec_time_rel'] for w in self.words][0]
 
 
