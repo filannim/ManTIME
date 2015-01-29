@@ -40,6 +40,8 @@ from utilities import extractors_stamp
 
 
 def identification_attribute_matrix(documents, dest, subject, training=True):
+    """It writes in dest the entire training matrix for the identification.
+    """
     assert type(documents) == list, 'Wrong type for documents.'
     assert len(documents) > 0, 'Empty documents list.'
     assert subject in ('EVENT', 'TIMEX'), 'Wrong identification subject.'
@@ -69,6 +71,8 @@ def identification_attribute_matrix(documents, dest, subject, training=True):
 
 
 def normalisation_attribute_matrix(documents, dest, subject, training=True):
+    """It writes in dest the entire training matrix for the attribute.
+    """
     assert type(documents) == list, 'Wrong type for documents.'
     assert len(documents) > 0, 'Empty documents list.'
     assert subject in EVENT_ATTRIBUTES
@@ -83,24 +87,31 @@ def normalisation_attribute_matrix(documents, dest, subject, training=True):
         for ndoc, document in enumerate(documents):
             for nsen, sentence in enumerate(document.sentences):
                 for nwor, word in enumerate(sentence.words):
+                    # attributes:
                     row = [v for _, v
                            in sorted(word.attributes.items())]
-                    row.append(get_label(word))
+
+                    # identification label:
+                    # I keep only the EVENT label (not TIMEX)
+                    ident_label = get_label(word)
+                    if not ident_label.endswith('EVENT'):
+                        ident_label = 'O'
+
+                    # normalisation label (CLASS) for training
                     if training:
                         label = word.tag_attributes.get(subject, NO_ATTRIBUTE)
-                        if not label:
+                        if not label or ident_label == 'O' or label == 'None':
                             label = NO_ATTRIBUTE
-                        if label == 'None':
-                            label == 'N/A'
                         label = label.replace(' ', '_').upper()
                         row.append(label)
+
+                    # token coordinates for test purpose
                     else:
                         # I sneak in the coordinates of each token
                         row.append('{}_{}_{}'.format(ndoc, nsen, nwor))
                     matrix.write('\t'.join(row))
 
                     # I am using CRFs with singleton sequences
-                    # (a small trick) ;)
                     matrix.write('\n\n')
 
 
@@ -241,16 +252,15 @@ class IdentificationClassifier(Classifier):
                 curr_prediction = line.strip().split('\t')[-1]
                 if curr_prediction:
                     curr_word = documents[n_doc].sentences[n_sent].words[n_word]
-                    curr_word.note = '{}_{}_{}'.format(n_doc, n_sent, n_word)
-                    
-                    # Just consider not annotated the current word if it has been
-                    # already positively annotated by another previous model.
-                    # Notice that the order in the most general for of this
-                    # script have an impact.
+
+                    # Just consider not annotated the current word if it has
+                    # been already positively annotated by another previous
+                    # model. Notice that the order in the most general for of
+                    # this script have an impact.
                     if curr_word.predicted_label != 'O':
                         curr_prediction = 'O'
-                    
-                    if (curr_prediction != last_prediction):
+
+                    if curr_prediction != last_prediction:
                         if last_element:
                             documents[n_doc].predicted_annotations.append(
                                 last_element)
@@ -279,6 +289,16 @@ class IdentificationClassifier(Classifier):
                         if len(documents[n_doc].sentences) == n_sent:
                             n_word, n_sent = 0, 0
                             n_doc += 1
+
+                # this is the sentence separator. the eventual annotation is
+                # pushed into the document. This prevents the merging of an
+                # annotation at the end of a sentence and at the beginning of a
+                # new one.
+                else:
+                    if last_element:
+                        documents[n_doc].predicted_annotations.append(
+                            last_element)
+
         return documents
 
 
