@@ -227,9 +227,9 @@ class i2b2Writer(FileWriter):
                     element.normalise()
                     xml_tag = str('<EVENT id="{eid}" start="{cstart}" ' +
                                   'end="{cend}" text="{text}" ' +
-                                  'type="{eclass}" modality="{modality}" ' +
+                                  'modality="{modality}" ' +
                                   'polarity="{polarity}" ' +
-                                  'sec_time_rel="{sec_time_rel}" />').format(
+                                  'type="{eclass}" />').format(
                         cstart=cstart, cend=cend, **element.__dict__)
                 output.append(xml_tag)
 
