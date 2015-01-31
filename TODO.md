@@ -3,7 +3,7 @@ TO-DO List
 
 This document lists all the things I should look more carefully in the future.
 
-- [ ] In the attribtue training phase, the multi-word expressions should be
+- [ ] In the attribute training phase, the multi-word expressions should be
 represented as one sample. The features will be merged according to the order
 of appearance.
 - [ ] Fix unicode-related bug at utilities.py:76.
