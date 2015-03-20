@@ -53,19 +53,22 @@ def identification_attribute_matrix(documents, dest, subject, training=True):
                 for word in sentence.words:
                     row = [v for _, v in sorted(word.attributes.items())]
                     matrix.write('\t'.join(row))
-                    gold_label = word.gold_label
+                    gold_label = word.gold_label.copy()
 
                     # The class of the instances different from the subject are
                     # changed in 'O'
                     if subject == 'EVENT':
-                        if gold_label.find('TIMEX') > -1:
-                            gold_label = 'O'
+                        if gold_label.tag == 'TIMEX':
+                            gold_label.position = 'O'
+                        # For events, we learn using the type attribute.
+                        else:
+                            gold_label.tag == word.tag_attributes['type']
                     else:
-                        if gold_label.find('EVENT') > -1:
-                            gold_label = 'O'
+                        if gold_label.tag == 'EVENT':
+                            gold_label.position = 'O'
 
                     if training:
-                        matrix.write('\t' + gold_label)
+                        matrix.write('\t' + str(gold_label))
                     matrix.write('\n')
                 matrix.write('\n')
 
@@ -94,14 +97,19 @@ def normalisation_attribute_matrix(documents, dest, subject, training=True):
                     # identification label:
                     # I keep only the EVENT label (not TIMEX)
                     ident_label = get_label(word)
-                    if not ident_label.endswith('EVENT'):
-                        ident_label = 'O'
+                    if ident_label.is_timex():
+                        ident_label.position = 'O'
 
                     # normalisation label (CLASS) for training
                     if training:
                         label = word.tag_attributes.get(subject, NO_ATTRIBUTE)
-                        if not label or ident_label == 'O' or label == 'None':
+
+                        # Different null representation are collapsed.
+                        label_to_be_fixed = any(not label, label == 'None',
+                                                ident_label.position == 'O')
+                        if label_to_be_fixed:
                             label = NO_ATTRIBUTE
+
                         label = label.replace(' ', '_').upper()
                         row.append(label)
 
@@ -225,7 +233,7 @@ class IdentificationClassifier(Classifier):
                                model_path, testset_path]
 
             # Draconianly check the input files
-            assert os.path.isfile(model_path), 'Model doesn\'t exist at {}'.format(model_path)
+            assert os.path.isfile(model_path), 'Model not found!'
             assert os.stat(model_path).st_size > 0, 'Model is empty!'
             assert os.path.isfile(testset_path), 'Test set doesn\'t exist!'
 
@@ -255,9 +263,9 @@ class IdentificationClassifier(Classifier):
 
                     # Just consider not annotated the current word if it has
                     # been already positively annotated by another previous
-                    # model. Notice that the order in the most general for of
-                    # this script have an impact.
-                    if curr_word.predicted_label != 'O':
+                    # model. Notice that the order in the most general FOR loop
+                    # of this script has an impact.
+                    if curr_word.predicted_label.position != 'O':
                         curr_prediction = 'O'
 
                     if curr_prediction != last_prediction:

@@ -26,29 +26,29 @@ from utilities import matching_gazetteer
 from model import Word
 from settings import LANGUAGE
 
-PORTER_STEMMER = Memoize(nltk.PorterStemmer().stem)
-LANCASTER_STEMMER = Memoize(nltk.LancasterStemmer().stem)
-WORDNET_LEMMATIZER = Memoize(nltk.WordNetLemmatizer().lemmatize)
+# PORTER_STEMMER = Memoize(nltk.PorterStemmer().stem)
+# LANCASTER_STEMMER = Memoize(nltk.LancasterStemmer().stem)
+# WORDNET_LEMMATIZER = Memoize(nltk.WordNetLemmatizer().lemmatize)
 STOPWORDS = nltk.corpus.stopwords.words(LANGUAGE)
 GAZETTEER_FOLDER = 'data/gazetteer/'
 COMMON_WORDS = pickle.load(open(GAZETTEER_FOLDER + 'common_words.pickle'))
 POSITIVE_WORDS = pickle.load(open(GAZETTEER_FOLDER + 'positive_words.pickle'))
 NEGATIVE_WORDS = pickle.load(open(GAZETTEER_FOLDER + 'negative_words.pickle'))
-MALE_NAMES = pickle.load(open(GAZETTEER_FOLDER + 'male.pickle'))
-FEMALE_NAMES = pickle.load(open(GAZETTEER_FOLDER + 'female.pickle'))
+# MALE_NAMES = pickle.load(open(GAZETTEER_FOLDER + 'male.pickle'))
+# FEMALE_NAMES = pickle.load(open(GAZETTEER_FOLDER + 'female.pickle'))
 COUNTRIES = pickle.load(open(GAZETTEER_FOLDER + 'countries.pickle'))
 ISO_COUNTRIES = pickle.load(open(GAZETTEER_FOLDER + 'isocountries.pickle'))
-US_CITIES = pickle.load(open(GAZETTEER_FOLDER + 'uscities.pickle'))
-NATIONALITIES = pickle.load(open(GAZETTEER_FOLDER + 'nationalities.pickle'))
+# US_CITIES = pickle.load(open(GAZETTEER_FOLDER + 'uscities.pickle'))
+# NATIONALITIES = pickle.load(open(GAZETTEER_FOLDER + 'nationalities.pickle'))
 FESTIVITIES = pickle.load(open(GAZETTEER_FOLDER + 'festivities.pickle'))
-PHONEME_DICTIONARY = nltk.corpus.cmudict.dict()
+# PHONEME_DICTIONARY = nltk.corpus.cmudict.dict()
 
 
 class WordBasedExtractors(object):
 
-    #@staticmethod
-    #def token(word):
-    #    return WordBasedResult(word.word_form)
+    # @staticmethod
+    # def token(word):
+    #     return WordBasedResult(word.word_form)
 
     @staticmethod
     def token_normalised(word):
@@ -91,17 +91,17 @@ class WordBasedExtractors(object):
     def lexical_named_entity_tag(word):
         return WordBasedResult(word.named_entity_tag)
 
-    @staticmethod
-    def morphological_wordnet_lemma(word):
-        return WordBasedResult(WORDNET_LEMMATIZER(word.word_form))
+    # @staticmethod
+    # def morphological_wordnet_lemma(word):
+    #     return WordBasedResult(WORDNET_LEMMATIZER(word.word_form))
 
-    @staticmethod
-    def morphological_porter_stem(word):
-        return WordBasedResult(PORTER_STEMMER(word.word_form))
+    # @staticmethod
+    # def morphological_porter_stem(word):
+    #     return WordBasedResult(PORTER_STEMMER(word.word_form))
 
-    @staticmethod
-    def morphological_lancaster_stem(word):
-        return WordBasedResult(LANCASTER_STEMMER(word.word_form))
+    # @staticmethod
+    # def morphological_lancaster_stem(word):
+    #     return WordBasedResult(LANCASTER_STEMMER(word.word_form))
 
     @staticmethod
     def morphological_unusual_word(word):
@@ -148,26 +148,26 @@ class WordBasedExtractors(object):
                 pattern += char
         return WordBasedResult(pattern)
 
-    @staticmethod
-    def morphological_vocal_pattern(word):
-        pattern = ''
-        for char in word.word_form:
-            if char in ['a', 'e', 'i', 'o', 'u']:
-                if pattern[-1:] != 'v':
-                    pattern += 'v'
-            elif char.isdigit():
-                if pattern[-1:] != 'D':
-                    pattern += 'D'
-            elif char.isspace():
-                if pattern[-1:] != ' ':
-                    pattern += ' '
-            elif not char.isalnum():
-                if pattern[-1:] != 'p':
-                    pattern += 'p'
-            else:
-                if pattern[-1:] != 'c':
-                    pattern += 'c'
-        return WordBasedResult(pattern)
+    # @staticmethod
+    # def morphological_vocal_pattern(word):
+    #     pattern = ''
+    #     for char in word.word_form:
+    #         if char in ['a', 'e', 'i', 'o', 'u']:
+    #             if pattern[-1:] != 'v':
+    #                 pattern += 'v'
+    #         elif char.isdigit():
+    #             if pattern[-1:] != 'D':
+    #                 pattern += 'D'
+    #         elif char.isspace():
+    #             if pattern[-1:] != ' ':
+    #                 pattern += ' '
+    #         elif not char.isalnum():
+    #             if pattern[-1:] != 'p':
+    #                 pattern += 'p'
+    #         else:
+    #             if pattern[-1:] != 'c':
+    #                 pattern += 'c'
+    #     return WordBasedResult(pattern)
 
     @staticmethod
     def morphological_has_digit(word):
@@ -388,25 +388,25 @@ class WordBasedExtractors(object):
     def temporal_compound(word):
         return WordBasedResult(any(re.findall(r'^[0-9]+\-(century|decade|year|month|week\-end|week|day|hour|minute|second|fortnight|)$', word.word_form.lower())))
 
-    @staticmethod
-    def phonetic_form(word):
-        phonemes = PHONEME_DICTIONARY.get(word.word_form.lower(), [''])[0]
-        attributes = (('phonetic_form', WordBasedResult('-'.join(phonemes))),
-                      ('phonetic_length', WordBasedResult(len(phonemes))),
-                      ('phonetic_first', WordBasedResult(phonemes[0] if phonemes else None)),
-                      ('phonetic_last', WordBasedResult(phonemes[-1] if phonemes else None)))
-        return WordBasedResults(attributes)
+    # @staticmethod
+    # def phonetic_form(word):
+    #     phonemes = PHONEME_DICTIONARY.get(word.word_form.lower(), [''])[0]
+    #     attributes = (('phonetic_form', WordBasedResult('-'.join(phonemes))),
+    #                   ('phonetic_length', WordBasedResult(len(phonemes))),
+    #                   ('phonetic_first', WordBasedResult(phonemes[0] if phonemes else None)),
+    #                   ('phonetic_last', WordBasedResult(phonemes[-1] if phonemes else None)))
+    #     return WordBasedResults(attributes)
 
 
 class SentenceBasedExtractors(object):
 
-    @staticmethod
-    def gazetteer_malename(sentence):
-        return matching_gazetteer(MALE_NAMES, sentence)
+    # @staticmethod
+    # def gazetteer_malename(sentence):
+    #     return matching_gazetteer(MALE_NAMES, sentence)
 
-    @staticmethod
-    def gazetteer_femalename(sentence):
-        return matching_gazetteer(FEMALE_NAMES, sentence)
+    # @staticmethod
+    # def gazetteer_femalename(sentence):
+    #     return matching_gazetteer(FEMALE_NAMES, sentence)
 
     @staticmethod
     def gazetteer_country(sentence):
@@ -416,13 +416,13 @@ class SentenceBasedExtractors(object):
     def gazetteer_isocountry(sentence):
         return matching_gazetteer(ISO_COUNTRIES, sentence)
 
-    @staticmethod
-    def gazetteer_uscity(sentence):
-        return matching_gazetteer(US_CITIES, sentence)
+    # @staticmethod
+    # def gazetteer_uscity(sentence):
+    #     return matching_gazetteer(US_CITIES, sentence)
 
-    @staticmethod
-    def gazetteer_nationality(sentence):
-        return matching_gazetteer(NATIONALITIES, sentence)
+    # @staticmethod
+    # def gazetteer_nationality(sentence):
+    #     return matching_gazetteer(NATIONALITIES, sentence)
 
     @staticmethod
     def gazetteer_festivity(sentence):

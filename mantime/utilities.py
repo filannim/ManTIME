@@ -146,10 +146,12 @@ class Memoize(object):
         self.function = function
         self.memo = {}
 
-    def __call__(self, *args):
-        if args not in self.memo:
-            self.memo[args] = self.function(*args)
-        return self.memo[args]
+    def __call__(self, *args, **kwrds):
+        import cPickle
+        key = cPickle.dumps(args, 1) + cPickle.dumps(kwrds, 1)
+        if key not in self.memo:
+            self.memo[key] = self.function(*args, **kwrds)
+        return self.memo[key]
 
 
 def main():

@@ -35,6 +35,7 @@ from classifier import IdentificationClassifier
 from classifier import NormalisationClassifier
 from settings import PATH_MODEL_FOLDER
 
+
 class ManTIME(object):
 
     def __init__(self, reader, writer, extractor, model_name, pipeline=True):
@@ -107,32 +108,36 @@ def main():
                         level=logging.INFO,
                         datefmt='%m/%d/%Y %I:%M:%S %p')
     # Parse input
-    # parser = argparse.ArgumentParser(
-    #     description='ManTIME: temporal information extraction')
-    # parser.add_argument(dest='folder', metavar='input folder', nargs='*')
-    # parser.add_argument(dest='model_name', metavar='model name', nargs='*')
-    # parser.add_argument('-ppp', '--post_processing_pipeline', dest='pipeline',
-    #                     action='store_true',
-    #                     help='it uses the post processing pipeline.')
-    # args = parser.parse_args()
+    parser = argparse.ArgumentParser(
+        description='ManTIME: temporal information extraction')
+    parser.add_argument('input_folder', help='Input data folder path')
+    parser.add_argument('model',
+                        help='Name of the model to use (case sensitive)')
+    parser.add_argument('-v', '--version', help='show the version and exit',
+                        action='store_true')
+    parser.add_argument('-ppp', '--post_processing_pipeline',
+                        action='store_true',
+                        help='it uses the post processing pipeline.')
+    args = parser.parse_args()
 
     # Expected usage of ManTIME
     mantime = ManTIME(reader=i2b2FileReader(),
                       writer=i2b2Writer(),
                       extractor=FullExtractor(),
-                      model_name=sys.argv[1],
+                      model_name=args.model,
                       pipeline=False)
-    #mantime.train(sys.argv[2])
-    assert os.path.exists(sys.argv[2])
-    documents = sorted(glob.glob(os.path.join(sys.argv[2], '*.xml')))
+    # mantime.train(sys.argv[2])
+    assert os.path.exists(args.input_folder), 'Model not found.'
+    documents = sorted(glob.glob(os.path.join(args.input_folder, '*.xml')))
+    assert documents, 'Input folder is empty.'
     for doc in documents:
         basename = os.path.basename(doc)
         writein = os.path.join('./output/', basename)
         if not os.path.exists(writein):
             with codecs.open(writein, 'w', encoding='utf8') as output:
-                #try:
+                # try:
                 output.write(mantime.label(doc)[0])
-                #except:
+                # except:
                 #    print 'Doc {} skipped.'.format(basename)
 
 if __name__ == '__main__':

@@ -24,34 +24,66 @@ from normalisers.timex_clinical import normalise as normalise_clinical
 def format_annotation(start_token, end_token, annotations,
                       annotation_format='IO'):
     '''It returns the correct sequence class label for the given token.'''
-    sequence_label = None
+    position = None
     tag_fired = ''
-    attribs = None
+    attribs = {}
     if annotations:
         for tag, attribs, (start_offset, end_offset) in annotations:
             tag_fired = tag
             if (start_offset, end_offset) == (start_token, end_token):
-                sequence_label = 'W'
+                position = 'W'
                 break
             elif end_offset == end_token:
-                sequence_label = 'E'
+                position = 'E'
                 break
             elif start_offset == start_token:
-                sequence_label = 'B'
+                position = 'B'
                 break
             elif start_offset < start_token and end_offset > end_token:
-                sequence_label = 'I'
+                position = 'I'
                 break
             else:
-                sequence_label = 'O'
-        if sequence_label not in list(annotation_format):
-            sequence_label = 'I'
-        if sequence_label == 'O':
-            return sequence_label, {}
-        else:
-            return sequence_label + '-' + tag_fired, attribs
+                position = 'O'
+        if position not in list(annotation_format):
+            position = 'I'
+        return SequenceLabel(position, tag_fired), attribs
     else:
-        return 'O', {}
+        return SequenceLabel('O'), attribs
+
+
+class SequenceLabel(object):
+    '''It represents a sequence label in the sequence labelling classifier.
+
+    O, B-TIMEX and I-EVENT are examples of sequence labels.
+    ^  ^           ^        position
+         ^---^       ^---^  tag
+    '''
+    def __init__(self, position, tag=None):
+        assert type(tag) == str
+        assert type(position) == str
+        assert position in 'IOBWE'
+        self._SEPARATOR = '-'
+        self.position = position.upper()
+        if self.position == 'O':
+            self.tag = None
+        else:
+            self.tag = tag.upper()
+        assert position != 'O' and tag
+
+    def is_timex(self):
+        return self.tag.startswith('TIMEX')
+
+    def is_event(self):
+        return self.tag.startswith('EVENT')
+
+    def copy(self):
+        return SequenceLabel(self.position, self.tag)
+
+    def __str__(self):
+        if self.tag:
+            return self._SEPARATOR.join([self.position, self.tag])
+        else:
+            return self.position
 
 
 class DependencyGraphNode(object):
@@ -202,8 +234,8 @@ class Word(object):
         self.part_of_speech = part_of_speech
         self.attributes = dict()
         self.id_token = id_token
-        self.gold_label = 'O'
-        self.predicted_label = 'O'
+        self.gold_label = SequenceLabel('O')
+        self.predicted_label = SequenceLabel('O')
         self.tag_attributes = dict()
 
     def __str__(self):
