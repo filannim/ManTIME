@@ -58,23 +58,43 @@ class SequenceLabel(object):
     ^  ^           ^        position
          ^---^       ^---^  tag
     '''
+    _SEPARATOR = '-'
+
     def __init__(self, position, tag=None):
-        assert type(tag) == str
+        assert type(tag) == str or not tag
         assert type(position) == str
-        assert position in 'IOBWE'
-        self._SEPARATOR = '-'
-        self.position = position.upper()
-        if self.position == 'O':
-            self.tag = None
-        else:
-            self.tag = tag.upper()
-        assert position != 'O' and tag
+        try:
+            self.position, self.tag = position.split(self._SEPARATOR)
+            self.tag = self.tag.upper()
+        except ValueError:
+            self.position = position.upper()
+            if tag:
+                self.tag = tag.upper()
+        finally:
+            if self.position == 'O':
+                self.tag = None
+        assert self.position in 'WEBIO', 'Unknown position code: {}'.format(
+            self.position)
 
     def is_timex(self):
-        return self.tag.startswith('TIMEX')
+        if self.tag:
+            return self.tag.startswith('TIMEX')
+        else:
+            return False
 
     def is_event(self):
-        return self.tag.startswith('EVENT')
+        if self.tag:
+            return self.tag.startswith('EVENT')
+        else:
+            return False
+
+    def is_out(self):
+        return self.position == 'O'
+
+    def set_out(self):
+        '''Make the sequence label value equal to out ('O').'''
+        self.tag = None
+        self.position = 'O'
 
     def copy(self):
         return SequenceLabel(self.position, self.tag)
@@ -84,6 +104,9 @@ class SequenceLabel(object):
             return self._SEPARATOR.join([self.position, self.tag])
         else:
             return self.position
+
+    def __eq__(self, other):
+        return self.position == other.position and self.tag == other.tag
 
 
 class DependencyGraphNode(object):

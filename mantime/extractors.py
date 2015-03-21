@@ -14,7 +14,7 @@
 from __future__ import division
 
 import re
-import pickle
+import cPickle
 import calendar
 import types
 
@@ -31,16 +31,16 @@ from settings import LANGUAGE
 # WORDNET_LEMMATIZER = Memoize(nltk.WordNetLemmatizer().lemmatize)
 STOPWORDS = nltk.corpus.stopwords.words(LANGUAGE)
 GAZETTEER_FOLDER = 'data/gazetteer/'
-COMMON_WORDS = pickle.load(open(GAZETTEER_FOLDER + 'common_words.pickle'))
-POSITIVE_WORDS = pickle.load(open(GAZETTEER_FOLDER + 'positive_words.pickle'))
-NEGATIVE_WORDS = pickle.load(open(GAZETTEER_FOLDER + 'negative_words.pickle'))
-# MALE_NAMES = pickle.load(open(GAZETTEER_FOLDER + 'male.pickle'))
-# FEMALE_NAMES = pickle.load(open(GAZETTEER_FOLDER + 'female.pickle'))
-COUNTRIES = pickle.load(open(GAZETTEER_FOLDER + 'countries.pickle'))
-ISO_COUNTRIES = pickle.load(open(GAZETTEER_FOLDER + 'isocountries.pickle'))
-# US_CITIES = pickle.load(open(GAZETTEER_FOLDER + 'uscities.pickle'))
-# NATIONALITIES = pickle.load(open(GAZETTEER_FOLDER + 'nationalities.pickle'))
-FESTIVITIES = pickle.load(open(GAZETTEER_FOLDER + 'festivities.pickle'))
+COMMON_WORDS = cPickle.load(open(GAZETTEER_FOLDER + 'common_words.pickle'))
+POSITIVE_WORDS = cPickle.load(open(GAZETTEER_FOLDER + 'positive_words.pickle'))
+NEGATIVE_WORDS = cPickle.load(open(GAZETTEER_FOLDER + 'negative_words.pickle'))
+# MALE_NAMES = cPickle.load(open(GAZETTEER_FOLDER + 'male.pickle'))
+# FEMALE_NAMES = cPickle.load(open(GAZETTEER_FOLDER + 'female.pickle'))
+COUNTRIES = cPickle.load(open(GAZETTEER_FOLDER + 'countries.pickle'))
+ISO_COUNTRIES = cPickle.load(open(GAZETTEER_FOLDER + 'isocountries.pickle'))
+# US_CITIES = cPickle.load(open(GAZETTEER_FOLDER + 'uscities.pickle'))
+# NATIONALITIES = cPickle.load(open(GAZETTEER_FOLDER + 'nationalities.pickle'))
+FESTIVITIES = cPickle.load(open(GAZETTEER_FOLDER + 'festivities.pickle'))
 # PHONEME_DICTIONARY = nltk.corpus.cmudict.dict()
 
 

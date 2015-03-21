@@ -30,6 +30,7 @@ from crf_utilities import probabilistic_correction
 from crf_utilities import label_switcher
 from model import Event
 from model import TemporalExpression
+from model import SequenceLabel
 from settings import PATH_MODEL_FOLDER
 from settings import PATH_CRF_PP_ENGINE_TEST
 from settings import PATH_CRF_PP_ENGINE_TRAIN
@@ -55,18 +56,25 @@ def identification_attribute_matrix(documents, dest, subject, training=True):
                     matrix.write('\t'.join(row))
                     gold_label = word.gold_label.copy()
 
-                    # The class of the instances different from the subject are
-                    # changed in 'O'
-                    if subject == 'EVENT':
-                        if gold_label.tag == 'TIMEX':
-                            gold_label.position = 'O'
-                        # For events, we learn using the type attribute.
+                    if not gold_label.is_out():
+                        # The class of the instances different from the subject
+                        # are changed in 'O'
+                        if subject == 'EVENT':
+                            if gold_label.is_timex():
+                                gold_label.set_out()
+                            else:
+                                # For events, we use the attribute CLASS.
+                                try:
+                                    gold_label.tag = word.tag_attributes[
+                                        'class']
+                                except KeyError:
+                                    # the clinical event type in i2b2 are
+                                    # annotated with the attribute 'TYPE'.
+                                    gold_label.tag = word.tag_attributes[
+                                        'type']
                         else:
-                            gold_label.tag == word.tag_attributes['type']
-                    else:
-                        if gold_label.tag == 'EVENT':
-                            gold_label.position = 'O'
-
+                            if gold_label.is_event():
+                                gold_label.set_out()
                     if training:
                         matrix.write('\t' + str(gold_label))
                     matrix.write('\n')
@@ -98,15 +106,15 @@ def normalisation_attribute_matrix(documents, dest, subject, training=True):
                     # I keep only the EVENT label (not TIMEX)
                     ident_label = get_label(word)
                     if ident_label.is_timex():
-                        ident_label.position = 'O'
+                        ident_label.set_out()
 
                     # normalisation label (CLASS) for training
                     if training:
                         label = word.tag_attributes.get(subject, NO_ATTRIBUTE)
 
                         # Different null representation are collapsed.
-                        label_to_be_fixed = any(not label, label == 'None',
-                                                ident_label.position == 'O')
+                        label_to_be_fixed = any((not label, label == 'None',
+                                                 ident_label.is_out()))
                         if label_to_be_fixed:
                             label = NO_ATTRIBUTE
 
@@ -253,41 +261,42 @@ class IdentificationClassifier(Classifier):
             else:
                 lines = iter(process.stdout.readline, '')
 
-            last_element = None
-            last_prediction = None
+            prev_element = None
+            prev_label = None
             n_timex, n_event = 1, 1
             for line in lines:
-                curr_prediction = line.strip().split('\t')[-1]
-                if curr_prediction:
-                    curr_word = documents[n_doc].sentences[n_sent].words[n_word]
+                try:
+                    curr_label = SequenceLabel(line.strip().split('\t')[-1])
+                    curr_word = documents[n_doc].sentences[n_sent].words[
+                        n_word]
 
                     # Just consider not annotated the current word if it has
                     # been already positively annotated by another previous
                     # model. Notice that the order in the most general FOR loop
                     # of this script has an impact.
-                    if curr_word.predicted_label.position != 'O':
-                        curr_prediction = 'O'
+                    if not curr_word.predicted_label.is_out():
+                        curr_label.set_out()
 
-                    if curr_prediction != last_prediction:
-                        if last_element:
+                    if curr_label != prev_label:
+                        if prev_element:
                             documents[n_doc].predicted_annotations.append(
-                                last_element)
-                        if curr_prediction == 'I-EVENT':
-                            last_element = Event(n_event, [curr_word])
+                                prev_element)
+                        if curr_label.is_event():
+                            prev_element = Event(n_event, [curr_word])
                             n_event += 1
-                        elif curr_prediction == 'I-TIMEX3':
-                            last_element = TemporalExpression(n_timex,
+                        elif curr_label.is_timex():
+                            prev_element = TemporalExpression(n_timex,
                                                               [curr_word])
                             n_timex += 1
                         else:
-                            last_element = None
+                            prev_element = None
                     else:
-                        if curr_prediction != 'O':
-                            last_element.append_word(curr_word)
+                        if not curr_label.is_out():
+                            prev_element.append_word(curr_word)
 
-                    if curr_prediction != 'O':
-                        curr_word.predicted_label = curr_prediction
-                    last_prediction = curr_prediction
+                    if not curr_label.is_out():
+                        curr_word.predicted_label = curr_label
+                    prev_label = curr_label
 
                     n_word += 1
 
@@ -297,15 +306,17 @@ class IdentificationClassifier(Classifier):
                         if len(documents[n_doc].sentences) == n_sent:
                             n_word, n_sent = 0, 0
                             n_doc += 1
+                except AttributeError:
+                    continue
 
                 # this is the sentence separator. the eventual annotation is
                 # pushed into the document. This prevents the merging of an
                 # annotation at the end of a sentence and at the beginning of a
                 # new one.
                 else:
-                    if last_element:
+                    if prev_element:
                         documents[n_doc].predicted_annotations.append(
-                            last_element)
+                            prev_element)
 
         return documents
 
@@ -386,8 +397,8 @@ class NormalisationClassifier(Classifier):
                     line = line.split('\t')
                     label = line[-1]
                     location = line[-2]
-                    is_event = line[-3] == 'I-EVENT'
-                    if is_event:
+                    seq_label = SequenceLabel(line[-3])
+                    if seq_label.is_event():
                         n_doc, n_sent, n_word = location.split('_')
                         documents[int(n_doc)]\
                             .sentences[int(n_sent)].words[int(n_word)]\

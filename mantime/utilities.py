@@ -18,6 +18,7 @@ import collections
 import os
 import md5
 
+
 class Mute_stderr(object):
     '''A context manager for doing a "deep suppression" of stderr.
 

@@ -56,7 +56,7 @@ class ManTIME(object):
 
     def train(self, folder):
         folder = os.path.abspath(folder)
-        assert os.path.isdir(folder), 'Folder doesn\' exist.'
+        assert os.path.isdir(folder), 'Folder doesn\'t exist.'
 
         identifier = IdentificationClassifier()
         normaliser = NormalisationClassifier()
@@ -121,24 +121,24 @@ def main():
     args = parser.parse_args()
 
     # Expected usage of ManTIME
-    mantime = ManTIME(reader=i2b2FileReader(),
-                      writer=i2b2Writer(),
+    mantime = ManTIME(reader=TempEval3FileReader(),
+                      writer=TempEval3Writer(),
                       extractor=FullExtractor(),
                       model_name=args.model,
                       pipeline=False)
-    # mantime.train(sys.argv[2])
-    assert os.path.exists(args.input_folder), 'Model not found.'
-    documents = sorted(glob.glob(os.path.join(args.input_folder, '*.xml')))
-    assert documents, 'Input folder is empty.'
-    for doc in documents:
-        basename = os.path.basename(doc)
-        writein = os.path.join('./output/', basename)
-        if not os.path.exists(writein):
-            with codecs.open(writein, 'w', encoding='utf8') as output:
-                # try:
-                output.write(mantime.label(doc)[0])
-                # except:
-                #    print 'Doc {} skipped.'.format(basename)
+    mantime.train(args.input_folder)
+    # assert os.path.exists(args.input_folder), 'Model not found.'
+    # documents = sorted(glob.glob(os.path.join(args.input_folder, '*.tml')))
+    # assert documents, 'Input folder is empty.'
+    # for doc in documents:
+    #     basename = os.path.basename(doc)
+    #     writein = os.path.join('./output/', basename)
+    #     if not os.path.exists(writein):
+    #         with codecs.open(writein, 'w', encoding='utf8') as output:
+    #             # try:
+    #             output.write(mantime.label(doc)[0])
+    #             # except:
+    #             #    print 'Doc {} skipped.'.format(basename)
 
 if __name__ == '__main__':
     main()
