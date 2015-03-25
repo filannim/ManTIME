@@ -16,53 +16,66 @@ from __future__ import division
 import re
 import cPickle
 import calendar
-import types
+import functools
 
 import nltk
 from num2words import num2words
 
-from utilities import Memoize
 from utilities import matching_gazetteer
-from model import Word
+from model_extractors import WordBasedResult
+from model_extractors import SentenceBasedResult
+from model_extractors import SentenceBasedResults
 from settings import LANGUAGE
+from settings import GAZETTEER_FOLDER
 
-# PORTER_STEMMER = Memoize(nltk.PorterStemmer().stem)
-# LANCASTER_STEMMER = Memoize(nltk.LancasterStemmer().stem)
-# WORDNET_LEMMATIZER = Memoize(nltk.WordNetLemmatizer().lemmatize)
-STOPWORDS = nltk.corpus.stopwords.words(LANGUAGE)
-GAZETTEER_FOLDER = 'data/gazetteer/'
-COMMON_WORDS = cPickle.load(open(GAZETTEER_FOLDER + 'common_words.pickle'))
-POSITIVE_WORDS = cPickle.load(open(GAZETTEER_FOLDER + 'positive_words.pickle'))
-NEGATIVE_WORDS = cPickle.load(open(GAZETTEER_FOLDER + 'negative_words.pickle'))
-# MALE_NAMES = cPickle.load(open(GAZETTEER_FOLDER + 'male.pickle'))
-# FEMALE_NAMES = cPickle.load(open(GAZETTEER_FOLDER + 'female.pickle'))
-COUNTRIES = cPickle.load(open(GAZETTEER_FOLDER + 'countries.pickle'))
-ISO_COUNTRIES = cPickle.load(open(GAZETTEER_FOLDER + 'isocountries.pickle'))
-# US_CITIES = cPickle.load(open(GAZETTEER_FOLDER + 'uscities.pickle'))
-# NATIONALITIES = cPickle.load(open(GAZETTEER_FOLDER + 'nationalities.pickle'))
-FESTIVITIES = cPickle.load(open(GAZETTEER_FOLDER + 'festivities.pickle'))
-# PHONEME_DICTIONARY = nltk.corpus.cmudict.dict()
+
+def memoise(obj):
+    try:
+        cache_file = open('../buffer/extractors/' + obj.__name__)
+        cache = obj.cache = cPickle.load(cache_file)
+    except IOError:
+        cache = obj.cache = {}
+
+    @functools.wraps(obj)
+    def memoiser(*args, **kwargs):
+        key = hash(args) * hash(frozenset(kwargs))
+        if key not in cache:
+            cache[key] = obj(*args, **kwargs)
+        return cache[key]
+    return memoiser
 
 
 class WordBasedExtractors(object):
+
+    # PORTER_STEMMER = Memoize(nltk.PorterStemmer().stem)
+    # LANCASTER_STEMMER = Memoize(nltk.LancasterStemmer().stem)
+    # WORDNET_LEMMATIZER = Memoize(nltk.WordNetLemmatizer().lemmatize)
+    STOPWORDS = nltk.corpus.stopwords.words(LANGUAGE)
+    COMMON_WORDS = cPickle.load(open(GAZETTEER_FOLDER + 'common_words.pickle'))
+    POSITIVE_WORDS = cPickle.load(open(GAZETTEER_FOLDER + 'positive_words.pickle'))
+    NEGATIVE_WORDS = cPickle.load(open(GAZETTEER_FOLDER + 'negative_words.pickle'))
 
     # @staticmethod
     # def token(word):
     #     return WordBasedResult(word.word_form)
 
     @staticmethod
+    @memoise
     def token_normalised(word):
         return WordBasedResult(re.sub(r'\d', 'D', word.lemma.strip()))
 
     @staticmethod
+    @memoise
     def lexical_lemma(word):
         return WordBasedResult(word.lemma)
 
     @staticmethod
+    @memoise
     def lexical_pos(word):
         return WordBasedResult(word.part_of_speech)
 
     @staticmethod
+    @memoise
     def lexical_tense(word):
         postag = word.part_of_speech
         if postag in ('VB', 'VD', 'VH', 'VV'):
@@ -79,39 +92,47 @@ class WordBasedExtractors(object):
             return WordBasedResult('NONE')
 
     @staticmethod
+    @memoise
     def lexical_polarity(word):
-        if word.word_form.lower() in POSITIVE_WORDS:
+        if word.word_form.lower() in WordBasedExtractors.POSITIVE_WORDS:
             return WordBasedResult('pos')
-        elif word.word_form.lower() in NEGATIVE_WORDS:
+        elif word.word_form.lower() in WordBasedExtractors.NEGATIVE_WORDS:
             return WordBasedResult('neg')
         else:
             return WordBasedResult('neu')
 
     @staticmethod
+    @memoise
     def lexical_named_entity_tag(word):
         return WordBasedResult(word.named_entity_tag)
 
     # @staticmethod
+    # @memoise
     # def morphological_wordnet_lemma(word):
-    #     return WordBasedResult(WORDNET_LEMMATIZER(word.word_form))
+    #     return WordBasedResult(WordBasedExtractors.WORDNET_LEMMATIZER(word.word_form))
 
     # @staticmethod
+    # @memoise
     # def morphological_porter_stem(word):
-    #     return WordBasedResult(PORTER_STEMMER(word.word_form))
+    #     return WordBasedResult(WordBasedExtractors.PORTER_STEMMER(word.word_form))
 
     # @staticmethod
+    # @memoise
     # def morphological_lancaster_stem(word):
-    #     return WordBasedResult(LANCASTER_STEMMER(word.word_form))
+    #     return WordBasedResult(WordBasedExtractors.LANCASTER_STEMMER(word.word_form))
 
     @staticmethod
+    @memoise
     def morphological_unusual_word(word):
-        return WordBasedResult(not word.word_form.lower() in COMMON_WORDS)
+        return WordBasedResult(not word.word_form.lower() in WordBasedExtractors.COMMON_WORDS)
 
     @staticmethod
+    @memoise
     def morphological_is_stopword(word):
-        return WordBasedResult(word.word_form in STOPWORDS)
+        return WordBasedResult(word.word_form in WordBasedExtractors.STOPWORDS)
 
     @staticmethod
+    @memoise
     def morphological_pattern(word):
         pattern = ''
         for char in word.word_form:
@@ -133,6 +154,7 @@ class WordBasedExtractors(object):
         return WordBasedResult(pattern)
 
     @staticmethod
+    @memoise
     def morphological_extended_pattern(word):
         pattern = ''
         for char in word.word_form:
@@ -149,6 +171,7 @@ class WordBasedExtractors(object):
         return WordBasedResult(pattern)
 
     # @staticmethod
+    # @memoise
     # def morphological_vocal_pattern(word):
     #     pattern = ''
     #     for char in word.word_form:
@@ -170,63 +193,77 @@ class WordBasedExtractors(object):
     #     return WordBasedResult(pattern)
 
     @staticmethod
+    @memoise
     def morphological_has_digit(word):
         return WordBasedResult(any(char.isdigit() for char in word.word_form))
 
     @staticmethod
+    @memoise
     def morphological_has_symbol(word):
         issymbol = lambda x: not (x.isdigit() or x.isalpha())
         return WordBasedResult(any(issymbol(char) for char in word.word_form))
 
     @staticmethod
+    @memoise
     def morphological_prefix(word):
         return WordBasedResult(word.word_form[:3] or
                                word.word_form[:2] or
                                word.word_form[:1])
 
     @staticmethod
+    @memoise
     def morphological_suffix(word):
         return WordBasedResult(word.word_form[-3:] or
                                word.word_form[-2:] or
                                word.word_form[-1:])
 
     @staticmethod
+    @memoise
     def morphological_first_upper(word):
         return WordBasedResult(word.word_form[0].isupper())
 
     @staticmethod
+    @memoise
     def morphological_is_alpha(word):
         return WordBasedResult(word.word_form.isalpha())
 
     @staticmethod
+    @memoise
     def morphological_is_lower(word):
         return WordBasedResult(word.word_form.islower())
 
     @staticmethod
+    @memoise
     def morphological_is_digit(word):
         return WordBasedResult(word.word_form.isdigit())
 
     @staticmethod
+    @memoise
     def morphological_is_alphabetic(word):
         return WordBasedResult(word.word_form.isalpha())
 
     @staticmethod
+    @memoise
     def morphological_is_alphanumeric(word):
         return WordBasedResult(word.word_form.isalnum())
 
     @staticmethod
+    @memoise
     def morphological_is_title(word):
         return WordBasedResult(word.word_form.istitle())
 
     @staticmethod
+    @memoise
     def morphological_is_upper(word):
         return WordBasedResult(word.word_form.isupper())
 
     @staticmethod
+    @memoise
     def morphological_is_numeric(word):
         return WordBasedResult(unicode(word.word_form).isnumeric())
 
     @staticmethod
+    @memoise
     def morphological_is_decimal(word):
         return WordBasedResult(unicode(word.word_form).isdecimal())
 
@@ -235,53 +272,63 @@ class WordBasedExtractors(object):
         return WordBasedResult(word.word_form[-1] == 's')
 
     @staticmethod
+    @memoise
     def morphological_token_with_no_letters(word):
         return WordBasedResult(''.join([c for c in word.word_form
                                         if not c.isalpha()]))
 
     @staticmethod
+    @memoise
     def morphological_token_with_no_letters_and_numbers(word):
         return WordBasedResult(''.join([c for c in word.word_form
                                         if not (c.isalpha() or c.isdigit())]))
 
     @staticmethod
+    @memoise
     def morphological_is_all_caps_and_dots(word):
         iscapsanddots = lambda x: x.isupper() or x == '.'
         return WordBasedResult(all(map(iscapsanddots, word.word_form)))
 
     @staticmethod
+    @memoise
     def morphological_is_all_digits_and_dots(word):
         isdigitsanddots = lambda x: x.isdigit() or x == '.'
         return WordBasedResult(all(map(isdigitsanddots, word.word_form)))
 
     @staticmethod
+    @memoise
     def temporal_number(word):
         pattern = r'^[0-9]+ ?(?:st|nd|rd|th)$'
         return WordBasedResult(any(re.findall(pattern,
                                               word.word_form.lower())))
 
     @staticmethod
+    @memoise
     def temporal_time(word):
         pattern = r'^([0-9]{1,2})[:\.\-]([0-9]{1,2}) ?(a\.?m\.?|p\.?m\.?)?$'
         return WordBasedResult(any(re.findall(pattern,
                                               word.word_form.lower())))
 
     @staticmethod
+    @memoise
     def temporal_digit(word):
         return WordBasedResult(any(re.findall('^[0-9]+$',
                                               word.word_form.lower())))
 
     @staticmethod
+    @memoise
     def temporal_ordinal(word):
         return WordBasedResult(any(re.findall('^(st|nd|rd|th)$',
                                               word.word_form.lower())))
 
     @staticmethod
+    @memoise
     def temporal_year(word):
         return WordBasedResult(any(re.findall('^[12][0-9]{3}|\'[0-9]{2,3}$',
                                               word.word_form.lower())))
 
     @staticmethod
+    @memoise
     def temporal_literal_number(word):
         lit_numbers = set([num2words(num) for num in xrange(0, 1001)])
         lit_numbers.update([num.replace('-', '') for num in lit_numbers])
@@ -290,6 +337,7 @@ class WordBasedExtractors(object):
                                    word.word_form.lower())))
 
     @staticmethod
+    @memoise
     def temporal_cardinal_number(word):
         card_numbers = set([num2words(num, True) for num in xrange(0, 1001)])
         card_numbers.update([num.replace('-', '') for num in card_numbers])
@@ -298,6 +346,7 @@ class WordBasedExtractors(object):
                                               word.word_form.lower())))
 
     @staticmethod
+    @memoise
     def temporal_month(word):
         regex = [calendar.month_name[num] for num in xrange(1, 13)]
         regex.extend([calendar.month_name[num][:3] for num in xrange(1, 13)])
@@ -306,6 +355,7 @@ class WordBasedExtractors(object):
                                               word.word_form.lower())))
 
     @staticmethod
+    @memoise
     def temporal_period(word):
         periods = ['centur[y|ies]', 'decades?', 'years?', 'months?',
                    r'week\-?ends?', 'weeks?', 'days?', 'hours?', 'minutes?',
@@ -315,26 +365,32 @@ class WordBasedExtractors(object):
                                               word.word_form.lower())))
 
     @staticmethod
+    @memoise
     def temporal_weekday(word):
         return WordBasedResult(any(re.findall(r'^(monday|tuesday|wednesday|thursday|friday|saturday|sunday|wed|tues|tue|thurs|thur|thu|sun|sat|mon|fri)$', word.word_form.lower())))
 
     @staticmethod
+    @memoise
     def temporal_pod(word):
         return WordBasedResult(any(re.findall(r'^(morning|afternoon|evening|night|noon|midnight|midday|sunrise|dusk|sunset|dawn|overnight|midday|noonday|noontide|nightfall|midafternoon|daybreak|gloaming|a\.?m\.?|p\.?m\.?)s?$', word.word_form.lower())))
 
     @staticmethod
+    @memoise
     def temporal_season(word):
         return WordBasedResult(any(re.findall(r'^(winter|autumn|spring|summer)s?', word.word_form.lower())))
 
     @staticmethod
+    @memoise
     def temporal_past_ref(word):
         return WordBasedResult(any(re.findall(r'^(yesterday|ago|earlier|early|last|recent|nearly|past|previous|before)$', word.word_form.lower())))
 
     @staticmethod
+    @memoise
     def temporal_present_ref(word):
         return WordBasedResult(any(re.findall(r'^(tonight|current|present|now|nowadays|today|currently)$', word.word_form.lower())))
 
     @staticmethod
+    @memoise
     def temporal_future_ref(word):
         future_refs = ['next', 'forthcoming', 'coming', 'tomorrow', 'after',
                        'later', 'ahead']
@@ -342,6 +398,7 @@ class WordBasedExtractors(object):
         return WordBasedResult(any(re.findall(pattern, word.word_form.lower())))
 
     @staticmethod
+    @memoise
     def temporal_signal(word):
         signals = ['after', 'about', 'into', 'between', 'again', 'within',
                    'every', 'for', 'on', 'the', 'since', 'in', 'of', 'until',
@@ -350,6 +407,7 @@ class WordBasedExtractors(object):
         return WordBasedResult(any(re.findall(pattern, word.word_form.lower())))
 
     @staticmethod
+    @memoise
     def temporal_fuzzy_quantifier(word):
         quantifiers = ['approximately', 'approximate', 'approx', 'about',
                        'few', 'some', 'bunch', 'several', 'around']
@@ -357,38 +415,47 @@ class WordBasedExtractors(object):
         return WordBasedResult(any(re.findall(pattern, word.word_form.lower())))
 
     @staticmethod
+    @memoise
     def temporal_modifier(word):
         return WordBasedResult(any(re.findall(r'^(beginning|less|more|much|long|short|end|start|half)$', word.word_form.lower())))
 
     @staticmethod
+    @memoise
     def temporal_temporal_adverbs(word):
         return WordBasedResult(any(re.findall(r'^(daily|earlier)$', word.word_form.lower())))
 
     @staticmethod
+    @memoise
     def temporal_temporal_adjectives(word):
         return WordBasedResult(any(re.findall(r'^(early|late|soon|fiscal|financial|tax)$', word.word_form.lower())))
 
     @staticmethod
+    @memoise
     def temporal_temporal_conjunctives(word):
         return WordBasedResult(any(re.findall(r'^(when|while|meanwhile|during|on|and|or|until)$', word.word_form.lower())))
 
     @staticmethod
+    @memoise
     def temporal_temporal_prepositions(word):
         return WordBasedResult(any(re.findall(r'^(pre|during|for|over|along|this|that|these|those|than|mid)$', word.word_form.lower())))
 
     @staticmethod
+    @memoise
     def temporal_temporal_coreference(word):
         return WordBasedResult(any(re.findall(r'^(dawn|time|period|course|era|age|season|quarter|semester|millenia|millenium|eve|festival|festivity)s?$', word.word_form.lower())))
 
     @staticmethod
+    @memoise
     def temporal_festivity(word):
         return WordBasedResult(any(re.findall(r'^(christmas|easter|epifany|martin|luther|thanksgiving|halloween|saints|armistice|nativity|advent|solstice|boxing|stephen|sylvester)$', word.word_form.lower())))
 
     @staticmethod
+    @memoise
     def temporal_compound(word):
         return WordBasedResult(any(re.findall(r'^[0-9]+\-(century|decade|year|month|week\-end|week|day|hour|minute|second|fortnight|)$', word.word_form.lower())))
 
     # @staticmethod
+    # @memoise
     # def phonetic_form(word):
     #     phonemes = PHONEME_DICTIONARY.get(word.word_form.lower(), [''])[0]
     #     attributes = (('phonetic_form', WordBasedResult('-'.join(phonemes))),
@@ -400,6 +467,15 @@ class WordBasedExtractors(object):
 
 class SentenceBasedExtractors(object):
 
+    # MALE_NAMES = cPickle.load(open(GAZETTEER_FOLDER + 'male.pickle'))
+    # FEMALE_NAMES = cPickle.load(open(GAZETTEER_FOLDER + 'female.pickle'))
+    COUNTRIES = cPickle.load(open(GAZETTEER_FOLDER + 'countries.pickle'))
+    ISO_COUNTRIES = cPickle.load(open(GAZETTEER_FOLDER + 'isocountries.pickle'))
+    # US_CITIES = cPickle.load(open(GAZETTEER_FOLDER + 'uscities.pickle'))
+    # NATIONALITIES = cPickle.load(open(GAZETTEER_FOLDER + 'nationalities.pickle'))
+    FESTIVITIES = cPickle.load(open(GAZETTEER_FOLDER + 'festivities.pickle'))
+    # PHONEME_DICTIONARY = nltk.corpus.cmudict.dict()
+
     # @staticmethod
     # def gazetteer_malename(sentence):
     #     return matching_gazetteer(MALE_NAMES, sentence)
@@ -409,26 +485,32 @@ class SentenceBasedExtractors(object):
     #     return matching_gazetteer(FEMALE_NAMES, sentence)
 
     @staticmethod
+    @memoise
     def gazetteer_country(sentence):
-        return matching_gazetteer(COUNTRIES, sentence)
+        return matching_gazetteer(SentenceBasedExtractors.COUNTRIES, sentence)
 
     @staticmethod
+    @memoise
     def gazetteer_isocountry(sentence):
-        return matching_gazetteer(ISO_COUNTRIES, sentence)
+        return matching_gazetteer(SentenceBasedExtractors.ISO_COUNTRIES, sentence)
 
     # @staticmethod
+    # @memoise
     # def gazetteer_uscity(sentence):
     #     return matching_gazetteer(US_CITIES, sentence)
 
     # @staticmethod
+    # @memoise
     # def gazetteer_nationality(sentence):
     #     return matching_gazetteer(NATIONALITIES, sentence)
 
     @staticmethod
+    @memoise
     def gazetteer_festivity(sentence):
-        return matching_gazetteer(FESTIVITIES, sentence)
+        return matching_gazetteer(SentenceBasedExtractors.FESTIVITIES, sentence)
 
     @staticmethod
+    @memoise
     def parse_2_levels_up_node(sentence):
         result = []
         for tree_index in sentence.parsetree.treepositions(order='leaves'):
@@ -441,6 +523,7 @@ class SentenceBasedExtractors(object):
         return SentenceBasedResult(tuple(result))
 
     @staticmethod
+    @memoise
     def parse_3_levels_up_node(sentence):
         result = []
         for tree_index in sentence.parsetree.treepositions(order='leaves'):
@@ -454,6 +537,7 @@ class SentenceBasedExtractors(object):
         return SentenceBasedResult(tuple(result))
 
     @staticmethod
+    @memoise
     def parse_2_levels_up_childs(sentence):
         result = []
         for tree_index in sentence.parsetree.treepositions(order='leaves'):
@@ -467,6 +551,7 @@ class SentenceBasedExtractors(object):
         return SentenceBasedResult(tuple(result))
 
     @staticmethod
+    @memoise
     def parse_3_levels_up_childs(sentence):
         result = []
         for tree_index in sentence.parsetree.treepositions(order='leaves'):
@@ -480,6 +565,7 @@ class SentenceBasedExtractors(object):
         return SentenceBasedResult(tuple(result))
 
     @staticmethod
+    @memoise
     def parse_3_levels_up_nodes(sentence):
         result = []
         for tree_index in sentence.parsetree.treepositions(order='leaves'):
@@ -494,6 +580,7 @@ class SentenceBasedExtractors(object):
         return SentenceBasedResult(tuple(result))
 
     @staticmethod
+    @memoise
     def parse_2_levels_up_nodes(sentence):
         result = []
         for tree_index in sentence.parsetree.treepositions(order='leaves'):
@@ -508,6 +595,7 @@ class SentenceBasedExtractors(object):
         return SentenceBasedResult(tuple(result))
 
     @staticmethod
+    @memoise
     def parse_start_or_end_child_in_s_clause(sentence):
         '''Suggested by Marilena Di Bari.
         Typically temporal expressions are at the very end or beginning of a
@@ -532,6 +620,7 @@ class SentenceBasedExtractors(object):
         return SentenceBasedResult(tuple(result))
 
     @staticmethod
+    @memoise
     def parse_distance_from_s_node(sentence):
         '''How far the current node (its POS) is from an S-parent.
         '''
@@ -553,6 +642,7 @@ class SentenceBasedExtractors(object):
         return SentenceBasedResult(tuple(result))
 
     @staticmethod
+    @memoise
     def dependency_outgoing_relations(sentence):
         '''For each word I represent a vector of all outgoing relations, plus
            the information related to the number of outgoing dependency
@@ -604,6 +694,7 @@ class SentenceBasedExtractors(object):
         return SentenceBasedResults(tuple(result))
 
     @staticmethod
+    @memoise
     def dependency_incoming_relations(sentence):
         '''For each word I represent a vector derived from the incoming
            dependency relations. I represent the following information:
@@ -677,43 +768,3 @@ class SentenceBasedExtractors(object):
 class DocumentBasedExtractors(object):
 
     pass
-
-
-class WordBasedResult(object):
-
-    def __init__(self, value):
-        assert type(value) in (types.NoneType, str, unicode, bool, int, float)
-        if isinstance(value, types.NoneType):
-            self.value = '_'
-        elif type(value) in (str, bool):
-            self.value = '"{}"'.format(str(value).replace(' ', '_'))
-        elif type(value) == unicode:
-            self.value = u'"{}"'.format(unicode(value.replace(u'\xa0', u'_')))
-        else:
-            self.value = '{}'.format(str(value).replace(' ', '_'))
-        self.value = self.value.replace(' ', '_')
-
-    def apply(self, word, name):
-        assert type(word) == Word, 'Wrong word type'
-        word.attributes[name] = self.value
-
-
-class WordBasedResults(object):
-
-    def __init__(self, values):
-        assert type(values) == tuple
-        self.values = values
-
-
-class SentenceBasedResult(object):
-
-    def __init__(self, values):
-        assert type(values) == tuple, 'Wrong type for values'
-        self.values = values
-
-
-class SentenceBasedResults(object):
-
-    def __init__(self, values):
-        assert type(values) == tuple, 'Wrong type for values'
-        self.values = values

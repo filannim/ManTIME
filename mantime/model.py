@@ -19,6 +19,7 @@ import cgi
 
 from normalisers.timex_general import normalise as normalise_general
 from normalisers.timex_clinical import normalise as normalise_clinical
+from utilities import deephash
 
 
 def format_annotation(start_token, end_token, annotations,
@@ -107,6 +108,9 @@ class SequenceLabel(object):
 
     def __eq__(self, other):
         return self.position == other.position and self.tag == other.tag
+
+    def __hash__(self):
+        return deephash(self.__dict__)
 
 
 class DependencyGraphNode(object):
@@ -216,6 +220,9 @@ class Document(object):
     def __repr__(self):
         return repr(self.__dict__)
 
+    def __hash__(self):
+        return deephash(self.__dict__)
+
 
 class Sentence(object):
 
@@ -225,17 +232,19 @@ class Sentence(object):
 
         if dependencies:
             assert type(dependencies) == list, 'Wrong dependencies type'
-        if indexed_dependencies:
-            assert type(indexed_dependencies) == DependencyGraph, \
-                'Wrong indexed dependencies type'
-        if parsetree:
-            assert type(parsetree) == ParentedTree, 'Wrong parsetree type'
+        # if indexed_dependencies:
+        #    assert type(indexed_dependencies) == DependencyGraph, \
+        #        'Wrong indexed dependencies type'
+        # if parsetree:
+        #    assert type(parsetree) == ParentedTree, 'Wrong parsetree type'
         if text:
             assert type(text) == list, 'Wrong text type'
 
         self.dependencies = dependencies
-        self.indexed_dependencies = indexed_dependencies
-        self.parsetree = parsetree
+        self._indexed_dependencies = indexed_dependencies
+        self.indexed_dependencies = DependencyGraph(indexed_dependencies)
+        self._parsetree = parsetree
+        self.parsetree = ParentedTree(parsetree)
         self.words = []
 
     def __str__(self):
@@ -243,6 +252,10 @@ class Sentence(object):
 
     def __repr__(self):
         return repr(self.__dict__)
+
+    def __hash__(self):
+        return deephash([self._indexed_dependencies, self._parsetree,
+                         self.words])
 
 
 class Word(object):
@@ -272,6 +285,9 @@ class Word(object):
                 self.word_form == other.word_form and
                 self.character_offset_begin == other.character_offset_begin and
                 self.character_offset_end == other.character_offset_end)
+
+    def __hash__(self):
+        return deephash(self.__dict__)
 
 
 class TemporalExpression(object):

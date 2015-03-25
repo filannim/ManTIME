@@ -169,8 +169,9 @@ class TempEval3FileReader(FileReader):
         for stanford_sentence in stanford_tree['sentences']:
             dependencies = stanford_sentence.get('dependencies', None)
             i_dependencies = stanford_sentence.get('indexeddependencies', None)
-            i_dependencies = DependencyGraph(i_dependencies)
-            parsetree = ParentedTree(stanford_sentence.get('parsetree', u''))
+            # i_dependencies = DependencyGraph(i_dependencies)
+            parsetree = stanford_sentence.get('parsetree', u'')
+            # parsetree = ParentedTree(parsetree)
             sentence_text = stanford_sentence.get('text', u'')
 
             sentence = Sentence(dependencies=dependencies,
@@ -300,8 +301,9 @@ class WikiWarsInLineFileReader(FileReader):
         for stanford_sentence in stanford_tree['sentences']:
             dependencies = stanford_sentence.get('dependencies', None)
             i_dependencies = stanford_sentence.get('indexeddependencies', None)
-            i_dependencies = DependencyGraph(i_dependencies)
-            parsetree = ParentedTree(stanford_sentence.get('parsetree', u''))
+            # i_dependencies = DependencyGraph(i_dependencies)
+            parsetree = stanford_sentence.get('parsetree', u'')
+            # parsetree = ParentedTree(parsetree)
             sentence_text = stanford_sentence.get('text', u'')
 
             sentence = Sentence(dependencies=dependencies,
@@ -412,8 +414,10 @@ class i2b2FileReader(FileReader):
         for stanford_sentence in stanford_tree['sentences']:
             dependencies = stanford_sentence.get('dependencies', None)
             i_dependencies = stanford_sentence.get('indexeddependencies', None)
-            i_dependencies = DependencyGraph(i_dependencies)
-            parsetree = ParentedTree(stanford_sentence.get('parsetree', u''))
+            # i_dependencies = DependencyGraph(i_dependencies)
+            parsetree = stanford_sentence.get('parsetree', u'')
+            # parsetree = ParentedTree(parsetree)
+
             sentence_text = stanford_sentence.get('text', u'')
 
             sentence = Sentence(dependencies=dependencies,

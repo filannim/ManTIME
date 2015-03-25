@@ -15,8 +15,9 @@
 
 from __future__ import generators
 import collections
-import os
+import copy
 import md5
+import os
 
 
 class Mute_stderr(object):
@@ -40,6 +41,40 @@ class Mute_stderr(object):
         os.dup2(self.save_fds, 2)
         # Close the null file
         os.close(self.null_fds)
+
+
+def deephash(obj):
+    '''
+    Makes a hash from a dictionary, list, tuple or set to any level, that
+    contains only other hashable types (including any lists, tuples, sets, and
+    dictionaries). In the case where other kinds of objects (like classes) need
+    to be hashed, pass in a collection of object attributes that are pertinent.
+    For example, a class can be hashed in this fashion:
+
+    make_hash([cls.__dict__, cls.__name__])
+
+    A function can be hashed like so:
+
+    make_hash([fn.__dict__, fn.__code__])
+    '''
+    if type(obj) == type(object.__dict__):
+        obj_2 = {}
+        for key, value in obj.items():
+            obj_2[key] = value
+        obj = obj_2
+
+    if isinstance(obj, (set, tuple, list)):
+        return hash(tuple([deephash(elem) for elem in obj]))
+    elif not isinstance(obj, dict):
+        return hash(obj)
+    else:
+        new_obj = copy.deepcopy(obj)
+        for key, value in new_obj.items():
+            new_obj[key] = deephash(value)
+        return hash(tuple(frozenset(sorted(new_obj.items()))))
+
+
+
 
 
 def search_subsequence(sequence, key, end=False):

@@ -14,13 +14,14 @@
 '''This module collect attributes from a sentence.'''
 
 from __future__ import division
+import cPickle
 import inspect
 import logging
 
-from extractors import WordBasedResult
-from extractors import WordBasedResults
-from extractors import SentenceBasedResult
-from extractors import SentenceBasedResults
+from model_extractors import WordBasedResult
+from model_extractors import WordBasedResults
+from model_extractors import SentenceBasedResult
+from model_extractors import SentenceBasedResults
 from extractors import WordBasedExtractors
 from extractors import SentenceBasedExtractors
 from extractors import DocumentBasedExtractors
@@ -35,6 +36,7 @@ class AttributesExtractor(object):
        attributes extractor.
     """
     def __init__(self):
+        self.document_extractors = []
         self.sentence_extractors = []
         self.word_extractors = []
 
@@ -48,14 +50,14 @@ class AttributesExtractor(object):
                 attribute_name = self.__name_attr(level,
                                                   attribute_number,
                                                   word_extractor.func_name)
-                extractor_result.apply(word, attribute_name)
+                word.attributes[attribute_name] = extractor_result.value
                 attribute_number += 1
             elif type(extractor_result) == WordBasedResults:
                 for attribute_name, attribute_value in extractor_result.values:
                     attribute_name = self.__name_attr(level,
                                                       attribute_number,
                                                       attribute_name)
-                    attribute_value.apply(word, attribute_name)
+                    word.attributes[attribute_name] = attribute_value
                     attribute_number += 1
             else:
                 print extractor_result, type(extractor_result)
@@ -73,7 +75,7 @@ class AttributesExtractor(object):
                     attr_name = self.__name_attr(level,
                                                  attribute_number,
                                                  sentence_extrator.func_name)
-                    word_value.apply(word, attr_name)
+                    word.attributes[attr_name] = word_value.value
                 attribute_number += 1
             elif type(extractor_result) == SentenceBasedResults:
                 assert len(extractor_result.values) == len(sentence.words)
@@ -84,7 +86,7 @@ class AttributesExtractor(object):
                         attr_name = self.__name_attr(level,
                                                      attribute_number,
                                                      attr_name)
-                        value.apply(word, attr_name)
+                        word.attributes[attr_name] = value
                         attribute_number += 1
                         num_attributes += 1
                     attribute_number -= num_attributes
@@ -112,7 +114,26 @@ class AttributesExtractor(object):
                 # word-based extractors
                 self.__extract_from_word(word, sent_attr_number)
         logging.info('Attributes: extracted.')
+        self.store_caches()
+        logging.info('Extractors\'s caches: stored.')
         return document
+
+    def store_caches(self):
+        # all the extractors (word, sentence, document-level)
+        extractors = self.word_extractors + self.sentence_extractors + \
+            self.document_extractors
+        pickle_path = lambda filename: '../buffer/extractors/{}'.format(filename)
+        for extractor in extractors:
+            try:
+                cPickle.dump(extractor.cache,
+                             open(pickle_path(extractor.__name__), 'w'))
+                print 'Extractor \'{}\'s cache SAVED.'.format(
+                    extractor.__name__)
+            except AttributeError:
+                # the extrator is not memoised
+                print 'Extractor \'{}\' not memoised.'.format(
+                    extractor.__name__)
+                continue
 
 
 class TimexesExtractor(AttributesExtractor):
@@ -130,6 +151,7 @@ class FullExtractor(AttributesExtractor):
     """
 
     def __init__(self):
+        '''Takes all the extractors (functions) declared in extractors.py.'''
         super(FullExtractor, self).__init__()
         self.document_extractors = [function[1] for function
                                     in inspect.getmembers(
