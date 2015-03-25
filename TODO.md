@@ -3,7 +3,7 @@ TO-DO List
 
 This document lists all the things I should look more carefully in the future.
 
-- [ ] get_annotation methos is called in a wasteful way (I need a queue and that's it).
+- [ ] get_annotation methods is called in a wasteful way (I need a queue and that's it).
 - [ ] Get all the EVENT attributes from TempEval-3 annotated documents (MAKEINSTANCE).
 - [ ] Correct some morphological gazetteer features according to the English grammar. Are all the things called prepositions actually prepositions? (ask to Marilena Di Bari)
 - [ ] In the attribute training phase, the multi-word expressions should be represented as one sample. The features will be merged according to the order of appearance.
