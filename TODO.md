@@ -3,7 +3,8 @@ TO-DO List
 
 This document lists all the things I should look more carefully in the future.
 
-- [ ] Implement the bufferisation at feature level.
+- [ ] get_annotation methos is called in a wasteful way (I need a queue and that's it).
+- [ ] Get all the EVENT attributes from TempEval-3 annotated documents (MAKEINSTANCE).
 - [ ] Correct some morphological gazetteer features according to the English grammar. Are all the things called prepositions actually prepositions? (ask to Marilena Di Bari)
 - [ ] In the attribute training phase, the multi-word expressions should be represented as one sample. The features will be merged according to the order of appearance.
 - [ ] Implement the feature extractor for Temporal Links.
@@ -21,6 +22,7 @@ This document lists all the things I should look more carefully in the future.
 - [ ] Comment the code: better and more verbosely using Google Commenting Style.
 - [ ] Implement a HTML (CSS3) writer (timesheet.js, TimelineJS).
 - [ ] The method search_subsequence is called many times. A more adequate ADT should be used.
+- [x] Implement the bufferisation at feature level.
 - [x] Fix unicode-related bug at utilities.py:76.
 - [x] Have a look at argparse ... it's not correct right now.
 - [x] Filter out useless features such as female gazetters, male gazetters, US cities. (commented)
