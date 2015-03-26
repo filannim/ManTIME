@@ -107,6 +107,7 @@ def normalisation_attribute_matrix(documents, dest, subject, training=True):
                     ident_label = get_label(word)
                     if ident_label.is_timex():
                         ident_label.set_out()
+                    row.append(str(ident_label))
 
                     # normalisation label (CLASS) for training
                     if training:
