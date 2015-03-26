@@ -86,7 +86,7 @@ class AttributesExtractor(object):
                         attr_name = self.__name_attr(level,
                                                      attribute_number,
                                                      attr_name)
-                        word.attributes[attr_name] = value
+                        word.attributes[attr_name] = value.value
                         attribute_number += 1
                         num_attributes += 1
                     attribute_number -= num_attributes
@@ -114,8 +114,6 @@ class AttributesExtractor(object):
                 # word-based extractors
                 self.__extract_from_word(word, sent_attr_number)
         logging.info('Attributes: extracted.')
-        self.store_caches()
-        logging.info('Extractors\'s caches: stored.')
         return document
 
     def store_caches(self):
@@ -127,12 +125,12 @@ class AttributesExtractor(object):
             try:
                 cPickle.dump(extractor.cache,
                              open(pickle_path(extractor.__name__), 'w'))
-                print 'Extractor \'{}\'s cache SAVED.'.format(
-                    extractor.__name__)
+                # print 'Extractor \'{}\'s cache SAVED.'.format(
+                #     extractor.__name__)
             except AttributeError:
                 # the extrator is not memoised
-                print 'Extractor \'{}\' not memoised.'.format(
-                    extractor.__name__)
+                # print 'Extractor \'{}\' not memoised.'.format(
+                #     extractor.__name__)
                 continue
 
 

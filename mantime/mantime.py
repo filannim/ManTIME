@@ -71,6 +71,10 @@ class ManTIME(object):
                 msg = 'Document {} skipped.'.format(os.path.relpath(input_file))
                 logging.error(msg)
 
+        # storing the attribute extractors caches
+        self.extractor.store_caches()
+        logging.info('Extractors\'s caches: stored.')
+
         # training models (identification and normalisation)
         modl = identifier.train(self.documents, self.model_name)
         modl = normaliser.train(self.documents, modl)
