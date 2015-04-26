@@ -268,8 +268,7 @@ class IdentificationClassifier(Classifier):
             for line in lines:
                 try:
                     curr_label = SequenceLabel(line.strip().split('\t')[-1])
-                    curr_word = documents[n_doc].sentences[n_sent].words[
-                        n_word]
+                    curr_word = documents[n_doc].sentences[n_sent].words[n_word]
 
                     # Just consider not annotated the current word if it has
                     # been already positively annotated by another previous
