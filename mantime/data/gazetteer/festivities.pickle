@@ -2,315 +2,502 @@ c__builtin__
 set
 p1
 ((lp2
-V['Bonfire', 'Night']
-p3
-aV['Eastertide']
-p4
-aV['Pentecost']
-p5
-aV['Ascension', 'Sunday']
-p6
-aV['Festival', 'of', 'Wesak']
-p7
-aV['St.', 'Nicholas', "'s", 'Day']
-p8
-aV['St', 'David', "'s", 'Day']
-p9
-aV['Tabernacles']
-p10
-aV['Burns', 'night']
-p11
-aV['Mehragan']
-p12
-aV['Hana', 'Matsuri']
-p13
-aV['D-day']
-p14
-aV['Advent']
-p15
-aV['Feast', 'Of', 'Pesach']
-p16
-aV['Jewish', 'New', 'Year']
-p17
-aV['Remembrance', 'Day']
-p18
-aV['VE', 'Day']
-p19
-aV['Coronation']
-p20
-aV['Easter', 'Sunday']
-p21
-aV['All', 'Hallows', 'Eve']
-p22
-aV['D-Day']
-p23
-aV['Katik']
-p24
-aV['Saint', 'Nicholas', "'s", 'Day']
-p25
-aV['Lent']
-p26
-aV['Holy', 'Week']
-p27
-aV['Day', 'Of', 'Atonement']
-p28
-aV['Ashadha']
-p29
-aV['All', "Saints'"]
-p30
-aV['Feast', 'of', 'Passover']
-p31
-aV['Magha']
-p32
-aV['Mother', "'s", 'Day']
-p33
-aV['Quadragesima', 'Sunday']
-p34
-aV['Fathers', "'", 'Day']
-p35
-aV['Remembrance', 'Sunday']
-p36
-aV['Asvina']
-p37
-aV['St.', 'Patrick', "'s", 'Day']
-p38
-aV['Shici-go-san']
-p39
-aV['St.', 'Nicholas', "'", 'Day']
-p40
-aV['Father', "'s", 'Day']
-p41
-aV['St', 'Nicholas', "'s", 'Day']
-p42
-aV['Feast', 'Of', 'Passover']
-p43
-aV['Succoth']
-p44
-aV['V.E.', 'Day']
-p45
-aV['Noruz']
-p46
-aV['Yom', 'Kippur']
-p47
-aV['Feast', 'Of', 'Stephen']
-p48
-aV['Advent', 'Sunday']
-p49
-aV['New', 'Year', "'s", 'Eve']
-p50
-aV['Ash', 'Wednesday']
-p51
-aV['Assumption']
-p52
-aV['All', 'Hallows']
-p53
-aV['Spring', 'Festival']
-p54
-aV['Commonwealth', 'Day']
-p55
-aV['Saint', 'David', "'s", 'Day']
-p56
-aV['Hogmanay']
-p57
-aV['Corpus', 'Christi']
-p58
-aV['Feast', 'Of', 'Weeks']
-p59
-aV['Mothering', 'Sunday']
-p60
-aV['Saga', 'dawa']
-p61
-aV['Day', 'of', 'Atonement']
-p62
-aV['V.J', '.']
-p63
-aV['Independence', 'Day']
-p64
-aV['St', 'Andrew', "'s", 'Day']
-p65
-aV['Fathering', 'Sunday']
-p66
-aV['Silver', 'Jubilee']
-p67
-aV['Jubilee']
-p68
-aV['Magar']
-p69
-aV['Vaisakha']
-p70
-aV['Phagan']
-p71
-aV['Pesach']
-p72
-aV['May']
-p73
-aV['Saint', 'Andrew', "'s", 'Day']
-p74
-aV['Festival', 'Of', 'Wesak']
-p75
-aV['Burns', 'Night']
-p76
-aV['Quinquagesima', 'Sunday']
-p77
-aV['karttika']
-p78
-aV['St', 'Nicholas', "'", 'Day']
-p79
-aV['Saint', 'Stephen', "'s", 'Day']
-p80
-aV['Rabi', 'I']
-p81
-aV['Shrove', 'Tuesday']
-p82
-aV['Assumption', 'Sunday']
-p83
-aV['Bastille']
-p84
-aV['Saint', 'Nicholas', "'", 'Day']
-p85
-aV['Easter', 'Monday']
-p86
-aV['Palm', 'Sunday']
-p87
-aV['Good', 'Fri']
-p88
-aV['Rajab']
-p89
-aV['Rosh', 'Hashanah']
-p90
-aV['St', 'Basil', "'s", 'Day']
-p91
-aV['Feast', 'of', 'Stephen']
-p92
-aV['Asun']
-p93
-aV['Pajjusana']
-p94
-aV['Guy', 'Fawkes', "'", 'night']
-p95
-aV['Whit', 'Sunday']
-p96
-aV['Ramadan']
-p97
-aV['Islamic', 'New', 'Year']
-p98
-aV['St.', 'Swithun', "'s", 'Day']
-p99
-aV['Saraswati', 'Puja']
-p100
-aV['St.', 'George', "'s", 'Day']
-p101
-aV['Feast', 'of', 'Weeks']
-p102
-aV['Yuletide']
-p103
-aV['Epiphany']
-p104
-aV['St.', 'David', "'s", 'Day']
-p105
-aV['St', 'George', "'s", 'Day']
-p106
-aV['Saint', 'Swithun', "'s", 'Day']
-p107
-aV['Bonfire', 'night']
-p108
-aV['All', "Souls'"]
-p109
-aV['Low', 'Sunday']
-p110
-aV['Saint', 'Valentine', "'s", 'Day']
-p111
-aV['Shawwal']
-p112
-aV['VJ']
-p113
-aV['Thanksgiving']
-p114
-aV['Diwali']
-p115
-aV['Bhadrapada']
-p116
-aV['Xmas', 'Eve']
-p117
-aV['St', 'Valentine', "'s", 'Day']
-p118
-aV['Chinese', 'New', 'Year']
-p119
-aV['Oli']
-p120
-aV['St.', 'Andrew', "'s", 'Day']
-p121
-aV['St', 'Stephen', "'s", 'Day']
-p122
-aV['Golden', 'Jubilee']
-p123
-aV["Hallowe'en"]
-p124
-aV['Christmas', 'Eve']
-p125
-aV['Guy', 'Fawkes', "'", 'Night']
-p126
-aV['Halloween']
-p127
-aV['April', 'Fool', "'s"]
-p128
-aV['New', 'Year']
-p129
-aV['Xmas']
-p130
-aV['Hanukkah']
-p131
-aV['Chaitra']
-p132
-aV['Ramadam']
-p133
-aV['Saint', 'Basil', "'s", 'Day']
-p134
-aV['Phalguna']
-p135
-aV['Grandparent', "'s"]
-p136
-aV['Easter']
-p137
-aV['Septuagesima', 'Sunday']
-p138
-aV['Muharram']
-p139
-aV['Saint', 'Patrick', "'s", 'Day']
-p140
-aV['Christmas']
-p141
-aV['Spring', 'festival']
-p142
-aV['St', 'Swithun', "'s", 'Day']
-p143
-aV['Christmastide']
-p144
-aV['Boxing', 'Day']
-p145
-aV['Dhu-i-Hijja']
-p146
-aV['Good', 'Friday']
-p147
-aV['St.', 'Stephen', "'s", 'Day']
-p148
-aV['Saga', 'Dawa']
-p149
-aV['St.', 'Basil', "'s", 'Day']
-p150
-aV['Trinity', 'Sunday']
-p151
-aV['Whitsun']
-p152
-aV['Feast', 'of', 'Pesach']
-p153
-aV['Passover']
-p154
-aV['Saint', 'George', "'s", 'Day']
-p155
-aV['St', 'Patrick', "'s", 'Day']
-p156
-aV['Rogation', 'Sunday']
-p157
+(S'Bhadrapada'
+tp3
+a(S'Whitsun'
+tp4
+a(S'Day'
+S'of'
+S'Atonement'
+tp5
+a(S'Golden'
+S'Jubilee'
+tp6
+a(S'Silver'
+S'Jubilee'
+tp7
+a(S'Corpus'
+S'Christi'
+tp8
+a(S'Ascension'
+S'Sunday'
+tp9
+a(S'Assumption'
+S'Sunday'
+tp10
+a(S'Xmas'
+tp11
+a(S'V.J'
+S'.'
+tp12
+a(S'Bonfire'
+S'Night'
+tp13
+a(S'Saint'
+S'George'
+S"'s"
+S'Day'
+tp14
+a(S'Festival'
+S'of'
+S'Wesak'
+tp15
+a(S'Commonwealth'
+S'Day'
+tp16
+a(S'Noruz'
+tp17
+a(S'New'
+S'Year'
+tp18
+a(S'Grandparent'
+S"'s"
+tp19
+a(S'Bastille'
+tp20
+a(S'Spring'
+S'festival'
+tp21
+a(S'Day'
+S'Of'
+S'Atonement'
+tp22
+a(S'Pajjusana'
+tp23
+a(S'Saint'
+S'Patrick'
+S"'s"
+S'Day'
+tp24
+a(S'VE'
+S'Day'
+tp25
+a(S'Fathers'
+S"'"
+S'Day'
+tp26
+a(S'Shawwal'
+tp27
+a(S'Spring'
+S'Festival'
+tp28
+a(S'May'
+tp29
+a(S'Oli'
+tp30
+a(S'Shrove'
+S'Tuesday'
+tp31
+a(S'Fathering'
+S'Sunday'
+tp32
+a(S'St'
+S'David'
+S"'s"
+S'Day'
+tp33
+a(S'Assumption'
+tp34
+a(S'Rogation'
+S'Sunday'
+tp35
+a(S'St.'
+S'Nicholas'
+S"'s"
+S'Day'
+tp36
+a(S'St.'
+S'Basil'
+S"'s"
+S'Day'
+tp37
+a(S'Remembrance'
+S'Sunday'
+tp38
+a(S'St.'
+S'Nicholas'
+S"'"
+S'Day'
+tp39
+a(S'VJ'
+tp40
+a(S'Rabi'
+S'I'
+tp41
+a(S'Yom'
+S'Kippur'
+tp42
+a(S'Easter'
+S'Monday'
+tp43
+a(S'Mehragan'
+tp44
+a(S'Saint'
+S'Nicholas'
+S"'"
+S'Day'
+tp45
+a(S'Feast'
+S'Of'
+S'Passover'
+tp46
+a(S'Magha'
+tp47
+a(S'Lent'
+tp48
+a(S'Tabernacles'
+tp49
+a(S'All'
+S"Saints'"
+tp50
+a(S'Quadragesima'
+S'Sunday'
+tp51
+a(S'Independence'
+S'Day'
+tp52
+a(S'karttika'
+tp53
+a(S'St.'
+S'Patrick'
+S"'s"
+S'Day'
+tp54
+a(S'All'
+S'Hallows'
+tp55
+a(S'Saint'
+S'Stephen'
+S"'s"
+S'Day'
+tp56
+a(S'St.'
+S'Swithun'
+S"'s"
+S'Day'
+tp57
+a(S'Good'
+S'Fri'
+tp58
+a(S'Saga'
+S'Dawa'
+tp59
+a(S'Good'
+S'Friday'
+tp60
+a(S'All'
+S'Hallows'
+S'Eve'
+tp61
+a(S'Katik'
+tp62
+a(S'St'
+S'Valentine'
+S"'s"
+S'Day'
+tp63
+a(S'Magar'
+tp64
+a(S'Pentecost'
+tp65
+a(S'Guy'
+S'Fawkes'
+S"'"
+S'Night'
+tp66
+a(S'Remembrance'
+S'Day'
+tp67
+a(S'St'
+S'Swithun'
+S"'s"
+S'Day'
+tp68
+a(S'Coronation'
+tp69
+a(S'St.'
+S'George'
+S"'s"
+S'Day'
+tp70
+a(S'Asun'
+tp71
+a(S'St'
+S'Basil'
+S"'s"
+S'Day'
+tp72
+a(S'Epiphany'
+tp73
+a(S'Ramadan'
+tp74
+a(S'Guy'
+S'Fawkes'
+S"'"
+S'night'
+tp75
+a(S'All'
+S"Souls'"
+tp76
+a(S'Eastertide'
+tp77
+a(S'Rosh'
+S'Hashanah'
+tp78
+a(S'Dhu-i-Hijja'
+tp79
+a(S'Boxing'
+S'Day'
+tp80
+a(S'Vaisakha'
+tp81
+a(S'Xmas'
+S'Eve'
+tp82
+a(S'Feast'
+S'of'
+S'Stephen'
+tp83
+a(S'Advent'
+tp84
+a(S'Christmastide'
+tp85
+a(S'Trinity'
+S'Sunday'
+tp86
+a(S'Thanksgiving'
+tp87
+a(S'Succoth'
+tp88
+a(S'Burns'
+S'Night'
+tp89
+a(S'Feast'
+S'of'
+S'Weeks'
+tp90
+a(S'St.'
+S'David'
+S"'s"
+S'Day'
+tp91
+a(S'Father'
+S"'s"
+S'Day'
+tp92
+a(S'Saga'
+S'dawa'
+tp93
+a(S'St.'
+S'Andrew'
+S"'s"
+S'Day'
+tp94
+a(S'Shici-go-san'
+tp95
+a(S'Halloween'
+tp96
+a(S'Chaitra'
+tp97
+a(S'Jewish'
+S'New'
+S'Year'
+tp98
+a(S'Ramadam'
+tp99
+a(S'St'
+S'Patrick'
+S"'s"
+S'Day'
+tp100
+a(S'Whit'
+S'Sunday'
+tp101
+a(S'Muharram'
+tp102
+a(S'Hana'
+S'Matsuri'
+tp103
+a(S'Yuletide'
+tp104
+a(S'Christmas'
+S'Eve'
+tp105
+a(S'Low'
+S'Sunday'
+tp106
+a(S'D-Day'
+tp107
+a(S'Septuagesima'
+S'Sunday'
+tp108
+a(S'Advent'
+S'Sunday'
+tp109
+a(S'Phagan'
+tp110
+a(S'St'
+S'Andrew'
+S"'s"
+S'Day'
+tp111
+a(S'April'
+S'Fool'
+S"'s"
+tp112
+a(S'Hanukkah'
+tp113
+a(S"Hallowe'en"
+tp114
+a(S'Islamic'
+S'New'
+S'Year'
+tp115
+a(S'Easter'
+S'Sunday'
+tp116
+a(S'St'
+S'George'
+S"'s"
+S'Day'
+tp117
+a(S'St.'
+S'Stephen'
+S"'s"
+S'Day'
+tp118
+a(S'Bonfire'
+S'night'
+tp119
+a(S'Holy'
+S'Week'
+tp120
+a(S'V.E.'
+S'Day'
+tp121
+a(S'Festival'
+S'Of'
+S'Wesak'
+tp122
+a(S'Chinese'
+S'New'
+S'Year'
+tp123
+a(S'New'
+S'Year'
+S"'s"
+S'Eve'
+tp124
+a(S'Palm'
+S'Sunday'
+tp125
+a(S'Saint'
+S'David'
+S"'s"
+S'Day'
+tp126
+a(S'Saint'
+S'Andrew'
+S"'s"
+S'Day'
+tp127
+a(S'Easter'
+tp128
+a(S'St'
+S'Nicholas'
+S"'"
+S'Day'
+tp129
+a(S'Ash'
+S'Wednesday'
+tp130
+a(S'Diwali'
+tp131
+a(S'Hogmanay'
+tp132
+a(S'Ashadha'
+tp133
+a(S'Feast'
+S'Of'
+S'Stephen'
+tp134
+a(S'Phalguna'
+tp135
+a(S'Feast'
+S'of'
+S'Pesach'
+tp136
+a(S'Saint'
+S'Valentine'
+S"'s"
+S'Day'
+tp137
+a(S'Saint'
+S'Nicholas'
+S"'s"
+S'Day'
+tp138
+a(S'Saint'
+S'Basil'
+S"'s"
+S'Day'
+tp139
+a(S'Burns'
+S'night'
+tp140
+a(S'D-day'
+tp141
+a(S'Feast'
+S'Of'
+S'Weeks'
+tp142
+a(S'Feast'
+S'of'
+S'Passover'
+tp143
+a(S'Rajab'
+tp144
+a(S'Saint'
+S'Swithun'
+S"'s"
+S'Day'
+tp145
+a(S'Feast'
+S'Of'
+S'Pesach'
+tp146
+a(S'Mother'
+S"'s"
+S'Day'
+tp147
+a(S'Asvina'
+tp148
+a(S'Jubilee'
+tp149
+a(S'Christmas'
+tp150
+a(S'Mothering'
+S'Sunday'
+tp151
+a(S'Quinquagesima'
+S'Sunday'
+tp152
+a(S'Pesach'
+tp153
+a(S'Passover'
+tp154
+a(S'St'
+S'Stephen'
+S"'s"
+S'Day'
+tp155
+a(S'St'
+S'Nicholas'
+S"'s"
+S'Day'
+tp156
+a(S'Saraswati'
+S'Puja'
+tp157
 atRp158
 .
