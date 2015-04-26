@@ -74,9 +74,6 @@ def deephash(obj):
         return hash(tuple(frozenset(sorted(new_obj.items()))))
 
 
-
-
-
 def search_subsequence(sequence, key, end=False):
     '''Yields all the start positions of the *key* in the *sequence*.
 
@@ -101,9 +98,9 @@ def search_subsequence(sequence, key, end=False):
     shift = 1
     for current_position in range(len(key)):
         while shift <= current_position and \
-                key[current_position] != key[current_position-shift]:
-            shift += shifts_table[current_position-shift]
-        shifts_table[current_position+1] = shift
+                key[current_position] != key[current_position - shift]:
+            shift += shifts_table[current_position - shift]
+        shifts_table[current_position + 1] = shift
     # do the actual search
     start_position = 0
     matched_lenght = 0
@@ -120,74 +117,11 @@ def search_subsequence(sequence, key, end=False):
                 yield start_position
 
 
-def apply_gazetteer(sentence, gazetteer, case_sensitive=False):
-    '''It returns a list of indexes corresponding to the beginning of a
-    found *gazetteer* item in the *sentence*.'''
-    # TO-DO: If I use a Trie structure for each gazetteer, I should save
-    #        a bit of computational time.
-    case = lambda text: text.lower() if case_sensitive else text
-    indexes = []
-    sentence = case(sentence)
-    for item in gazetteer:
-        indexes.extend(search_subsequence(sentence, case(item), end=True))
-    return sorted(indexes)
-
-
-def matching_gazetteer(gazetteer, sentence):
-    word_forms = [token.word_form for token in sentence.words]
-    matchings = set()
-    for gazetteer_item in gazetteer:
-        subsequences = search_subsequence(word_forms, gazetteer_item)
-        if subsequences:
-            for subsequence_start in subsequences:
-                subsequence_end = subsequence_start + len(gazetteer_item)
-                matchings.update(range(subsequence_start, subsequence_end))
-    return __format(matchings, len(word_forms))
-
-
-def __format(matching_elements, length):
-    from extractors import WordBasedResult
-    from extractors import SentenceBasedResult
-    assert type(length) == int
-    assert type(matching_elements) == set
-    if matching_elements:
-        assert max(matching_elements) <= length
-        matching_elements = sorted(matching_elements)
-        result = []
-        for index in xrange(length):
-            if matching_elements:
-                if index == matching_elements[0]:
-                    result.append(WordBasedResult('I'))
-                    matching_elements.pop(0)
-                else:
-                    result.append(WordBasedResult('O'))
-            else:
-                result.append(WordBasedResult('O'))
-        return SentenceBasedResult(tuple(result))
-    else:
-        return SentenceBasedResult(tuple([WordBasedResult('O')]*length))
-
-
 def extractors_stamp():
     attributes_extractor_content = open('./attributes_extractor.py').read()
     md5_obj = md5.new()
     md5_obj.update(attributes_extractor_content)
     return md5_obj.digest()
-
-
-class Memoize(object):
-    """Memoization utility."""
-
-    def __init__(self, function):
-        self.function = function
-        self.memo = {}
-
-    def __call__(self, *args, **kwrds):
-        import cPickle
-        key = cPickle.dumps(args, 1) + cPickle.dumps(kwrds, 1)
-        if key not in self.memo:
-            self.memo[key] = self.function(*args, **kwrds)
-        return self.memo[key]
 
 
 def main():
