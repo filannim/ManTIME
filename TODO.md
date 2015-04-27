@@ -3,17 +3,15 @@ TO-DO List
 
 This document lists all the things I should look more carefully in the future.
 
-- [ ] get_annotation methods is called in a wasteful way (I need a queue and that's it).
-- [ ] Correct some morphological gazetteer features according to the English grammar. Are all the things called prepositions actually prepositions? (ask to Marilena Di Bari)
+- [ ] `get_annotation` method is called in a wasteful way (I need a queue and that's it).
 - [ ] In the attribute training phase, the multi-word expressions should be represented as one sample. The features will be merged according to the order of appearance.
 - [ ] Implement the feature extractor for Temporal Links.
 - [ ] Implement the classifier for Temporal Links.
 - [ ] The writers should use an xml library instead of writing strings to a file.
 - [ ] Adapt the writers to output temporal links too.
 - [ ] Make the features as lighter as possible (in terms of storage space).
-- [ ] Probably you can avoid some variables for Document and Sentence objects.
+- [ ] Probably some variables in Document and Sentence objects can be deleted.
 - [ ] Group the annotations token based at sentence level.
-- [ ] Should the attribute data matrix be made of positive samples only?
 - [ ] Implement an error method to get statistics from the models.
 - [ ] Implement a shuffle method and cross-fold validation for the data.
 - [ ] Do I really need to load Stanford Core NLP everytime for every document? Once (the problem)[https://github.com/dasmith/stanford-corenlp-python/issues/13] with long texts is solved I should switch to the new stanford-core-nlp.
@@ -21,6 +19,11 @@ This document lists all the things I should look more carefully in the future.
 - [ ] Comment the code: better and more verbosely using Google Commenting Style.
 - [ ] Implement a HTML (CSS3) writer (timesheet.js, TimelineJS).
 - [ ] The method search_subsequence is called many times. A more adequate ADT should be used.
+
+Done:
+
+- [x] Should the attribute data matrix be made of positive samples only?
+- [x] Correct some morphological gazetteer features according to the English grammar. Are all the things called prepositions actually prepositions? (ask to Marilena Di Bari)
 - [x] Implement the bufferisation at feature level.
 - [x] Fix unicode-related bug at utilities.py:76.
 - [x] Have a look at argparse ... it's not correct right now.
