@@ -266,14 +266,27 @@ class IdentificationClassifier(Classifier):
             prev_label = None
             n_timex, n_event = 1, 1
             for line in lines:
-                try:
-                    curr_label = SequenceLabel(line.strip().split('\t')[-1])
+                line = line.strip()
+                if line:
+                    # read the predicted label (last column from CRF++)
+                    predicted_class = line.split('\t')[-1]
+                    curr_label = SequenceLabel(predicted_class)
+                    # for events, the predicted label carries the event
+                    # class and not just [IO]-EVENT. Therefore, I need to
+                    # save the class in eclass variable and also change
+                    # curr_label's tag to just 'EVENT'
+                    if idnt_class == 'EVENT':
+                        if not curr_label.is_out():
+                            eclass = curr_label.tag
+                            curr_label.tag = 'EVENT'
+
                     curr_word = documents[n_doc].sentences[n_sent].words[n_word]
 
                     # Just consider not annotated the current word if it has
                     # been already positively annotated by another previous
                     # model. Notice that the order in the most general FOR loop
                     # of this script has an impact.
+
                     if not curr_word.predicted_label.is_out():
                         curr_label.set_out()
 
@@ -282,7 +295,8 @@ class IdentificationClassifier(Classifier):
                             documents[n_doc].predicted_annotations.append(
                                 prev_element)
                         if curr_label.is_event():
-                            prev_element = Event(n_event, [curr_word])
+                            prev_element = Event(n_event, [curr_word],
+                                                 eclass=eclass)
                             n_event += 1
                         elif curr_label.is_timex():
                             prev_element = TemporalExpression(n_timex,
@@ -296,6 +310,7 @@ class IdentificationClassifier(Classifier):
 
                     if not curr_label.is_out():
                         curr_word.predicted_label = curr_label
+
                     prev_label = curr_label
 
                     n_word += 1
@@ -306,8 +321,6 @@ class IdentificationClassifier(Classifier):
                         if len(documents[n_doc].sentences) == n_sent:
                             n_word, n_sent = 0, 0
                             n_doc += 1
-                except AttributeError:
-                    continue
 
                 # this is the sentence separator. the eventual annotation is
                 # pushed into the document. This prevents the merging of an

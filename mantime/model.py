@@ -107,7 +107,11 @@ class SequenceLabel(object):
             return self.position
 
     def __eq__(self, other):
-        return self.position == other.position and self.tag == other.tag
+        return (isinstance(self, type(other)) and
+                self.position == other.position and self.tag == other.tag)
+
+    def __ne__(self, other):
+        return not self == other
 
     def __hash__(self):
         return deephash(self.__dict__)
@@ -203,7 +207,7 @@ class Document(object):
         self.predicted_annotations = []
 
     def get_text(self, start, end):
-        return self.text[start+self.text_offset:end+self.text_offset]
+        return self.text[start + self.text_offset:end + self.text_offset]
 
     def store_gold_annotations(self):
         """Enriching the Stanford Parser output with gold annotations."""
@@ -331,7 +335,7 @@ class TemporalExpression(object):
                 _, ttype, value, _, mod = timex_normalise(text, dct)
         except Exception:
             ttype, value = 'DATE', 'X'
-        self.text = cgi.escape(self.text.replace('\n', ' '), True)
+        self.text = cgi.escape(text.replace('\n', ' '), True)
         self.ttype = ttype
         self.value = value
         self.mod = mod
@@ -363,15 +367,19 @@ class Event(object):
         self.words.append(word)
         self.end = self.words[-1].character_offset_end
 
-    def normalise(self):
-        assert all(['type' in w.tag_attributes.keys() for w in self.words])
-        assert all(['modality' in w.tag_attributes.keys() for w in self.words])
+    def normalise(self, document):
         assert all(['polarity' in w.tag_attributes.keys() for w in self.words])
-        self.eclass = [w.tag_attributes['type'] for w in self.words][0]
-        self.modality = [w.tag_attributes['modality'] for w in self.words][0]
-        self.polarity = [w.tag_attributes['polarity'] for w in self.words][0]
+        assert all(['modality' in w.tag_attributes.keys() for w in self.words])
+        self.pos = [w.tag_attributes.get('pos', '') for w in self.words][0]
+        self.tense = [w.tag_attributes.get('tense', '') for w in self.words][0]
+        self.aspect = [w.tag_attributes.get('aspect', '') for w in self.words][0]
+        self.polarity = [w.tag_attributes.get('polarity', '') for w in self.words][0]
+        self.modality = [w.tag_attributes.get('modality', '') for w in self.words][0]
         self.sec_time_rel = ''
-        self.text = cgi.escape(self.text.replace('\n', ' '), True)
+        start = self.words[0].character_offset_begin + document.text_offset
+        end = self.words[-1].character_offset_end + document.text_offset
+        text = document.text[start:end]
+        self.text = cgi.escape(text.replace('\n', ' '), True)
         # [w.tag_attributes['sec_time_rel'] for w in self.words][0]
 
 

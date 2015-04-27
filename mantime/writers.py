@@ -77,39 +77,6 @@ class TempEval3Writer(FileWriter):
         """It writes on an external file in the TempEval-3 format.
 
         """
-        from normalisers.timex_general import normalise as timex_normalise
-
-        def write_tag(memory, text):
-            annotated_text = ''.join(text[memory['start']:memory['end']]).strip()
-            attribs = ''
-            if memory['tag'] == 'EVENT':
-                attrs = memory['event_attributes']
-                event_eid = memory['tag_ids'].get(memory['tag'], 1)
-                event_class = memory['event_class']
-                attribs = 'class="{}" eid="e{}"'.format(event_class, event_eid)
-                memory['events'].append((event_eid, attrs['pos'],
-                                         attrs['tense'], attrs['aspect'],
-                                         attrs['polarity'], attrs['modality'],
-                                         annotated_text))
-                memory['tag_ids'][memory['tag']] = event_eid + 1
-            elif memory['tag'] == 'TIMEX3':
-                _, ttype, tvalue, _ = timex_normalise(annotated_text,
-                                                      memory['dct'])
-                ttid = memory['tag_ids'].get(memory['tag'], 1)
-                memory['tag_ids'][memory['tag']] = ttid + 1
-                attribs = 'type="{}" value="{}" tid="t{}"'.format(ttype,
-                                                                  tvalue,
-                                                                  ttid)
-            if memory['tag']:
-                text.insert(memory['start'], '<{} {}>'.format(memory['tag'],
-                                                              attribs))
-                text.insert(memory['end']+1, '</{}>'.format(memory['tag']))
-                memory['offset'] += 2
-            memory['start'] = 0
-            memory['end'] = 0
-            memory['tag'] = None
-            memory['event_class'] = None
-            memory['event_attributes'] = {}
 
         outputs = []
         for document in documents:
@@ -124,67 +91,42 @@ class TempEval3Writer(FileWriter):
                               'temporalFunction="false" functionInDocument="' +
                               'CREATION_TIME">{}</TIMEX3></DCT>\n'
                               ).format(document.dct, document.dct_text))
-            output.append(u'<TITLE>{}</TITLE>\n'.format(document.title))
+            output.append(u'<TITLE>{}</TITLE>\n\n'.format(document.title))
 
             text = list(document.text)
-            memory = {'start': 0, 'end': 0, 'tag': None, 'offset': 0,
-                      'tag_ids': Counter(), 'event_attributes': {},
-                      'events': [], 'event_class': None,
-                      'dct': document.dct.replace('-', '')}
             # TO-DO: This works properly only for IO annotation schema!
-            for sentence in document.sentences:
-                for word in sentence.words:
-                    current_start = word.character_offset_begin + \
-                        document.text_offset + memory['offset']
-                    current_end = word.character_offset_end + \
-                        document.text_offset + memory['offset']
-                    event_class = word.tag_attributes.get('class', None)
-                    event_attrs = {a: word.tag_attributes.get(a, None) for a
-                                   in EVENT_ATTRIBUTES}
-                    if word.predicted_label != 'O':
-                        current_tag = word.predicted_label.split('-')[1]
-                        # Labelled token
-                        if memory['start']:
-                            # Next labelled token
-                            if memory['tag'] == current_tag:
-                                # Continuing previous annotation
-                                memory['end'] = current_end
-                                memory['event_class'] = event_class
-                                memory['event_attributes'].update(event_attrs)
-                            else:
-                                # Starting a new annotation
-                                write_tag(memory, text)
-                                memory['start'] = current_start
-                                memory['event_class'] = event_class
-                                memory['event_attributes'].update(event_attrs)
-                        else:
-                            # First labelled token
-                            memory['start'] = current_start
-                            memory['end'] = current_end
-                            memory['tag'] = current_tag
-                            memory['event_class'] = event_class
-                            memory['event_attributes'].update(event_attrs)
-                    else:
-                        # Unlabelled token
-                        if memory['start']:
-                            write_tag(memory, text)
-            # An annotation can possibly end on the very last token
-            if memory['start']:
-                write_tag(memory, text)
-            # TO-DO: end.
-            output.append(u'<TEXT><![CDATA[\n{}]]></TEXT>\n\n'.format(''.join(text)))
+            for element in document.predicted_annotations:
+                # sostituisco il pezzetto nel testo con la stringa annotata
+                if isinstance(element, TemporalExpression):
+                    utterance = document.dct.replace('-', '')
+                    element.normalise(document, utterance, 'general')
+                    annotation = str('<TIMEX3 tid="{tid}" type="{ttype}" ' +
+                                     'mod="{mod}" value="{value}">' +
+                                     '{text}</TIMEX3>').format(
+                                         **element.__dict__)
+                elif isinstance(element, Event):
+                    element.normalise(document)
+                    annotation = str('<EVENT eid="{eid}" class="{eclass}">' +
+                                     '{text}</EVENT>').format(
+                                         **element.__dict__)
+                text[element.start + document.text_offset] = annotation
+                # empty the remaining characters
+                for i in xrange(document.text_offset + element.start + 1,
+                                document.text_offset + element.end):
+                    text[i] = ''
+
+            output.append(u'<TEXT>{}</TEXT>\n\n'.format(
+                ''.join(text)))
 
             # MAKEINSTANCEs
-            for eid, pos, tense, aspect, pol, mod, _ in memory['events']:
-                instance = str('<MAKEINSTANCE eiid="{}" eventID="{}" pos="{}"' +
-                               ' tense="{}" aspect="{}" ' +
-                               'polarity="{}" ').format(
-                                    'ei{}'.format(eid), 'e{}'.format(eid),
-                                    pos, tense, aspect, pol)
-                if mod != NO_ATTRIBUTE:
-                    instance += 'modality="{}" />'.format(mod)
-                else:
-                    instance += '/>'
+            events = (e for e in document.predicted_annotations
+                      if isinstance(e, Event))
+            for event in events:
+                instance = str('<MAKEINSTANCE eiid="{eid}" eventID="{eid}" ' +
+                               'pos="{pos}" tense="{tense}" ' +
+                               'aspect="{aspect}" polarity="{polarity}" ' +
+                               'modality="{modality}" />').format(
+                                   **event.__dict__)
                 output.append(instance)
             output.append('')
 
@@ -216,7 +158,7 @@ class i2b2Writer(FileWriter):
             # TIMEX3s and EVENTs
             for element in document.predicted_annotations:
                 element.text = document.get_text(element.start, element.end)
-                cstart, cend = element.start+1, element.end+1
+                cstart, cend = element.start + 1, element.end + 1
                 if isinstance(element, TemporalExpression):
                     element.normalise(document, document.dct_text, 'clinical')
                     xml_tag = str('<TIMEX3 id="{tid}" start="{cstart}" ' +
@@ -224,7 +166,7 @@ class i2b2Writer(FileWriter):
                                   'val="{value}" mod="{mod}" />').format(
                         cstart=cstart, cend=cend, **element.__dict__)
                 elif isinstance(element, Event):
-                    element.normalise()
+                    element.normalise(document)
                     xml_tag = str('<EVENT id="{eid}" start="{cstart}" ' +
                                   'end="{cend}" text="{text}" ' +
                                   'modality="{modality}" ' +

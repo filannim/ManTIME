@@ -127,19 +127,16 @@ class WordBasedExtractors(object):
         return WordBasedResult(word.named_entity_tag)
 
     # @staticmethod
-    # @memoise
     # def morphological_wordnet_lemma(word):
     #     res = WordBasedExtractors.WORDNET_LEMMATIZER(word.word_form)
     #     return return WordBasedResult(res)
 
     # @staticmethod
-    # @memoise
     # def morphological_porter_stem(word):
     #     res = WordBasedExtractors.PORTER_STEMMER(word.word_form)
     #     return return WordBasedResult(res)
 
     # @staticmethod
-    # @memoise
     # def morphological_lancaster_stem(word):
     #     res = WordBasedExtractors.LANCASTER_STEMMER(word.word_form)
     #     return return WordBasedResult(res)
@@ -191,7 +188,6 @@ class WordBasedExtractors(object):
         return WordBasedResult(pattern)
 
     # @staticmethod
-    # @memoise
     # def morphological_vocal_pattern(word):
     #     pattern = ''
     #     for char in word.word_form:
@@ -359,80 +355,130 @@ class WordBasedExtractors(object):
 
     @staticmethod
     def temporal_weekday(word):
-        return WordBasedResult(any(re.findall(r'^(monday|tuesday|wednesday|thursday|friday|saturday|sunday|wed|tues|tue|thurs|thur|thu|sun|sat|mon|fri)$', word.word_form.lower())))
+        keys = ('monday', 'tuesday', 'wednesday', 'thursday', 'friday',
+                'saturday', 'sunday', 'wed', 'tues', 'tue', 'thurs', 'thur',
+                'thu', 'sun', 'sat', 'mon', 'fri')
+        return WordBasedResult(word.word_form.lower() in keys)
 
     @staticmethod
     def temporal_pod(word):
-        return WordBasedResult(any(re.findall(r'^(morning|afternoon|evening|night|noon|midnight|midday|sunrise|dusk|sunset|dawn|overnight|midday|noonday|noontide|nightfall|midafternoon|daybreak|gloaming|a\.?m\.?|p\.?m\.?)s?$', word.word_form.lower())))
+        pattrn = r'^(morning|afternoon|evening|night|noon|midnight|midday|sunrise|dusk|sunset|dawn|overnight|midday|noonday|noontide|nightfall|midafternoon|daybreak|gloaming|a\.?m\.?|p\.?m\.?)s?$'
+        return WordBasedResult(any(re.findall(pattrn, word.word_form.lower())))
 
     @staticmethod
     def temporal_season(word):
-        return WordBasedResult(any(re.findall(r'^(winter|autumn|spring|summer)s?', word.word_form.lower())))
+        pattrn = r'^(winter|autumn|spring|summer)s?'
+        return WordBasedResult(any(re.findall(pattrn, word.word_form.lower())))
 
     @staticmethod
     def temporal_past_ref(word):
-        return WordBasedResult(any(re.findall(r'^(yesterday|ago|earlier|early|last|recent|nearly|past|previous|before)$', word.word_form.lower())))
+        pattrn = r'^(yesterday|ago|earlier|early|last|recent|nearly|past|previous|before)$'
+        return WordBasedResult(any(re.findall(pattrn, word.word_form.lower())))
 
     @staticmethod
     def temporal_present_ref(word):
-        return WordBasedResult(any(re.findall(r'^(tonight|current|present|now|nowadays|today|currently)$', word.word_form.lower())))
+        pattrn = r'^(tonight|current|present|now|nowadays|today|currently)$'
+        return WordBasedResult(any(re.findall(pattrn, word.word_form.lower())))
 
     @staticmethod
     def temporal_future_ref(word):
-        future_refs = ['next', 'forthcoming', 'coming', 'tomorrow', 'after',
-                       'later', 'ahead']
-        pattern = r'^({pattern})$'.format(pattern='|'.join(future_refs))
-        return WordBasedResult(any(re.findall(pattern, word.word_form.lower())))
+        future_refs = ('next', 'forthcoming', 'coming', 'tomorrow', 'after',
+                       'later', 'ahead')
+        return WordBasedResult(word.word_form.lower() in future_refs)
 
     @staticmethod
     def temporal_signal(word):
-        signals = ['after', 'about', 'into', 'between', 'again', 'within',
+        signals = ('after', 'about', 'into', 'between', 'again', 'within',
                    'every', 'for', 'on', 'the', 'since', 'in', 'of', 'until',
-                   'at', 'over', 'from', 'by', 'through', 'to', 'and', 'a']
-        pattern = r'^({pattern})$'.format(pattern='|'.join(signals))
-        return WordBasedResult(any(re.findall(pattern, word.word_form.lower())))
+                   'at', 'over', 'from', 'by', 'through', 'to', 'and', 'a',
+                   'each', 'till', 'as', 'about')
+        return WordBasedResult(word.word_form.lower() in signals)
 
     @staticmethod
     def temporal_fuzzy_quantifier(word):
-        quantifiers = ['approximately', 'approximate', 'approx', 'about',
-                       'few', 'some', 'bunch', 'several', 'around']
-        pattern = r'^({pattern})$'.format(pattern='|'.join(quantifiers))
-        return WordBasedResult(any(re.findall(pattern, word.word_form.lower())))
+        quantifiers = ('approximately', 'approximate', 'approx', 'about',
+                       'few', 'some', 'bunch', 'several', 'around', 'any')
+        return WordBasedResult(word.word_form.lower() in quantifiers)
 
     @staticmethod
     def temporal_modifier(word):
-        return WordBasedResult(any(re.findall(r'^(beginning|less|more|much|long|short|end|start|half)$', word.word_form.lower())))
+        modifiers = ('beginning', 'less', 'more', 'much', 'long', 'short',
+                     'end', 'start', 'half', 'few', 'most', 'several')
+        return WordBasedResult(word.word_form.lower() in modifiers)
 
     @staticmethod
-    def temporal_temporal_adverbs(word):
-        return WordBasedResult(any(re.findall(r'^(daily|earlier)$', word.word_form.lower())))
+    def temporal_temporal_adverbs_points_of_time_definite(word):
+        adverbs = ('now', 'then', 'today', 'tomorrow', 'tonight', 'yesterday',
+                   'immediately')
+        return WordBasedResult(word.word_form.lower() in adverbs)
+
+    @staticmethod
+    def temporal_temporal_adverbs_points_of_time_indefinite(word):
+        adverbs = ('nowadays', 'suddenly')
+        return WordBasedResult(word.word_form.lower() in adverbs)
+
+    @staticmethod
+    def temporal_temporal_adverbs_frequency_indefinite(word):
+        adverbs = ('always', 'constantly', 'ever', 'frequently', 'generally',
+                   'infrequently', 'never', 'normally', 'occasionally',
+                   'often', 'rarely', 'regularly', 'seldom', 'sometimes',
+                   'regularly', 'usually', 'continually', 'periodically',
+                   'repeatedly')
+        return WordBasedResult(word.word_form.lower() in adverbs)
+
+    @staticmethod
+    def temporal_temporal_adverbs_frequency_definite(word):
+        adverbs = ('annually', 'daily', 'fortnightly', 'hourly', 'monthly',
+                   'nightly', 'quarterly', 'weekly', 'yearly', 'bimonthly',
+                   'once', 'twice')
+        return WordBasedResult(word.word_form.lower() in adverbs)
+
+    @staticmethod
+    def temporal_temporal_adverbs_relationships_in_time_indefinite(word):
+        adverbs = ('already', 'before', 'early', 'earlier', 'eventually',
+                   'finally', 'first', 'formerly', 'just', 'last', 'late',
+                   'later', 'lately', 'next', 'previously', 'recently',
+                   'since', 'soon', 'still', 'yet', 'after', 'earliest',
+                   'latest', 'afterwards')
+        return WordBasedResult(word.word_form.lower() in adverbs)
 
     @staticmethod
     def temporal_temporal_adjectives(word):
-        return WordBasedResult(any(re.findall(r'^(early|late|soon|fiscal|financial|tax)$', word.word_form.lower())))
+        adjectives = ('early', 'late', 'soon', 'fiscal', 'financial', 'tax')
+        return WordBasedResult(word.word_form.lower() in adjectives)
 
     @staticmethod
-    def temporal_temporal_conjunctives(word):
-        return WordBasedResult(any(re.findall(r'^(when|while|meanwhile|during|on|and|or|until)$', word.word_form.lower())))
+    def temporal_temporal_conjunctions(word):
+        conjunctions = ('when', 'while', 'meanwhile', 'during', 'on', 'and',
+                        'or', 'until')
+        return WordBasedResult(word.word_form.lower() in conjunctions)
 
     @staticmethod
     def temporal_temporal_prepositions(word):
-        return WordBasedResult(any(re.findall(r'^(pre|during|for|over|along|this|that|these|those|than|mid)$', word.word_form.lower())))
+        prepositions = ('over', 'by', 'throughout', 'pre', 'during', 'for',
+                        'along', 'this', 'that', 'these', 'those', 'than',
+                        'mid', 'then', 'from', 'about', 'to', 'at')
+        return WordBasedResult(word.word_form.lower() in prepositions)
 
     @staticmethod
     def temporal_temporal_coreference(word):
-        return WordBasedResult(any(re.findall(r'^(dawn|time|period|course|era|age|season|quarter|semester|millenia|millenium|eve|festival|festivity)s?$', word.word_form.lower())))
+        pattrn = r'^(dawn|time|period|course|era|age|season|quarter|semester|millenia|millenium|eve|festival|festivity)s?$'
+        return WordBasedResult(any(re.findall(pattrn, word.word_form.lower())))
 
     @staticmethod
     def temporal_festivity(word):
-        return WordBasedResult(any(re.findall(r'^(christmas|easter|epifany|martin|luther|thanksgiving|halloween|saints|armistice|nativity|advent|solstice|boxing|stephen|sylvester)$', word.word_form.lower())))
+        festivities = ('christmas', 'easter', 'epifany', 'martin', 'luther',
+                       'thanksgiving', 'halloween', 'saints', 'armistice',
+                       'nativity', 'advent', 'solstice', 'boxing', 'stephen',
+                       'sylvester')
+        return WordBasedResult(word.word_form.lower() in festivities)
 
     @staticmethod
     def temporal_compound(word):
-        return WordBasedResult(any(re.findall(r'^[0-9]+\-(century|decade|year|month|week\-end|week|day|hour|minute|second|fortnight|)$', word.word_form.lower())))
+        pattrn = r'^[0-9]+\-(century|decade|year|month|week\-end|week|day|hour|minute|second|fortnight|)$'
+        return WordBasedResult(any(re.findall(pattrn, word.word_form.lower())))
 
     # @staticmethod
-    # @memoise
     # def phonetic_form(word):
     #     phonemes = PHONEME_DICTIONARY.get(word.word_form.lower(), [''])[0]
     #     attributes = (('phonetic_form', WordBasedResult('-'.join(phonemes))),
@@ -462,33 +508,28 @@ class SentenceBasedExtractors(object):
     #     return matching_gazetteer(FEMALE_NAMES, sentence)
 
     @staticmethod
-    @memoise
     def gazetteer_country(sentence):
         return matching_gazetteer(SentenceBasedExtractors.COUNTRIES, sentence)
 
     @staticmethod
-    @memoise
     def gazetteer_isocountry(sentence):
-        res = SentenceBasedExtractors.ISO_COUNTRIES, sentence
-        return matching_gazetteer(res)
+        res = SentenceBasedExtractors.ISO_COUNTRIES
+        return matching_gazetteer(res, sentence)
 
     # @staticmethod
-    # @memoise
     # def gazetteer_uscity(sentence):
     #     return matching_gazetteer(US_CITIES, sentence)
 
     # @staticmethod
-    # @memoise
     # def gazetteer_nationality(sentence):
     #     return matching_gazetteer(NATIONALITIES, sentence)
 
     @staticmethod
-    @memoise
     def gazetteer_festivity(sentence):
-        return matching_gazetteer(SentenceBasedExtractors.FESTIVITIES, sentence)
+        return matching_gazetteer(SentenceBasedExtractors.FESTIVITIES,
+                                  sentence)
 
     @staticmethod
-    @memoise
     def parse_2_levels_up_node(sentence):
         result = []
         for tree_index in sentence.parsetree.treepositions(order='leaves'):
@@ -501,7 +542,6 @@ class SentenceBasedExtractors(object):
         return SentenceBasedResult(tuple(result))
 
     @staticmethod
-    @memoise
     def parse_3_levels_up_node(sentence):
         result = []
         for tree_index in sentence.parsetree.treepositions(order='leaves'):
@@ -515,7 +555,6 @@ class SentenceBasedExtractors(object):
         return SentenceBasedResult(tuple(result))
 
     @staticmethod
-    @memoise
     def parse_2_levels_up_childs(sentence):
         result = []
         for tree_index in sentence.parsetree.treepositions(order='leaves'):
@@ -529,7 +568,6 @@ class SentenceBasedExtractors(object):
         return SentenceBasedResult(tuple(result))
 
     @staticmethod
-    @memoise
     def parse_3_levels_up_childs(sentence):
         result = []
         for tree_index in sentence.parsetree.treepositions(order='leaves'):
@@ -543,7 +581,6 @@ class SentenceBasedExtractors(object):
         return SentenceBasedResult(tuple(result))
 
     @staticmethod
-    @memoise
     def parse_3_levels_up_nodes(sentence):
         result = []
         for tree_index in sentence.parsetree.treepositions(order='leaves'):
@@ -558,7 +595,6 @@ class SentenceBasedExtractors(object):
         return SentenceBasedResult(tuple(result))
 
     @staticmethod
-    @memoise
     def parse_2_levels_up_nodes(sentence):
         result = []
         for tree_index in sentence.parsetree.treepositions(order='leaves'):
@@ -573,7 +609,6 @@ class SentenceBasedExtractors(object):
         return SentenceBasedResult(tuple(result))
 
     @staticmethod
-    @memoise
     def parse_start_or_end_child_in_s_clause(sentence):
         '''Suggested by Marilena Di Bari.
         Typically temporal expressions are at the very end or beginning of a
@@ -593,12 +628,11 @@ class SentenceBasedExtractors(object):
                 tree = tree.parent()
                 steps_up += 1
             position_under_s = idx[(len(idx) - steps_up)]
-            leaf_result = position_under_s in(0, len(tree)-1)
+            leaf_result = position_under_s in(0, len(tree) - 1)
             result.append(WordBasedResult(leaf_result))
         return SentenceBasedResult(tuple(result))
 
     @staticmethod
-    @memoise
     def parse_distance_from_s_node(sentence):
         '''How far the current node (its POS) is from an S-parent.
         '''
@@ -620,7 +654,6 @@ class SentenceBasedExtractors(object):
         return SentenceBasedResult(tuple(result))
 
     @staticmethod
-    @memoise
     def dependency_outgoing_relations(sentence):
         '''For each word I represent a vector of all outgoing relations, plus
            the information related to the number of outgoing dependency
@@ -672,7 +705,6 @@ class SentenceBasedExtractors(object):
         return SentenceBasedResults(tuple(result))
 
     @staticmethod
-    @memoise
     def dependency_incoming_relations(sentence):
         '''For each word I represent a vector derived from the incoming
            dependency relations. I represent the following information:
