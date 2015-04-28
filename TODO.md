@@ -3,7 +3,6 @@ TO-DO List
 
 This document lists all the things I should look more carefully in the future.
 
-- [ ] convert the gazetteers to Unicode.
 - [ ] show the #_files_processed/#files.
 - [ ] `get_annotation` method is called in a wasteful way (I need a queue and that's it).
 - [ ] In the attribute training phase, the multi-word expressions should be represented as one sample. The features will be merged according to the order of appearance.
@@ -24,6 +23,7 @@ This document lists all the things I should look more carefully in the future.
 
 Done:
 
+- [x] convert the gazetteers to Unicode.
 - [x] Should the attribute data matrix be made of positive samples only?
 - [x] Correct some morphological gazetteer features according to the English grammar. Are all the things called prepositions actually prepositions? (ask to Marilena Di Bari)
 - [x] Implement the bufferisation at feature level.
