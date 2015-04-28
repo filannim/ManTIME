@@ -263,7 +263,7 @@ class IdentificationClassifier(Classifier):
                 lines = iter(process.stdout.readline, '')
 
             prev_element = None
-            prev_label = None
+            prev_label = SequenceLabel('O')
             n_timex, n_event = 1, 1
             for line in lines:
                 line = line.strip()
@@ -277,8 +277,11 @@ class IdentificationClassifier(Classifier):
                     # curr_label's tag to just 'EVENT'
                     if idnt_class == 'EVENT':
                         if not curr_label.is_out():
-                            eclass = curr_label.tag
-                            curr_label.tag = 'EVENT'
+                            try:
+                                eclass = curr_label.tag
+                                curr_label.tag = 'EVENT'
+                            except AttributeError:
+                                curr_label.set_out()
 
                     curr_word = documents[n_doc].sentences[n_sent].words[n_word]
 
