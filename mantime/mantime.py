@@ -123,8 +123,8 @@ def main():
     args = parser.parse_args()
 
     # ManTIME
-    mantime = ManTIME(reader=i2b2FileReader(),
-                      writer=i2b2Writer(),
+    mantime = ManTIME(reader=TempEval3FileReader(),
+                      writer=TempEval3Writer(),
                       extractor=FullExtractor(),
                       model_name=args.model,
                       pipeline=False)
@@ -138,17 +138,18 @@ def main():
         input_files = os.path.join(args.input_folder, '*.*')
         documents = sorted(glob.glob(input_files))
         assert documents, 'Input folder is empty.'
-        for doc in documents:
+        for index, doc in enumerate(documents, start=1):
             basename = os.path.basename(doc)
             writein = os.path.join('./output/', basename)
-            # if not os.path.exists(writein):
+            position = '[{}/{}]'.format(index, len(documents))
             with codecs.open(writein, 'w', encoding='utf8') as output:
-                # try:
-                output.write(mantime.label(doc)[0])
-                # except:
-                #    print 'Doc {} skipped.'.format(basename)
-            # else:
-            #     print 'Doc {} already in output folder.'.format(basename)
+                try:
+                    output.write(mantime.label(doc)[0])
+                    logging.info('{} Doc {} annotated.'.format(position,
+                                                               basename))
+                except:
+                    logging.info('{} Doc {} ** skipped **!'.format(position,
+                                                                   basename))
 
 if __name__ == '__main__':
     main()
