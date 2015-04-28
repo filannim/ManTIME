@@ -73,9 +73,6 @@ def matching_gazetteer(gazetteer, sentence):
 
 class WordBasedExtractors(object):
 
-    # PORTER_STEMMER = Memoize(nltk.PorterStemmer().stem)
-    # LANCASTER_STEMMER = Memoize(nltk.LancasterStemmer().stem)
-    # WORDNET_LEMMATIZER = Memoize(nltk.WordNetLemmatizer().lemmatize)
     STOPWORDS = nltk.corpus.stopwords.words(LANGUAGE)
     COMMON_WORDS = cPickle.load(open_gazetteer('common_words.pickle'))
     POSITIVE_WORDS = cPickle.load(open_gazetteer('positive_words.pickle'))
@@ -126,21 +123,6 @@ class WordBasedExtractors(object):
     def lexical_named_entity_tag(word):
         return WordBasedResult(word.named_entity_tag)
 
-    # @staticmethod
-    # def morphological_wordnet_lemma(word):
-    #     res = WordBasedExtractors.WORDNET_LEMMATIZER(word.word_form)
-    #     return return WordBasedResult(res)
-
-    # @staticmethod
-    # def morphological_porter_stem(word):
-    #     res = WordBasedExtractors.PORTER_STEMMER(word.word_form)
-    #     return return WordBasedResult(res)
-
-    # @staticmethod
-    # def morphological_lancaster_stem(word):
-    #     res = WordBasedExtractors.LANCASTER_STEMMER(word.word_form)
-    #     return return WordBasedResult(res)
-
     @staticmethod
     def morphological_unusual_word(word):
         res = not word.word_form.lower() in WordBasedExtractors.COMMON_WORDS
@@ -186,27 +168,6 @@ class WordBasedExtractors(object):
             else:
                 pattern += char
         return WordBasedResult(pattern)
-
-    # @staticmethod
-    # def morphological_vocal_pattern(word):
-    #     pattern = ''
-    #     for char in word.word_form:
-    #         if char in ['a', 'e', 'i', 'o', 'u']:
-    #             if pattern[-1:] != 'v':
-    #                 pattern += 'v'
-    #         elif char.isdigit():
-    #             if pattern[-1:] != 'D':
-    #                 pattern += 'D'
-    #         elif char.isspace():
-    #             if pattern[-1:] != ' ':
-    #                 pattern += ' '
-    #         elif not char.isalnum():
-    #             if pattern[-1:] != 'p':
-    #                 pattern += 'p'
-    #         else:
-    #             if pattern[-1:] != 'c':
-    #                 pattern += 'c'
-    #     return WordBasedResult(pattern)
 
     @staticmethod
     def morphological_has_digit(word):
@@ -338,18 +299,18 @@ class WordBasedExtractors(object):
 
     @staticmethod
     def temporal_month(word):
-        regex = [calendar.month_name[num] for num in xrange(1, 13)]
-        regex.extend([calendar.month_name[num][:3] for num in xrange(1, 13)])
-        pattern = r'^({pattern})\.?$'.format(pattern='|'.join(regex))
-        return WordBasedResult(any(re.findall(pattern,
-                                              word.word_form.lower())))
+        months = [calendar.month_name[num] for num in xrange(1, 13)]
+        months_abbr = [m[:3] for m in months]
+        months.extend([m + '.' for m in months_abbr])
+        months.extend(months_abbr)
+        return WordBasedResult(word.word_form.lower() in months)
 
     @staticmethod
     def temporal_period(word):
-        periods = ['centur[y|ies]', 'decades?', 'years?', 'months?',
-                   r'week\-?ends?', 'weeks?', 'days?', 'hours?', 'minutes?',
+        periods = ['centur[y|ies]', 'decades?', 'years?', 'months?', 'days?',
+                   'week\-?ends?', 'weeks?', 'hours?', 'minutes?',
                    'seconds?', 'fortnights?']
-        pattern = r'^({pattern})$'.format(pattern=periods)
+        pattern = r'^({pattern})$'.format(pattern='|'.join(periods))
         return WordBasedResult(any(re.findall(pattern,
                                               word.word_form.lower())))
 
@@ -362,7 +323,11 @@ class WordBasedExtractors(object):
 
     @staticmethod
     def temporal_pod(word):
-        pattrn = r'^(morning|afternoon|evening|night|noon|midnight|midday|sunrise|dusk|sunset|dawn|overnight|midday|noonday|noontide|nightfall|midafternoon|daybreak|gloaming|a\.?m\.?|p\.?m\.?)s?$'
+        pods = ('morning', 'afternoon', 'evening', 'night', 'noon', 'midnight',
+                'midday', 'sunrise', 'dusk', 'sunset', 'dawn', 'overnight',
+                'midday', 'noonday', 'noontide', 'nightfall', 'midafternoon',
+                'daybreak', 'gloaming', 'a\.?m\.?', 'p\.?m\.?')
+        pattrn = r'^({})s?$'.format('|'.join(pods))
         return WordBasedResult(any(re.findall(pattrn, word.word_form.lower())))
 
     @staticmethod
@@ -414,7 +379,7 @@ class WordBasedExtractors(object):
 
     @staticmethod
     def temporal_temporal_adverbs_points_of_time_indefinite(word):
-        adverbs = ('nowadays', 'suddenly')
+        adverbs = ('nowadays', 'suddenly', 'currently')
         return WordBasedResult(word.word_form.lower() in adverbs)
 
     @staticmethod
@@ -462,7 +427,10 @@ class WordBasedExtractors(object):
 
     @staticmethod
     def temporal_temporal_coreference(word):
-        pattrn = r'^(dawn|time|period|course|era|age|season|quarter|semester|millenia|millenium|eve|festival|festivity)s?$'
+        coreferences = ('dawn', 'time', 'period', 'course', 'era', 'age',
+                        'season', 'quarter', 'semester', 'millenia', 'eve',
+                        'millenium', 'festival', 'festivity')
+        pattrn = r'^({})s?$'.format('|'.join(coreferences))
         return WordBasedResult(any(re.findall(pattrn, word.word_form.lower())))
 
     @staticmethod
@@ -475,37 +443,15 @@ class WordBasedExtractors(object):
 
     @staticmethod
     def temporal_compound(word):
-        pattrn = r'^[0-9]+\-(century|decade|year|month|week\-end|week|day|hour|minute|second|fortnight|)$'
+        pattrn = r'^[0-9]+\-(century|decade|year|month|week\-?end|week|day|hour|minute|second|fortnight)$'
         return WordBasedResult(any(re.findall(pattrn, word.word_form.lower())))
-
-    # @staticmethod
-    # def phonetic_form(word):
-    #     phonemes = PHONEME_DICTIONARY.get(word.word_form.lower(), [''])[0]
-    #     attributes = (('phonetic_form', WordBasedResult('-'.join(phonemes))),
-    #                   ('phonetic_length', WordBasedResult(len(phonemes))),
-    #                   ('phonetic_first', WordBasedResult(phonemes[0] if phonemes else None)),
-    #                   ('phonetic_last', WordBasedResult(phonemes[-1] if phonemes else None)))
-    #     return WordBasedResults(attributes)
 
 
 class SentenceBasedExtractors(object):
 
-    # MALE_NAMES = cPickle.load(open_gazetteer('male.pickle'))
-    # FEMALE_NAMES = cPickle.load(open_gazetteer('female.pickle'))
-    # US_CITIES = cPickle.load(open_gazetteer('uscities.pickle'))
-    # NATIONALITIES = cPickle.load(open_gazetteer('nationalities.pickle'))
-    # PHONEME_DICTIONARY = nltk.corpus.cmudict.dict()
     COUNTRIES = cPickle.load(open_gazetteer('countries.pickle'))
     ISO_COUNTRIES = cPickle.load(open_gazetteer('isocountries.pickle'))
     FESTIVITIES = cPickle.load(open_gazetteer('festivities.pickle'))
-
-    # @staticmethod
-    # def gazetteer_malename(sentence):
-    #     return matching_gazetteer(MALE_NAMES, sentence)
-
-    # @staticmethod
-    # def gazetteer_femalename(sentence):
-    #     return matching_gazetteer(FEMALE_NAMES, sentence)
 
     @staticmethod
     def gazetteer_country(sentence):
@@ -515,14 +461,6 @@ class SentenceBasedExtractors(object):
     def gazetteer_isocountry(sentence):
         res = SentenceBasedExtractors.ISO_COUNTRIES
         return matching_gazetteer(res, sentence)
-
-    # @staticmethod
-    # def gazetteer_uscity(sentence):
-    #     return matching_gazetteer(US_CITIES, sentence)
-
-    # @staticmethod
-    # def gazetteer_nationality(sentence):
-    #     return matching_gazetteer(NATIONALITIES, sentence)
 
     @staticmethod
     def gazetteer_festivity(sentence):
