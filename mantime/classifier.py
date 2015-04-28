@@ -218,8 +218,9 @@ class IdentificationClassifier(Classifier):
         of words with the right labels.
 
         """
+        logging.info('Identification: applying ML models.')
         if extractors_stamp() != model.extractors_md5:
-            logging.warning('The feature extractor component is different' +
+            logging.warning('The feature extractor component is different ' +
                             'from the one used in the training!')
 
         if post_processing_pipeline:
@@ -333,7 +334,7 @@ class IdentificationClassifier(Classifier):
                     if prev_element:
                         documents[n_doc].predicted_annotations.append(
                             prev_element)
-
+        logging.info('Identification: done.')
         return documents
 
 
@@ -385,6 +386,7 @@ class NormalisationClassifier(Classifier):
         of words with the right labels.
 
         """
+        logging.info('Normalisation: applying ML models.')
         for attribute in self.attributes:
             testset_path = NamedTemporaryFile(delete=False).name
             model_path = '{}.{}'.format(model.path_normalisation, attribute)
@@ -419,6 +421,7 @@ class NormalisationClassifier(Classifier):
                         documents[int(n_doc)]\
                             .sentences[int(n_sent)].words[int(n_word)]\
                             .tag_attributes[attribute] = label
+        logging.info('Normalisation: done.')
         return documents
 
 

@@ -105,6 +105,7 @@ class AttributesExtractor(object):
            applied on the word.
         """
         # document-based extractors
+        logging.info('Attributes: extracting...')
         doc_attr_number = self.__extract_from_document(document, 0)
         for sentence in document.sentences:
             # sentence-based extractors
@@ -120,7 +121,7 @@ class AttributesExtractor(object):
         # all the extractors (word, sentence, document-level)
         extractors = self.word_extractors + self.sentence_extractors + \
             self.document_extractors
-        pickle_path = lambda filename: '../buffer/extractors/{}'.format(filename)
+        pickle_path = lambda filename: '../buffer/extractors/' + str(filename)
         for extractor in extractors:
             try:
                 cPickle.dump(extractor.cache,
