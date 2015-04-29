@@ -541,7 +541,7 @@ class SentenceBasedExtractors(object):
                 node = tree_index[:-level]
                 try:
                     parents.append(sentence.parsetree[node].node)
-                except TypeError:
+                except (TypeError, AttributeError):
                     continue
             result.append(WordBasedResult('_'.join(parents)))
         return SentenceBasedResult(tuple(result))
@@ -555,19 +555,22 @@ class SentenceBasedExtractors(object):
         parsetree = sentence.parsetree
         result = []
         for idx in parsetree.treepositions(order='leaves'):
-            tree = parsetree[idx[:-1]]
-            steps_up = 1
-            # there are some leaves which are not necessarily child of S
-            # all the leaves are always child of ROOT)
-            # Don't believe me? Try to parse this sentence:
-            # -  "And Rosneft benefits from BP's expertise in exploring in
-            #     difficult and potentially hazardous conditions."
-            while not (tree.node.startswith('S') or tree.node == 'ROOT'):
-                tree = tree.parent()
-                steps_up += 1
-            position_under_s = idx[(len(idx) - steps_up)]
-            leaf_result = position_under_s in(0, len(tree) - 1)
-            result.append(WordBasedResult(leaf_result))
+            try:
+                tree = parsetree[idx[:-1]]
+                steps_up = 1
+                # there are some leaves which are not necessarily child of S
+                # all the leaves are always child of ROOT)
+                # Don't believe me? Try to parse this sentence:
+                # -  "And Rosneft benefits from BP's expertise in exploring in
+                #     difficult and potentially hazardous conditions."
+                while not (tree.node.startswith('S') or tree.node == 'ROOT'):
+                    tree = tree.parent()
+                    steps_up += 1
+                position_under_s = idx[(len(idx) - steps_up)]
+                leaf_result = position_under_s in(0, len(tree) - 1)
+                result.append(WordBasedResult(leaf_result))
+            except Exception:
+                result.append(WordBasedResult(False))
         return SentenceBasedResult(tuple(result))
 
     @staticmethod
@@ -584,9 +587,12 @@ class SentenceBasedExtractors(object):
             # Don't believe me? Try to parse this sentence:
             # -  "And Rosneft benefits from BP's expertise in exploring in
             #     difficult and potentially hazardous conditions."
-            while not (tree.node.startswith('S') or tree.node == 'ROOT'):
-                tree = tree.parent()
-                steps_up += 1
+            try:
+                while not (tree.node.startswith('S') or tree.node == 'ROOT'):
+                    tree = tree.parent()
+                    steps_up += 1
+            except AttributeError:
+                pass
 
             result.append(WordBasedResult(steps_up))
         return SentenceBasedResult(tuple(result))
