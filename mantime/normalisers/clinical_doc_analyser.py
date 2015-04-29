@@ -22,6 +22,7 @@ import codecs
 from datetime import date as datex
 import re
 import os
+import sys
 
 from timex_clinical import normalise
 
@@ -144,12 +145,9 @@ class ClinicalDocument(object):
 
 
 def main():
-    path = './test_data/xml/'
+    path, filename = os.path.split(os.path.abspath(sys.argv[1]))
     analyser = DocumentAnalyser()
-    for filename in os.listdir(path):
-        if filename[-4:] == ".xml":
-            clinical_note = analyser.analyse(path, filename, False)
-            print clinical_note
+    print analyser.analyse(path, filename, False)
 
 if __name__ == '__main__':
     main()
