@@ -16,6 +16,7 @@
 """
 
 import cgi
+import logging
 
 from normalisers.timex_general import normalise as normalise_general
 from normalisers.timex_clinical import normalise as normalise_clinical
@@ -177,7 +178,7 @@ class DependencyGraph(object):
         return node == self.DUMMY_LABEL
 
     def load(self, indexeddependencies):
-        node = lambda dependency: int(dependency.split('-')[-1])-1
+        node = lambda dependency: int(dependency.split('-')[-1]) - 1
         indexeddependencies = ((relation, node(start), node(end))
                                for relation, start, end
                                in indexeddependencies)
@@ -322,6 +323,9 @@ class TemporalExpression(object):
         """
         assert self.words
         assert domain in ('general', 'clinical')
+        if not (dct.isdigit() and len(dct) == 8):
+            dct = None
+            logging.warning('Utterance time not found: using current date.')
         start = self.words[0].character_offset_begin + document.text_offset
         end = self.words[-1].character_offset_end + document.text_offset
         text = document.text[start:end]
@@ -368,13 +372,17 @@ class Event(object):
         self.end = self.words[-1].character_offset_end
 
     def normalise(self, document):
+        # polarity and modality are valid in both schemas (i2b2 and ISO-TimeML)
         assert all(['polarity' in w.tag_attributes.keys() for w in self.words])
         assert all(['modality' in w.tag_attributes.keys() for w in self.words])
         self.pos = [w.tag_attributes.get('pos', '') for w in self.words][0]
         self.tense = [w.tag_attributes.get('tense', '') for w in self.words][0]
-        self.aspect = [w.tag_attributes.get('aspect', '') for w in self.words][0]
-        self.polarity = [w.tag_attributes.get('polarity', '') for w in self.words][0]
-        self.modality = [w.tag_attributes.get('modality', '') for w in self.words][0]
+        self.aspect = [w.tag_attributes.get('aspect', '') for w
+                       in self.words][0]
+        self.polarity = [w.tag_attributes.get('polarity', '') for w
+                         in self.words][0]
+        self.modality = [w.tag_attributes.get('modality', '') for w
+                         in self.words][0]
         self.sec_time_rel = ''
         start = self.words[0].character_offset_begin + document.text_offset
         end = self.words[-1].character_offset_end + document.text_offset
@@ -405,12 +413,3 @@ class TemporalLink(object):
         self.element1 = element1
         self.element2 = element2
         self.reltype = reltype
-
-# class AnnotationStandard(object):
-#     """ It represents an annotation standard.
-
-#     """
-#     def __init__(self, structure):
-#         """ Structure = {TAG1: [ATTR1, ATTR2], TAG2: [ATTR1, ATTR2]} """
-#         self.identification_tags = structure.keys()
-
