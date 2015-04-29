@@ -139,14 +139,20 @@ class TempEval3Writer(FileWriter):
 class i2b2Writer(FileWriter):
     """This class is a writer in the TempEval-3 format."""
 
-    def __init__(self):
+    def __init__(self, inline=False):
+        assert isinstance(inline, bool), 'Wrong inline variable type.'
         super(i2b2Writer, self).__init__()
+        self.inline = inline
 
     def write(self, documents):
-        """It writes on an external file in the TempEval-3 format.
+        """It writes on an external file in the i2b2 format.
 
+        Can write both in inline and stand-off XML format.
         """
+        if self.inline:
+            return self.write_inline(documents)
 
+        # stand-off way
         outputs = []
         for document in documents:
             output = []
@@ -191,6 +197,50 @@ class i2b2Writer(FileWriter):
             output.append(u'</TAGS>')
             output.append(u'</ClinicalNarrativeTemporalAnnotation>')
 
+            outputs.append('\n'.join(output))
+        return outputs
+
+    def write_inline(self, documents):
+        """It writes on an external file in the TempEval-3 format.
+
+        """
+        outputs = []
+        for document in documents:
+            output = []
+            output.append('<?xml version="1.0" ?>')
+            output.append('<ClinicalNarrativeTemporalAnnotation>')
+
+            text = list(document.text)
+            # TO-DO: This works properly only for IO annotation schema!
+            for element in document.predicted_annotations:
+                # sostituisco il pezzetto nel testo con la stringa annotata
+                if isinstance(element, TemporalExpression):
+                    utterance = document.dct.replace('-', '')
+                    element.normalise(document, utterance, 'general')
+                    annotation = unicode('<TIMEX3 tid="{tid}" type="{ttype}"' +
+                                         ' mod="{mod}" value="{value}">' +
+                                         '{text}</TIMEX3>').format(
+                                             **element.__dict__)
+                elif isinstance(element, Event):
+                    element.normalise(document)
+                    annotation = unicode('<EVENT id="{eid}" type="{eclass}" ' +
+                                         'modality="{modality}" ' +
+                                         'polarity="{polarity}" ' +
+                                         '>{text}</EVENT>').format(
+                                             **element.__dict__)
+                text[element.start + document.text_offset] = annotation
+                # empty the remaining characters
+                for i in xrange(document.text_offset + element.start + 1,
+                                document.text_offset + element.end):
+                    text[i] = ''
+
+            output.append(u'<TEXT><![CDATA[{}]]></TEXT>\n\n'.format(
+                ''.join(text)))
+
+            output.append('')
+
+            # TLINKs
+            output.append(u'</ClinicalNarrativeTemporalAnnotation>')
             outputs.append('\n'.join(output))
         return outputs
 
