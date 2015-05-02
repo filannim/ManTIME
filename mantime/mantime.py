@@ -22,10 +22,11 @@ import cPickle
 import glob
 import logging
 import os
+import sys
 import xml.etree.cElementTree as cElementTree
 
 from readers import i2b2FileReader, TempEval3FileReader
-from writers import i2b2Writer, TempEval3Writer
+from writers import i2b2Writer, TempEval3Writer, HTMLWriter
 from attributes_extractor import FullExtractor
 from classifier import IdentificationClassifier
 from classifier import NormalisationClassifier
@@ -123,8 +124,8 @@ def main():
     args = parser.parse_args()
 
     # ManTIME
-    mantime = ManTIME(reader=TempEval3FileReader(),
-                      writer=TempEval3Writer(),
+    mantime = ManTIME(reader=i2b2FileReader(),
+                      writer=HTMLWriter(domain='clinical'),
                       extractor=FullExtractor(),
                       model_name=args.model,
                       pipeline=False)
@@ -139,17 +140,20 @@ def main():
         documents = sorted(glob.glob(input_files))
         assert documents, 'Input folder is empty.'
         for index, doc in enumerate(documents, start=1):
-            basename = os.path.basename(doc)
+            basename = os.path.basename(doc) + ".html"
             writein = os.path.join('./output/', basename)
             position = '[{}/{}]'.format(index, len(documents))
             with codecs.open(writein, 'w', encoding='utf8') as output:
-                try:
-                    output.write(mantime.label(doc)[0])
-                    logging.info('{} Doc {} annotated.'.format(position,
-                                                               basename))
-                except:
-                    logging.info('{} Doc {} ** skipped **!'.format(position,
-                                                                   basename))
+                # try:
+                output.write(mantime.label(doc)[0])
+                logging.info('{} Doc {} annotated.'.format(position,
+                                                           basename))
+                # except:
+                #     logging.info('{} Doc {} ** skipped **!'.format(position,
+                #                                                    basename))
+                #     exc_type, exc_obj, exc_tb = sys.exc_info()
+                #     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                #     print exc_type, fname, exc_tb.tb_lineno
 
 if __name__ == '__main__':
     main()
