@@ -79,8 +79,10 @@ class WordBasedExtractors(object):
     NEGATIVE_WORDS = cPickle.load(open_gazetteer('negative_words.pickle'))
     CARDINAL_NUMBERS = set([num2words(num, True) for num in xrange(0, 1001)])
     CARDINAL_NUMBERS.update([num.replace('-', '') for num in CARDINAL_NUMBERS])
+    CARDINAL_NUMBERS = '|'.join(CARDINAL_NUMBERS)
     LITERAL_NUMBERS = set([num2words(num) for num in xrange(0, 1001)])
     LITERAL_NUMBERS.update([num.replace('-', '') for num in LITERAL_NUMBERS])
+    LITERAL_NUMBERS = '|'.join(LITERAL_NUMBERS)
 
     # @staticmethod
     # def token(word):
@@ -287,15 +289,13 @@ class WordBasedExtractors(object):
 
     @staticmethod
     def temporal_literal_number(word):
-        pattern = r'^({pattern})$'.format(pattern='|'.join(
-            WordBasedExtractors.LITERAL_NUMBERS))
+        pattern = r'^({})$'.format(WordBasedExtractors.LITERAL_NUMBERS)
         return WordBasedResult(any(re.findall(pattern,
                                    word.word_form.lower())))
 
     @staticmethod
     def temporal_cardinal_number(word):
-        pattern = r'^({pattern})$'.format(pattern='|'.join(
-            WordBasedExtractors.CARDINAL_NUMBERS))
+        pattern = r'^({})$'.format(WordBasedExtractors.CARDINAL_NUMBERS)
         return WordBasedResult(any(re.findall(pattern,
                                               word.word_form.lower())))
 
