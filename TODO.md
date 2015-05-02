@@ -3,13 +3,11 @@ TO-DO List
 
 This document lists all the things I should look more carefully in the future.
 
-- [ ] `get_annotation` method is called in a wasteful way (I need a queue and that's it).
 - [ ] In the attribute training phase, the multi-word expressions should be represented as one sample. The features will be merged according to the order of appearance.
 - [ ] Implement the feature extractor for Temporal Links.
 - [ ] Implement the classifier for Temporal Links.
 - [ ] The writers should use an xml library instead of writing strings to a file.
 - [ ] Adapt the writers to output temporal links too.
-- [ ] Make the features as lighter as possible (in terms of storage space).
 - [ ] Probably some variables in Document and Sentence objects can be deleted.
 - [ ] Group the annotations token based at sentence level.
 - [ ] Implement an error method to get statistics from the models.
@@ -17,11 +15,13 @@ This document lists all the things I should look more carefully in the future.
 - [ ] Do I really need to load Stanford Core NLP everytime for every document? Once (the problem)[https://github.com/dasmith/stanford-corenlp-python/issues/13] with long texts is solved I should switch to the new stanford-core-nlp.
 - [ ] Unit-test the code with a proper testing framework (py.test).
 - [ ] Comment the code: better and more verbosely using Google Commenting Style.
-- [ ] Implement a HTML (CSS3) writer (timesheet.js, TimelineJS).
-- [ ] The method search_subsequence is called many times. A more adequate ADT should be used.
 
 Done:
 
+- [x] `get_annotation` method is called in a wasteful way (I need a queue and that's it).
+- [x] The method search_subsequence is called many times. A more adequate ADT should be used.
+- [x] Implement a HTML (CSS3) writer (timesheet.js, TimelineJS).
+- [x] Make the features as lighter as possible (in terms of storage space).
 - [x] show the #_files_processed/#files.
 - [x] convert the gazetteers to Unicode.
 - [x] Should the attribute data matrix be made of positive samples only?
