@@ -1,0 +1,57 @@
+body {
+    font-family: Tahoma;
+    font-size: 20px;
+    text-rendering: optimizeLegibility;
+}
+
+TIMEX3, EVENT {
+    display: inline-block;
+    -webkit-box-sizing: content-box;
+    -moz-box-sizing: content-box;
+    box-sizing: content-box;            
+    float: none;            
+    z-index: auto;            
+    position: static;            
+    overflow: visible;            
+    padding: 2px 4px;            
+    line-height: 14px;            
+    color: #ffffff;            
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);            
+    white-space: nowrap;            
+    vertical-align: baseline;            
+    -webkit-border-radius: 3px;            
+    -moz-border-radius: 3px;            
+    border-radius: 3px;            
+    border: 1px solid;
+    border-bottom: 4px solid;
+}        
+    
+EVENT {
+    color: black;
+    background-color: white;
+    border-color: #000;
+}
+
+TIMEX3 {
+    color: white;
+    background-color: black;
+    border-color: #000;
+}
+
+EVENT[type=PROBLEM] { border-bottom-color: #d11141;}
+EVENT[type=TREATMENT] { border-bottom-color: #00b159;}
+EVENT[type=TEST] { border-bottom-color: #00aedb;}
+EVENT[type=OCCURRENCE] { border-bottom-color: #f37735;}
+EVENT[type=CLINICAL_DEPT] { border-bottom-color: #ffc425;}
+EVENT[type=EVIDENTIAL] { border-bottom-color: #dfe3ee;}
+
+TIMEX3[type=TIME] { border-bottom-color: #468847;}        
+TIMEX3[type=DATE] { border-bottom-color: #3a87ad;}
+TIMEX3[type=DURATION] { border-bottom-color: #f89406;}
+TIMEX3[type=SET] { border-bottom-color: #b94a48;}
+
+body TIMEX3:after[value], body TIMEX3:after {            
+    content: " (" attr(value) ") ";
+    font-size: xx-small;
+    vertical-align: top;
+}
