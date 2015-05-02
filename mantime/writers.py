@@ -22,12 +22,8 @@
 """
 
 from abc import ABCMeta, abstractmethod
-import logging
-import os
-from collections import Counter
+import cgi
 
-from settings import EVENT_ATTRIBUTES
-from settings import NO_ATTRIBUTE
 from model import TemporalExpression
 from model import Event
 
@@ -168,8 +164,8 @@ class i2b2Writer(FileWriter):
                 if isinstance(element, TemporalExpression):
                     element.normalise(document, document.dct_text, 'clinical')
                     xml_tag = str('<TIMEX3 id="{tid}" start="{cstart}" ' +
-                                  'end="{cend}" text="{text}" type="{ttype}" ' +
-                                  'val="{value}" mod="{mod}" />').format(
+                                  'end="{cend}" text="{text}" type="{ttype}"' +
+                                  ' val="{value}" mod="{mod}" />').format(
                         cstart=cstart, cend=cend, **element.__dict__)
                 elif isinstance(element, Event):
                     element.normalise(document)
@@ -210,7 +206,7 @@ class i2b2Writer(FileWriter):
             output.append('<?xml version="1.0" ?>')
             output.append('<ClinicalNarrativeTemporalAnnotation>')
 
-            text = list(document.text)
+            text = [cgi.escape(c, True) for c in list(document.text)]
             # TO-DO: This works properly only for IO annotation schema!
             for element in document.predicted_annotations:
                 # sostituisco il pezzetto nel testo con la stringa annotata
@@ -236,7 +232,7 @@ class i2b2Writer(FileWriter):
             output.append(u'<TEXT>{}</TEXT>\n\n'.format(
                 ''.join(text)))
 
-            output.append('')
+            output.append(u'')
 
             # TLINKs
             output.append(u'</ClinicalNarrativeTemporalAnnotation>')
@@ -284,7 +280,7 @@ def main():
 
     file_reader = TempEval3FileReader(annotation_format='IO')
     document = file_reader.parse(sys.argv[1])
-    file_writer = SimpleWriter()
+    file_writer = i2b2Writer()
     print file_writer.write([document])
 
 if __name__ == '__main__':
