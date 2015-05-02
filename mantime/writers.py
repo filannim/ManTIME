@@ -215,8 +215,7 @@ class i2b2Writer(FileWriter):
             for element in document.predicted_annotations:
                 # sostituisco il pezzetto nel testo con la stringa annotata
                 if isinstance(element, TemporalExpression):
-                    utterance = document.dct.replace('-', '')
-                    element.normalise(document, utterance, 'general')
+                    element.normalise(document, document.dct_text, 'clinical')
                     annotation = unicode('<TIMEX3 tid="{tid}" type="{ttype}"' +
                                          ' mod="{mod}" value="{value}">' +
                                          '{text}</TIMEX3>').format(
@@ -225,7 +224,7 @@ class i2b2Writer(FileWriter):
                     element.normalise(document)
                     annotation = unicode('<EVENT id="{eid}" type="{eclass}" ' +
                                          'modality="{modality}" ' +
-                                         'polarity="{polarity}" ' +
+                                         'polarity="{polarity}"' +
                                          '>{text}</EVENT>').format(
                                              **element.__dict__)
                 text[element.start + document.text_offset] = annotation
@@ -234,7 +233,7 @@ class i2b2Writer(FileWriter):
                                 document.text_offset + element.end):
                     text[i] = ''
 
-            output.append(u'<TEXT><![CDATA[{}]]></TEXT>\n\n'.format(
+            output.append(u'<TEXT>{}</TEXT>\n\n'.format(
                 ''.join(text)))
 
             output.append('')
