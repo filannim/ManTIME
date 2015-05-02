@@ -77,6 +77,10 @@ class WordBasedExtractors(object):
     COMMON_WORDS = cPickle.load(open_gazetteer('common_words.pickle'))
     POSITIVE_WORDS = cPickle.load(open_gazetteer('positive_words.pickle'))
     NEGATIVE_WORDS = cPickle.load(open_gazetteer('negative_words.pickle'))
+    CARDINAL_NUMBERS = set([num2words(num, True) for num in xrange(0, 1001)])
+    CARDINAL_NUMBERS.update([num.replace('-', '') for num in CARDINAL_NUMBERS])
+    LITERAL_NUMBERS = set([num2words(num) for num in xrange(0, 1001)])
+    LITERAL_NUMBERS.update([num.replace('-', '') for num in LITERAL_NUMBERS])
 
     # @staticmethod
     # def token(word):
@@ -283,17 +287,15 @@ class WordBasedExtractors(object):
 
     @staticmethod
     def temporal_literal_number(word):
-        lit_numbers = set([num2words(num) for num in xrange(0, 1001)])
-        lit_numbers.update([num.replace('-', '') for num in lit_numbers])
-        pattern = r'^({pattern})$'.format(pattern='|'.join(lit_numbers))
+        pattern = r'^({pattern})$'.format(pattern='|'.join(
+            WordBasedExtractors.LITERAL_NUMBERS))
         return WordBasedResult(any(re.findall(pattern,
                                    word.word_form.lower())))
 
     @staticmethod
     def temporal_cardinal_number(word):
-        card_numbers = set([num2words(num, True) for num in xrange(0, 1001)])
-        card_numbers.update([num.replace('-', '') for num in card_numbers])
-        pattern = r'^({pattern})$'.format(pattern='|'.join(card_numbers))
+        pattern = r'^({pattern})$'.format(pattern='|'.join(
+            WordBasedExtractors.CARDINAL_NUMBERS))
         return WordBasedResult(any(re.findall(pattern,
                                               word.word_form.lower())))
 
@@ -337,7 +339,9 @@ class WordBasedExtractors(object):
 
     @staticmethod
     def temporal_past_ref(word):
-        pattrn = r'^(yesterday|ago|earlier|early|last|recent|nearly|past|previous|before)$'
+        refs = ('yesterday', 'ago', 'earlier', 'early', 'last', 'recent',
+                'nearly', 'past', 'previous', 'before')
+        pattrn = r'^({})$'.format('|'.join(refs))
         return WordBasedResult(any(re.findall(pattrn, word.word_form.lower())))
 
     @staticmethod
