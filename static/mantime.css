@@ -2,6 +2,14 @@ body {
     text-rendering: optimizeLegibility;
 }
 
+footer {
+  padding-top: 40px;
+  padding-bottom: 40px;
+  margin-top: 40px;
+  border-top: 1px solid #eee;
+  text-align: center;
+}
+
 TIMEX3, EVENT {
     display: inline-block;
     -webkit-box-sizing: content-box;
