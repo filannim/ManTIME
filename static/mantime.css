@@ -47,6 +47,7 @@ TIMEX3[type=TIME] { border-bottom-color: #468847;}
 TIMEX3[type=DATE] { border-bottom-color: #3a87ad;}
 TIMEX3[type=DURATION] { border-bottom-color: #f89406;}
 TIMEX3[type=SET] { border-bottom-color: #b94a48;}
+TIMEX3[type=FREQUENCY] { border-bottom-color: #b94a48;}
 
 body TIMEX3:after[value], body TIMEX3:after {            
     content: " (" attr(value) ") ";

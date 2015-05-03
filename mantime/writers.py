@@ -265,7 +265,7 @@ class HTMLWriter(FileWriter):
             output.append('<link rel="stylesheet" href="{}css/bootstrap.min.css" />'.format(maxcdn_bootstrap))
             output.append('<link rel="stylesheet" href="{}css/bootstrap-theme.min.css" />'.format(maxcdn_bootstrap))
             output.append('<script src="{}js/bootstrap.min.js"></script>'.format(maxcdn_bootstrap))
-            output.append('<link href="https://cdn.rawgit.com/filannim/ManTIME/master/static/mantime_inline.css" rel="stylesheet" type="text/css" />')
+            output.append('<link href="https://cdn.rawgit.com/filannim/ManTIME/master/static/mantime.css" rel="stylesheet" type="text/css" />')
             output.append('<title>{}</title>'.format(str(document.title)))
 
             text = [cgi.escape(c, True) for c in list(document.text)]
