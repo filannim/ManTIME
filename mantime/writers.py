@@ -293,12 +293,10 @@ class HTMLWriter(FileWriter):
 
             output.append(u'<body>')
             output.append(''.join(text))
-            output.append(u'</body>')
 
-            output.append(u'<script src="js/jquery.js"></script>')
-            output.append(u'<script src="js/holder/holder.js"></script>')
-            output.append(u'<script src="js/google-code-prettify/prettify.js"></script>')
-            output.append(u'<script src="js/application.js"></script>)')
+            output.append(u'<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>')
+
+            output.append(u'</body>')
 
             # TLINKs
             output.append(u'</html>')
