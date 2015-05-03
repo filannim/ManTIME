@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ClinicalNarrativeTemporalAnnotation>
+<TEXT><![CDATA[
+Admission Date :
+2012-06-07
+Discharge Date :
+2012-06-09
+Service :
+MEDICINE
+History of Present Illness :
+Mr. Vazquez is a 48 year old man with a history of hepatitis C , bipolar disorder with suicide attempts in the past , recent CMED admit earlier in 4/05 who was found alert approximately one hour after taking an unspecified number of pills .
+Per report , there were empty bottles of Inderal and Klonopin found at bedside , as well as 02-26 full bottles of geodon , gabapentin , Lescol and paroxitine .
+The patient was reportedly alert at scene , and then became unresponsive in route to the hospital .
+In the Rita , the patient was intubated and given activated charcoal .
+His initial BP was 60/P with a pulse in the 60 s.
+He was given 4 amps of calcium gluconate , and started on a Calcium gtt .
+He was also given 5mg of glucagon and started on a glucagon drip with good response .
+His urine and serum tox screens were notable only for benzos , otherwise negative .
+He was seen by cardiology , and toxicology was consulted via telephone .
+He was admitted to the CMED , intubated for airway protection and started on both a calcium and glucagon drip .
+There was evidence of possible aspiration pneumonia on CXR , though he was extubated without incident on the AM of transfer to the medicine floor .
+CMED was made aware , and they are actively involved in his care .
+Brief Hospital Course :
+A/P : 48yo man with h/o HCV , bipolar DO , h/o suicide attempts , a/w overdose of Inderal , Klonopin , Geodon , s/T Jackson stay with intubation for airway protection , with question of L retrocardiac infiltrate , now doing well .
+Overdose :
+- monitor on tele overnight
+- if HR drops , restart glucagon gtt
+- watch for BZD withdrawal , agitation
+Bipolar disorder :
+- appreciate CMED consult ; patient to be discharged to inpatient CMED facility once stable
+- suicide precautions
+Activity : OOB with assist
+FEN : house diet
+PPX : SC heparin , bowel regimen , nicotine patch
+CODE : full
+DISPO : transfer to inpatient CMED likely tomorrow
+]]></TEXT>
+<TAGS>
+</TAGS>
+</ClinicalNarrativeTemporalAnnotation>

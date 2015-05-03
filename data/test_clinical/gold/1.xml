@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ClinicalNarrativeTemporalAnnotation>
+<TEXT><![CDATA[
+Admission Date :
+09/29/1993
+Discharge Date :
+10/04/1993
+HISTORY OF PRESENT ILLNESS :
+The patient is a 28-year-old woman who is HIV positive for two years .
+She presented with left upper quadrant pain as well as nausea and vomiting which is a long-standing complaint .
+She was diagnosed in 1991 during the birth of her child .
+She claims she does not know why she is HIV positive .
+She is from Maryland , apparently had no blood transfusions before the birth of her children so it is presumed heterosexual transmission .
+At that time , she also had cat scratch fever and she had resection of an abscess in the left lower extremity .
+She has not used any anti retroviral therapy since then , because of pancytopenia and vomiting on DDI .
+She has complaints of nausea and vomiting as well as left upper quadrant pain on and off getting progressively worse over the past month .
+She has had similar pain intermittently for last year .
+She described the pain as a burning pain which is positional , worse when she walks or does any type of exercise .
+She has no relief from antacids or H2 blockers .
+In 10/92 , she had a CT scan which showed fatty infiltration of her liver diffusely with a 1 cm cyst in the right lobe of the liver .
+She had a normal pancreas at that time , however , hyperdense kidneys .
+Her alkaline phosphatase was slightly elevated but otherwise relatively normal .
+Her amylase was mildly elevated but has been down since then .
+The patient has had progressive failure to thrive and steady weight loss .
+She was brought in for an esophagogastroduodenoscopy on 9/26 but she basically was not sufficiently sedated and readmitted at this time for a GI work-up as well as an evaluation of new abscess in her left lower calf and right medial lower extremity quadriceps muscle .
+She was also admitted to be connected up with social services for HIV patients .
+HOSPITAL COURSE :
+The patient was admitted and many cultures were sent which were all negative .
+She did not have any of her pain in the hospital .
+On the third hospital day , she did have some pain and was treated with Percocet .
+She went for a debridement of her left calf lesion on 10/2/93 and was started empirically on IV ceftriaxone which was changed to po doxycycline on the day of discharge .
+A follow-up CT scan was done which did not show any evidence for splenomegaly or hepatomegaly .
+The 1 cm cyst which was seen in 10/92 was still present .
+There was a question of a cyst in her kidney with a stone right below the cyst , although this did not seem to be clinically significant .
+]]></TEXT>
+<TAGS>
+<EVENT id="E0" start="1" end="10" text="Admission" modality="FACTUAL" polarity="POS" type="OCCURRENCE" />
+<EVENT id="E29" start="1010" end="1015" text="walks" modality="FACTUAL" polarity="POS" type="OCCURRENCE" />
+<EVENT id="E30" start="1036" end="1044" text="exercise" modality="FACTUAL" polarity="POS" type="OCCURRENCE" />
+<EVENT id="E31" start="1058" end="1064" text="relief" modality="FACTUAL" polarity="NEG" type="OCCURRENCE" />
+<EVENT id="E32" start="1070" end="1078" text="antacids" modality="FACTUAL" polarity="POS" type="TREATMENT" />
+<EVENT id="E33" start="1082" end="1093" text="H2 blockers" modality="FACTUAL" polarity="POS" type="TREATMENT" />
+<EVENT id="E34" start="1115" end="1124" text="a CT scan" modality="FACTUAL" polarity="POS" type="TEST" />
+<EVENT id="E35" start="1138" end="1179" text="fatty infiltration of her liver diffusely" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E36" start="1185" end="1227" text="a 1 cm cyst in the right lobe of the liver" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E37" start="1238" end="1255" text="a normal pancreas" modality="FACTUAL" polarity="POS" type="OCCURRENCE" />
+<EVENT id="E2" start="128" end="140" text="HIV positive" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E38" start="1281" end="1299" text="hyperdense kidneys" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E39" start="1302" end="1326" text="Her alkaline phosphatase" modality="FACTUAL" polarity="POS" type="TEST" />
+<EVENT id="E40" start="1331" end="1348" text="slightly elevated" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E41" start="1374" end="1380" text="normal" modality="FACTUAL" polarity="POS" type="OCCURRENCE" />
+<EVENT id="E42" start="1383" end="1394" text="Her amylase" modality="FACTUAL" polarity="POS" type="TEST" />
+<EVENT id="E43" start="1399" end="1414" text="mildly elevated" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E44" start="1428" end="1432" text="down" modality="FACTUAL" polarity="POS" type="OCCURRENCE" />
+<EVENT id="E45" start="1466" end="1495" text="progressive failure to thrive" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E46" start="1500" end="1518" text="steady weight loss" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E47" start="1544" end="1573" text="an esophagogastroduodenoscopy" modality="FACTUAL" polarity="POS" type="TEST" />
+<EVENT id="E3" start="161" end="170" text="presented" modality="FACTUAL" polarity="POS" type="EVIDENTIAL" />
+<EVENT id="E48" start="1621" end="1628" text="sedated" modality="FACTUAL" polarity="NEG" type="TREATMENT" />
+<EVENT id="E49" start="1633" end="1643" text="readmitted" modality="FACTUAL" polarity="POS" type="OCCURRENCE" />
+<EVENT id="E50" start="1661" end="1673" text="a GI work-up" modality="FACTUAL" polarity="POS" type="TEST" />
+<EVENT id="E51" start="1685" end="1698" text="an evaluation" modality="FACTUAL" polarity="POS" type="TEST" />
+<EVENT id="E52" start="1702" end="1736" text="new abscess in her left lower calf" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E4" start="176" end="200" text="left upper quadrant pain" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E53" start="1803" end="1811" text="admitted" modality="FACTUAL" polarity="POS" type="OCCURRENCE" />
+<EVENT id="E54" start="1818" end="1851" text="connected up with social services" modality="FACTUAL" polarity="POS" type="OCCURRENCE" />
+<EVENT id="E55" start="1856" end="1859" text="HIV" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E56" start="1905" end="1913" text="admitted" modality="FACTUAL" polarity="POS" type="OCCURRENCE" />
+<EVENT id="E57" start="1918" end="1931" text="many cultures" modality="FACTUAL" polarity="NEG" type="TEST" />
+<EVENT id="E58" start="1953" end="1965" text="all negative" modality="FACTUAL" polarity="POS" type="OCCURRENCE" />
+<EVENT id="E59" start="1992" end="2000" text="her pain" modality="FACTUAL" polarity="NEG" type="PROBLEM" />
+<EVENT id="E60" start="2004" end="2016" text="the hospital" modality="FACTUAL" polarity="POS" type="CLINICAL_DEPT" />
+<EVENT id="E61" start="2060" end="2069" text="some pain" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E62" start="2091" end="2099" text="Percocet" modality="FACTUAL" polarity="POS" type="TREATMENT" />
+<EVENT id="E5" start="212" end="218" text="nausea" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E63" start="2115" end="2128" text="a debridement" modality="FACTUAL" polarity="POS" type="TREATMENT" />
+<EVENT id="E64" start="2132" end="2152" text="her left calf lesion" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E65" start="2195" end="2209" text="IV ceftriaxone" modality="FACTUAL" polarity="POS" type="TREATMENT" />
+<EVENT id="E6" start="223" end="231" text="vomiting" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E66" start="2231" end="2245" text="po doxycycline" modality="FACTUAL" polarity="POS" type="TREATMENT" />
+<EVENT id="E67" start="2260" end="2269" text="discharge" modality="FACTUAL" polarity="POS" type="OCCURRENCE" />
+<EVENT id="E68" start="2272" end="2291" text="A follow-up CT scan" modality="FACTUAL" polarity="POS" type="TEST" />
+<EVENT id="E69" start="2315" end="2319" text="show" modality="FACTUAL" polarity="POS" type="EVIDENTIAL" />
+<EVENT id="E70" start="2324" end="2332" text="evidence" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E71" start="2337" end="2349" text="splenomegaly" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E72" start="2353" end="2365" text="hepatomegaly" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E73" start="2368" end="2381" text="The 1 cm cyst" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E7" start="241" end="266" text="a long-standing complaint" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E74" start="2450" end="2470" text="a cyst in her kidney" modality="POSSIBLE" polarity="POS" type="PROBLEM" />
+<EVENT id="E75" start="2476" end="2483" text="a stone" modality="POSSIBLE" polarity="POS" type="PROBLEM" />
+<EVENT id="E76" start="2496" end="2504" text="the cyst" modality="POSSIBLE" polarity="POS" type="PROBLEM" />
+<EVENT id="E8" start="277" end="286" text="diagnosed" modality="FACTUAL" polarity="POS" type="OCCURRENCE" />
+<EVENT id="E1" start="29" end="38" text="Discharge" modality="FACTUAL" polarity="POS" type="OCCURRENCE" />
+<EVENT id="E9" start="302" end="324" text="the birth of her child" modality="FACTUAL" polarity="POS" type="OCCURRENCE" />
+<EVENT id="E10" start="367" end="379" text="HIV positive" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E11" start="423" end="441" text="blood transfusions" modality="FACTUAL" polarity="NEG" type="TREATMENT" />
+<EVENT id="E12" start="449" end="474" text="the birth of her children" modality="FACTUAL" polarity="POS" type="OCCURRENCE" />
+<EVENT id="E13" start="493" end="518" text="heterosexual transmission" modality="POSSIBLE" polarity="POS" type="PROBLEM" />
+<EVENT id="E14" start="549" end="566" text="cat scratch fever" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E15" start="579" end="588" text="resection" modality="FACTUAL" polarity="POS" type="TREATMENT" />
+<EVENT id="E16" start="592" end="630" text="an abscess in the left lower extremity" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E17" start="650" end="677" text="any anti retroviral therapy" modality="FACTUAL" polarity="NEG" type="TREATMENT" />
+<EVENT id="E18" start="702" end="714" text="pancytopenia" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E19" start="719" end="727" text="vomiting" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E20" start="731" end="734" text="DDI" modality="FACTUAL" polarity="POS" type="TREATMENT" />
+<EVENT id="E21" start="759" end="765" text="nausea" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E22" start="770" end="778" text="vomiting" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E23" start="790" end="814" text="left upper quadrant pain" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E24" start="848" end="853" text="worse" modality="FACTUAL" polarity="POS" type="OCCURRENCE" />
+<EVENT id="E25" start="888" end="900" text="similar pain" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E26" start="946" end="954" text="the pain" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E27" start="958" end="972" text="a burning pain" modality="FACTUAL" polarity="POS" type="PROBLEM" />
+<EVENT id="E28" start="995" end="1000" text="worse" modality="FACTUAL" polarity="POS" type="OCCURRENCE" />
+<TIMEX3 id="T7" start="1099" end="1104" text="10/92" type="DATE" val="1992-10" mod="NA" />
+<TIMEX3 id="T8" start="1259" end="1268" text="that time" type="DATE" val="1992-10" mod="NA" />
+<TIMEX3 id="T2" start="145" end="154" text="two years" type="DURATION" val="p2y" mod="NA" />
+<TIMEX3 id="T9" start="1577" end="1581" text="9/26" type="DATE" val="1993-09-26" mod="NA" />
+<TIMEX3 id="T10" start="1647" end="1656" text="this time" type="DATE" val="1993-09-29" mod="NA" />
+<TIMEX3 id="T0" start="18" end="28" text="09/29/1993" type="DATE" val="1993-09-29" mod="NA" />
+<TIMEX3 id="T11" start="2022" end="2044" text="the third hospital day" type="DATE" val="1993-10-01" mod="NA" />
+<TIMEX3 id="T12" start="2156" end="2163" text="10/2/93" type="DATE" val="1993-10-02" mod="NA" />
+<TIMEX3 id="T13" start="2249" end="2271" text="the day of discharge ." type="DATE" val="1993-10-04" mod="NA" />
+<TIMEX3 id="T14" start="2400" end="2405" text="10/92" type="DATE" val="1992-10" mod="NA" />
+<TIMEX3 id="T3" start="290" end="294" text="1991" type="DATE" val="1991" mod="NA" />
+<TIMEX3 id="T1" start="46" end="56" text="10/04/1993" type="DATE" val="1993-10-04" mod="NA" />
+<TIMEX3 id="T4" start="524" end="533" text="that time" type="DATE" val="1991" mod="NA" />
+<TIMEX3 id="T5" start="859" end="873" text="the past month" type="DURATION" val="p1m" mod="NA" />
+<TIMEX3 id="T6" start="920" end="929" text="last year" type="DURATION" val="p1y" mod="NA" />
+<TLINK id="TL0" fromID="E0" fromText="Admission" toID="T0" toText="09/29/1993" type="OVERLAP" />
+<TLINK id="TL1" fromID="E3" fromText="presented" toID="E0" toText="Admission" type="OVERLAP" />
+<TLINK id="TL10" fromID="E60" fromText="the hospital" toID="T1" toText="10/04/1993" type="BEFORE" />
+<TLINK id="TL11" fromID="E10" fromText="HIV positive" toID="E2" toText="HIV positive" type="OVERLAP" />
+<TLINK id="TL12" fromID="E2" fromText="HIV positive" toID="T2" toText="two years" type="OVERLAP" />
+<TLINK id="TL13" fromID="E4" fromText="left upper quadrant pain" toID="E3" toText="presented" type="BEFORE" />
+<TLINK id="TL14" fromID="E5" fromText="nausea" toID="E4" toText="left upper quadrant pain" type="OVERLAP" />
+<TLINK id="TL15" fromID="E4" fromText="left upper quadrant pain" toID="E7" toText="a long-standing complaint" type="OVERLAP" />
+<TLINK id="TL17" fromID="E6" fromText="vomiting" toID="E4" toText="left upper quadrant pain" type="OVERLAP" />
+<TLINK id="TL18" fromID="E7" fromText="a long-standing complaint" toID="E6" toText="vomiting" type="OVERLAP" />
+<TLINK id="TL19" fromID="E13" fromText="heterosexual transmission" toID="E8" toText="diagnosed" type="BEFORE" />
+<TLINK id="TL2" fromID="E68" fromText="A follow-up CT scan" toID="E0" toText="Admission" type="AFTER" />
+<TLINK id="TL20" fromID="E9" fromText="the birth of her child" toID="E8" toText="diagnosed" type="OVERLAP" />
+<TLINK id="TL21" fromID="E8" fromText="diagnosed" toID="T3" toText="1991" type="OVERLAP" />
+<TLINK id="TL22" fromID="E12" fromText="the birth of her children" toID="E9" toText="the birth of her child" type="OVERLAP" />
+<TLINK id="TL23" fromID="E14" fromText="cat scratch fever" toID="E9" toText="the birth of her child" type="OVERLAP" />
+<TLINK id="TL24" fromID="E11" fromText="blood transfusions" toID="E9" toText="the birth of her child" type="BEFORE" />
+<TLINK id="TL26" fromID="E14" fromText="cat scratch fever" toID="T4" toText="that time" type="OVERLAP" />
+<TLINK id="TL27" fromID="E15" fromText="resection" toID="E14" toText="cat scratch fever" type="OVERLAP" />
+<TLINK id="TL28" fromID="E16" fromText="an abscess in the left lower extremity" toID="E15" toText="resection" type="BEFORE" />
+<TLINK id="TL29" fromID="E17" fromText="any anti retroviral therapy" toID="E16" toText="an abscess in the left lower extremity" type="AFTER" />
+<TLINK id="TL3" fromID="E49" fromText="readmitted" toID="E0" toText="Admission" type="OVERLAP" />
+<TLINK id="TL30" fromID="E18" fromText="pancytopenia" toID="E17" toText="any anti retroviral therapy" type="BEFORE" />
+<TLINK id="TL31" fromID="E19" fromText="vomiting" toID="E18" toText="pancytopenia" type="OVERLAP" />
+<TLINK id="TL33" fromID="E18" fromText="pancytopenia" toID="E20" toText="DDI" type="OVERLAP" />
+<TLINK id="TL34" fromID="E20" fromText="DDI" toID="E19" toText="vomiting" type="OVERLAP" />
+<TLINK id="TL35" fromID="E21" fromText="nausea" toID="E22" toText="vomiting" type="OVERLAP" />
+<TLINK id="TL36" fromID="E22" fromText="vomiting" toID="E23" toText="left upper quadrant pain" type="OVERLAP" />
+<TLINK id="TL37" fromID="E23" fromText="left upper quadrant pain" toID="E24" toText="worse" type="BEFORE" />
+<TLINK id="TL38" fromID="E24" fromText="worse" toID="T5" toText="the past month" type="OVERLAP" />
+<TLINK id="TL39" fromID="E26" fromText="the pain" toID="E25" toText="similar pain" type="OVERLAP" />
+<TLINK id="TL4" fromID="E45" fromText="progressive failure to thrive" toID="E0" toText="Admission" type="BEFORE" />
+<TLINK id="TL40" fromID="E25" fromText="similar pain" toID="T6" toText="last year" type="OVERLAP" />
+<TLINK id="TL41" fromID="E27" fromText="a burning pain" toID="E26" toText="the pain" type="OVERLAP" />
+<TLINK id="TL42" fromID="E31" fromText="relief" toID="E26" toText="the pain" type="AFTER" />
+<TLINK id="TL43" fromID="E27" fromText="a burning pain" toID="E28" toText="worse" type="BEFORE" />
+<TLINK id="TL44" fromID="E28" fromText="worse" toID="E29" toText="walks" type="OVERLAP" />
+<TLINK id="TL45" fromID="E29" fromText="walks" toID="E30" toText="exercise" type="OVERLAP" />
+<TLINK id="TL46" fromID="E32" fromText="antacids" toID="E33" toText="H2 blockers" type="OVERLAP" />
+<TLINK id="TL47" fromID="E31" fromText="relief" toID="E32" toText="antacids" type="AFTER" />
+<TLINK id="TL48" fromID="E34" fromText="a CT scan" toID="T7" toText="10/92" type="OVERLAP" />
+<TLINK id="TL49" fromID="E37" fromText="a normal pancreas" toID="E34" toText="a CT scan" type="BEFORE" />
+<TLINK id="TL5" fromID="E60" fromText="the hospital" toID="T0" toText="09/29/1993" type="AFTER" />
+<TLINK id="TL50" fromID="E35" fromText="fatty infiltration of her liver diffusely" toID="E34" toText="a CT scan" type="BEFORE" />
+<TLINK id="TL51" fromID="E36" fromText="a 1 cm cyst in the right lobe of the liver" toID="E35" toText="fatty infiltration of her liver diffusely" type="OVERLAP" />
+<TLINK id="TL52" fromID="E73" fromText="The 1 cm cyst" toID="E36" toText="a 1 cm cyst in the right lobe of the liver" type="OVERLAP" />
+<TLINK id="TL53" fromID="E37" fromText="a normal pancreas" toID="T8" toText="that time" type="BEFORE" />
+<TLINK id="TL54" fromID="E38" fromText="hyperdense kidneys" toID="E37" toText="a normal pancreas" type="OVERLAP" />
+<TLINK id="TL55" fromID="E38" fromText="hyperdense kidneys" toID="E39" toText="Her alkaline phosphatase" type="OVERLAP" />
+<TLINK id="TL56" fromID="E42" fromText="Her amylase" toID="E40" toText="slightly elevated" type="OVERLAP" />
+<TLINK id="TL57" fromID="E40" fromText="slightly elevated" toID="E39" toText="Her alkaline phosphatase" type="OVERLAP" />
+<TLINK id="TL58" fromID="E40" fromText="slightly elevated" toID="E41" toText="normal" type="OVERLAP" />
+<TLINK id="TL59" fromID="E43" fromText="mildly elevated" toID="E42" toText="Her amylase" type="OVERLAP" />
+<TLINK id="TL6" fromID="T5" fromText="the past month" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="TL60" fromID="E44" fromText="down" toID="E43" toText="mildly elevated" type="AFTER" />
+<TLINK id="TL61" fromID="E46" fromText="steady weight loss" toID="E45" toText="progressive failure to thrive" type="OVERLAP" />
+<TLINK id="TL62" fromID="E48" fromText="sedated" toID="E47" toText="an esophagogastroduodenoscopy" type="OVERLAP" />
+<TLINK id="TL63" fromID="E47" fromText="an esophagogastroduodenoscopy" toID="T9" toText="9/26" type="OVERLAP" />
+<TLINK id="TL64" fromID="E53" fromText="admitted" toID="E49" toText="readmitted" type="OVERLAP" />
+<TLINK id="TL66" fromID="E50" fromText="a GI work-up" toID="E49" toText="readmitted" type="AFTER" />
+<TLINK id="TL67" fromID="E52" fromText="new abscess in her left lower calf" toID="E49" toText="readmitted" type="BEFORE" />
+<TLINK id="TL68" fromID="E48" fromText="sedated" toID="T10" toText="this time" type="BEFORE" />
+<TLINK id="TL69" fromID="E51" fromText="an evaluation" toID="T10" toText="this time" type="OVERLAP" />
+<TLINK id="TL7" fromID="T2" fromText="two years" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="TL70" fromID="E54" fromText="connected up with social services" toID="E53" toText="admitted" type="OVERLAP" />
+<TLINK id="TL71" fromID="E56" fromText="admitted" toID="E53" toText="admitted" type="OVERLAP" />
+<TLINK id="TL72" fromID="E54" fromText="connected up with social services" toID="E55" toText="HIV" type="OVERLAP" />
+<TLINK id="TL73" fromID="E58" fromText="all negative" toID="E57" toText="many cultures" type="OVERLAP" />
+<TLINK id="TL74" fromID="E57" fromText="many cultures" toID="E56" toText="admitted" type="OVERLAP" />
+<TLINK id="TL75" fromID="E59" fromText="her pain" toID="E60" toText="the hospital" type="OVERLAP" />
+<TLINK id="TL76" fromID="E61" fromText="some pain" toID="T11" toText="the third hospital day" type="OVERLAP" />
+<TLINK id="TL77" fromID="E62" fromText="Percocet" toID="T11" toText="the third hospital day" type="OVERLAP" />
+<TLINK id="TL78" fromID="E62" fromText="Percocet" toID="E61" toText="some pain" type="AFTER" />
+<TLINK id="TL79" fromID="E65" fromText="IV ceftriaxone" toID="E63" toText="a debridement" type="OVERLAP" />
+<TLINK id="TL8" fromID="T6" fromText="last year" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="TL80" fromID="E63" fromText="a debridement" toID="T12" toText="10/2/93" type="OVERLAP" />
+<TLINK id="TL82" fromID="E64" fromText="her left calf lesion" toID="E63" toText="a debridement" type="BEFORE" />
+<TLINK id="TL83" fromID="E64" fromText="her left calf lesion" toID="E52" toText="new abscess in her left lower calf" type="OVERLAP" />
+<TLINK id="TL84" fromID="E66" fromText="po doxycycline" toID="E65" toText="IV ceftriaxone" type="AFTER" />
+<TLINK id="TL85" fromID="T13" fromText="the day of discharge ." toID="E67" toText="discharge" type="OVERLAP" />
+<TLINK id="TL86" fromID="E66" fromText="po doxycycline" toID="T13" toText="the day of discharge ." type="AFTER" />
+<TLINK id="TL87" fromID="E69" fromText="show" toID="E68" toText="A follow-up CT scan" type="OVERLAP" />
+<TLINK id="TL88" fromID="E74" fromText="a cyst in her kidney" toID="E68" toText="A follow-up CT scan" type="BEFORE" />
+<TLINK id="TL89" fromID="E70" fromText="evidence" toID="E68" toText="A follow-up CT scan" type="OVERLAP" />
+<TLINK id="TL9" fromID="E1" fromText="Discharge" toID="T1" toText="10/04/1993" type="OVERLAP" />
+<TLINK id="TL90" fromID="E72" fromText="hepatomegaly" toID="E71" toText="splenomegaly" type="OVERLAP" />
+<TLINK id="TL91" fromID="E71" fromText="splenomegaly" toID="E69" toText="show" type="BEFORE" />
+<TLINK id="TL92" fromID="E73" fromText="The 1 cm cyst" toID="T14" toText="10/92" type="OVERLAP" />
+<TLINK id="TL93" fromID="E75" fromText="a stone" toID="E74" toText="a cyst in her kidney" type="OVERLAP" />
+<TLINK id="TL95" fromID="E76" fromText="the cyst" toID="E75" toText="a stone" type="OVERLAP" />
+<TLINK id="SECTIME0" fromID="E29" fromText="walks" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME1" fromID="E30" fromText="exercise" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME2" fromID="E31" fromText="relief" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME3" fromID="E32" fromText="antacids" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME4" fromID="E33" fromText="H2 blockers" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME5" fromID="E34" fromText="a CT scan" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME6" fromID="E35" fromText="fatty infiltration of her liver diffusely" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME7" fromID="E36" fromText="a 1 cm cyst in the right lobe of the liver" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME8" fromID="E37" fromText="a normal pancreas" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME9" fromID="E2" fromText="HIV positive" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME10" fromID="E38" fromText="hyperdense kidneys" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME11" fromID="E39" fromText="Her alkaline phosphatase" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME12" fromID="E40" fromText="slightly elevated" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME13" fromID="E41" fromText="normal" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME14" fromID="E42" fromText="Her amylase" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME15" fromID="E43" fromText="mildly elevated" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME16" fromID="E44" fromText="down" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME17" fromID="E45" fromText="progressive failure to thrive" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME18" fromID="E46" fromText="steady weight loss" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME19" fromID="E47" fromText="an esophagogastroduodenoscopy" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME20" fromID="E3" fromText="presented" toID="T0" toText="09/29/1993" type="OVERLAP" />
+<TLINK id="SECTIME21" fromID="E48" fromText="sedated" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME22" fromID="E49" fromText="readmitted" toID="T0" toText="09/29/1993" type="OVERLAP" />
+<TLINK id="SECTIME23" fromID="E50" fromText="a GI work-up" toID="T0" toText="09/29/1993" type="AFTER" />
+<TLINK id="SECTIME24" fromID="E51" fromText="an evaluation" toID="T0" toText="09/29/1993" type="AFTER" />
+<TLINK id="SECTIME25" fromID="E52" fromText="new abscess in her left lower calf" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME26" fromID="E4" fromText="left upper quadrant pain" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME27" fromID="E53" fromText="admitted" toID="T0" toText="09/29/1993" type="OVERLAP" />
+<TLINK id="SECTIME28" fromID="E54" fromText="connected up with social services" toID="T0" toText="09/29/1993" type="AFTER" />
+<TLINK id="SECTIME29" fromID="E55" fromText="HIV" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME30" fromID="E56" fromText="admitted" toID="T1" toText="10/04/1993" type="BEFORE" />
+<TLINK id="SECTIME31" fromID="E57" fromText="many cultures" toID="T1" toText="10/04/1993" type="BEFORE" />
+<TLINK id="SECTIME32" fromID="E58" fromText="all negative" toID="T1" toText="10/04/1993" type="BEFORE" />
+<TLINK id="SECTIME33" fromID="E59" fromText="her pain" toID="T1" toText="10/04/1993" type="BEFORE" />
+<TLINK id="SECTIME34" fromID="E61" fromText="some pain" toID="T1" toText="10/04/1993" type="BEFORE" />
+<TLINK id="SECTIME35" fromID="E62" fromText="Percocet" toID="T1" toText="10/04/1993" type="BEFORE" />
+<TLINK id="SECTIME36" fromID="E5" fromText="nausea" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME37" fromID="E63" fromText="a debridement" toID="T1" toText="10/04/1993" type="BEFORE" />
+<TLINK id="SECTIME38" fromID="E64" fromText="her left calf lesion" toID="T1" toText="10/04/1993" type="BEFORE" />
+<TLINK id="SECTIME39" fromID="E65" fromText="IV ceftriaxone" toID="T1" toText="10/04/1993" type="BEFORE" />
+<TLINK id="SECTIME40" fromID="E6" fromText="vomiting" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME41" fromID="E66" fromText="po doxycycline" toID="T1" toText="10/04/1993" type="BEFORE" />
+<TLINK id="SECTIME42" fromID="E67" fromText="discharge" toID="T1" toText="10/04/1993" type="OVERLAP" />
+<TLINK id="SECTIME43" fromID="E68" fromText="A follow-up CT scan" toID="T1" toText="10/04/1993" type="BEFORE" />
+<TLINK id="SECTIME44" fromID="E69" fromText="show" toID="T1" toText="10/04/1993" type="BEFORE" />
+<TLINK id="SECTIME45" fromID="E70" fromText="evidence" toID="T1" toText="10/04/1993" type="BEFORE" />
+<TLINK id="SECTIME46" fromID="E71" fromText="splenomegaly" toID="T1" toText="10/04/1993" type="BEFORE" />
+<TLINK id="SECTIME47" fromID="E72" fromText="hepatomegaly" toID="T1" toText="10/04/1993" type="BEFORE" />
+<TLINK id="SECTIME48" fromID="E73" fromText="The 1 cm cyst" toID="T1" toText="10/04/1993" type="BEFORE" />
+<TLINK id="SECTIME49" fromID="E7" fromText="a long-standing complaint" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME50" fromID="E74" fromText="a cyst in her kidney" toID="T1" toText="10/04/1993" type="BEFORE" />
+<TLINK id="SECTIME51" fromID="E75" fromText="a stone" toID="T1" toText="10/04/1993" type="BEFORE" />
+<TLINK id="SECTIME52" fromID="E76" fromText="the cyst" toID="T1" toText="10/04/1993" type="BEFORE" />
+<TLINK id="SECTIME53" fromID="E8" fromText="diagnosed" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME54" fromID="E9" fromText="the birth of her child" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME55" fromID="E10" fromText="HIV positive" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME56" fromID="E11" fromText="blood transfusions" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME57" fromID="E12" fromText="the birth of her children" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME58" fromID="E13" fromText="heterosexual transmission" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME59" fromID="E14" fromText="cat scratch fever" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME60" fromID="E15" fromText="resection" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME61" fromID="E16" fromText="an abscess in the left lower extremity" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME62" fromID="E17" fromText="any anti retroviral therapy" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME63" fromID="E18" fromText="pancytopenia" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME64" fromID="E19" fromText="vomiting" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME65" fromID="E20" fromText="DDI" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME66" fromID="E21" fromText="nausea" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME67" fromID="E22" fromText="vomiting" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME68" fromID="E23" fromText="left upper quadrant pain" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME69" fromID="E24" fromText="worse" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME70" fromID="E25" fromText="similar pain" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME71" fromID="E26" fromText="the pain" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME72" fromID="E27" fromText="a burning pain" toID="T0" toText="09/29/1993" type="BEFORE" />
+<TLINK id="SECTIME73" fromID="E28" fromText="worse" toID="T0" toText="09/29/1993" type="BEFORE" />
+<SECTIME id="S0" start="18" end="28" text="09/29/1993" type="ADMISSION" dvalue="1993-09-29" />
+<SECTIME id="S1" start="46" end="56" text="10/04/1993" type="DISCHARGE" dvalue="1993-10-04" />
+</TAGS>
+</ClinicalNarrativeTemporalAnnotation>
