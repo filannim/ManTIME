@@ -332,8 +332,15 @@ class IdentificationClassifier(Classifier):
                 # new one.
                 else:
                     if prev_element:
-                        documents[n_doc].predicted_annotations.append(
-                            prev_element)
+                        try:
+                            documents[n_doc].predicted_annotations.append(
+                                prev_element)
+                        except IndexError:
+                            # we are at the end of the document and n_doc has
+                            # been already incremented. we need to add
+                            # prev_element to the previous document.
+                            documents[n_doc - 1].predicted_annotations.append(
+                                prev_element)
         logging.info('Identification: done.')
         return documents
 
