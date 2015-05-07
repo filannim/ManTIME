@@ -3,6 +3,7 @@ TO-DO List
 
 This document lists all the things I should look more carefully in the future.
 
+- [ ] `get_annotation` method is called in a wasteful way (I need a queue and that's it).
 - [ ] In the attribute training phase, the multi-word expressions should be represented as one sample. The features will be merged according to the order of appearance.
 - [ ] Implement the feature extractor for Temporal Links.
 - [ ] Implement the classifier for Temporal Links.
@@ -18,7 +19,6 @@ This document lists all the things I should look more carefully in the future.
 
 Done:
 
-- [x] `get_annotation` method is called in a wasteful way (I need a queue and that's it).
 - [x] The method search_subsequence is called many times. A more adequate ADT should be used.
 - [x] Implement a HTML (CSS3) writer (timesheet.js, TimelineJS).
 - [x] Make the features as lighter as possible (in terms of storage space).
