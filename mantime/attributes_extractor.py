@@ -25,6 +25,7 @@ from model_extractors import SentenceBasedResults
 from extractors import WordBasedExtractors
 from extractors import SentenceBasedExtractors
 from extractors import DocumentBasedExtractors
+from extractors import RelationExtractors
 
 
 class AttributesExtractor(object):
@@ -39,6 +40,7 @@ class AttributesExtractor(object):
         self.document_extractors = []
         self.sentence_extractors = []
         self.word_extractors = []
+        self.relation_extractors = []
 
     def __name_attr(self, type, num, name):
         return '{num:0>3}_{type}_{name}'.format(num=num, type=type, name=name)
@@ -103,6 +105,7 @@ class AttributesExtractor(object):
     def extract(self, document):
         """It returns an updated word with all the attributes extractors
            applied on the word.
+
         """
         # document-based extractors
         logging.info('Attributes: extracting...')
@@ -136,8 +139,9 @@ class AttributesExtractor(object):
 
 
 class TimexesExtractor(AttributesExtractor):
-    """This is what we had in ManTIME before the refactoring"""
+    """This is what we had in ManTIME before the refactoring.
 
+    """
     def __init__(self):
         super(TimexesExtractor, self).__init__()
         self.sentence_extractors = []
@@ -145,10 +149,9 @@ class TimexesExtractor(AttributesExtractor):
 
 
 class FullExtractor(AttributesExtractor):
-    """This extractor should never be used since it contains all the possible
-       features declared in ManTIME.
-    """
+    """This extracts all the attributes declared in ManTIME (extractors.py).
 
+    """
     def __init__(self):
         '''Takes all the extractors (functions) declared in extractors.py.'''
         super(FullExtractor, self).__init__()
@@ -163,6 +166,18 @@ class FullExtractor(AttributesExtractor):
         self.word_extractors = [function[1] for function
                                 in inspect.getmembers(
                                     WordBasedExtractors,
+                                    predicate=inspect.isfunction)]
+
+
+class TemporalRelationExtractor(AttributesExtractor):
+    """This extracts the attributes for the temporal relations.
+
+    """
+    def __init__(self):
+        super(TemporalRelationExtractor, self).__init__()
+        self.relation_extractors = [function[1] for function
+                                    in inspect.getmembers(
+                                    RelationExtractors,
                                     predicate=inspect.isfunction)]
 
 

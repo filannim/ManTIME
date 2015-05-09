@@ -726,3 +726,8 @@ class SentenceBasedExtractors(object):
 class DocumentBasedExtractors(object):
 
     pass
+
+
+class RelationExtractors(object):
+
+    pass
