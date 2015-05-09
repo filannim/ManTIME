@@ -3,6 +3,7 @@ TO-DO List
 
 This document lists all the things I should look more carefully in the future.
 
+- [ ] Activate the post processing pipeline.
 - [ ] In the attribute training phase, the multi-word expressions should be represented as one sample. The features will be merged according to the order of appearance.
 - [ ] pickle the num2py arrays and remove the dependency
 - [ ] port the ParentedTree implementation and remove the nltk dependency
