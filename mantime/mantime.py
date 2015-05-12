@@ -22,7 +22,6 @@ import cPickle
 import glob
 import logging
 import os
-import sys
 import xml.etree.cElementTree as cElementTree
 
 from readers import i2b2FileReader, TempEval3FileReader
@@ -90,7 +89,6 @@ class ManTIME(object):
         identifier = IdentificationClassifier()
         normaliser = NormalisationClassifier()
 
-        # try:
         doc = self.extractor.extract(self.reader.parse(file_name))
         annotated_doc = identifier.test([doc], self.model,
                                         self.post_processing_pipeline)
@@ -98,8 +96,6 @@ class ManTIME(object):
 
         output = self.writer.write(annotated_doc)
         return output
-        # except:
-        #    logging.info('{} skipped.'.format(file_name))
 
 
 def main():
@@ -125,10 +121,10 @@ def main():
 
     # ManTIME
     mantime = ManTIME(reader=i2b2FileReader(),
-                      writer=HTMLWriter(domain='clinical'),
+                      writer=i2b2Writer(),
                       extractor=FullExtractor(),
                       model_name=args.model,
-                      pipeline=False)
+                      pipeline=args.post_processing_pipeline)
 
     if args.mode == 'train':
         # Training
@@ -140,20 +136,21 @@ def main():
         documents = sorted(glob.glob(input_files))
         assert documents, 'Input folder is empty.'
         for index, doc in enumerate(documents, start=1):
-            basename = os.path.basename(doc) + ".html"
+            basename = os.path.basename(doc)
             writein = os.path.join('./output/', basename)
             position = '[{}/{}]'.format(index, len(documents))
-            with codecs.open(writein, 'w', encoding='utf8') as output:
-                # try:
-                output.write(mantime.label(doc)[0])
-                logging.info('{} Doc {} annotated.'.format(position,
-                                                           basename))
-                # except:
-                #     logging.info('{} Doc {} ** skipped **!'.format(position,
-                #                                                    basename))
-                #     exc_type, exc_obj, exc_tb = sys.exc_info()
-                #     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                #     print exc_type, fname, exc_tb.tb_lineno
+            if writein not in glob.glob('./output/*.*'):
+                file_path = writein
+                with codecs.open(file_path, 'w', encoding='utf8') as output:
+                    # try:
+                    logging.info('{} Doc {}.'.format(position, basename))
+                    output.write(mantime.label(doc)[0])
+                    logging.info('{} Doc {} annotated.'.format(position,
+                                                               basename))
+                    # except Exception:
+                        # logging.error('{} Doc {} ** skipped **!'.format(
+                        #     position, basename))
+                        # os.remove(file_path)
 
 if __name__ == '__main__':
     main()

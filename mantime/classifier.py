@@ -79,6 +79,7 @@ def identification_attribute_matrix(documents, dest, subject, training=True):
                         matrix.write('\t' + str(gold_label))
                     matrix.write('\n')
                 matrix.write('\n')
+        matrix.close()
 
 
 def normalisation_attribute_matrix(documents, dest, subject, training=True):
@@ -130,6 +131,7 @@ def normalisation_attribute_matrix(documents, dest, subject, training=True):
 
                     # I am using CRFs with singleton sequences
                     matrix.write('\n\n')
+        matrix.close()
 
 
 class Classifier(object):
@@ -226,6 +228,7 @@ class IdentificationClassifier(Classifier):
         if post_processing_pipeline:
             try:
                 factors = cPickle.load(open(model.path_factors))
+                logging.info('Scale factors loaded.')
             except IOError:
                 post_processing_pipeline = False
                 logging.warning('Scale factors not found.')
@@ -255,6 +258,7 @@ class IdentificationClassifier(Classifier):
             # post-processing pipeline
             if post_processing_pipeline and factors:
                 scale_factors = factors[idnt_class]
+                logging.debug(model.pp_pipeline_attribute_pos)
                 lines = label_switcher(
                     probabilistic_correction(
                         iter(process.stdout.readline, ''),
@@ -404,30 +408,43 @@ class NormalisationClassifier(Classifier):
 
             # Weakly check the input files
             if not os.path.isfile(model_path):
-                logging.error('Model doesn\'t exist at {}'.format(model_path))
+                logging.warning('Model doesn\'t exist at {}'.format(
+                    model_path))
+                continue
             else:
                 if os.stat(model_path).st_size == 0:
                     msg = 'Normalisation model for {} is empty!'
-                    logging.error(msg.format(attribute.lower()))
+                    logging.warning(msg.format(attribute.lower()))
+                    continue
             if not os.path.isfile(testset_path):
                 msg = 'Normalisation test set for {} doesn\'t exist at {}.'
                 logging.error(msg.format(attribute.lower(), testset_path))
+                continue
 
             with Mute_stderr():
-                process = subprocess.Popen(crf_command, stdout=subprocess.PIPE)
+                process = subprocess.Popen(crf_command, stdout=subprocess.PIPE,
+                                           stderr=None, stdin=None)
 
-            for line in iter(process.stdout.readline, ''):
-                line = line.strip()
-                if line:
-                    line = line.split('\t')
-                    label = line[-1]
-                    location = line[-2]
-                    seq_label = SequenceLabel(line[-3])
-                    if seq_label.is_event():
-                        n_doc, n_sent, n_word = location.split('_')
-                        documents[int(n_doc)]\
-                            .sentences[int(n_sent)].words[int(n_word)]\
-                            .tag_attributes[attribute] = label
+                for line in iter(process.stdout.readline, ''):
+                    line = line.strip()
+                    if line:
+                        line = line.split('\t')
+                        label = line[-1]
+                        location = line[-2]
+                        seq_label = SequenceLabel(line[-3])
+                        if seq_label.is_event():
+                            n_doc, n_sent, n_word = location.split('_')
+                            documents[int(n_doc)]\
+                                .sentences[int(n_sent)].words[int(n_word)]\
+                                .tag_attributes[attribute] = label
+
+                # close stdout
+                process.stdout.close()
+                process.wait()
+
+            # delete testset
+            os.remove(testset_path)
+
         logging.info('Normalisation: done.')
         return documents
 
