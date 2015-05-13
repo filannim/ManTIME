@@ -336,6 +336,58 @@ class HTMLWriter(FileWriter):
         return outputs
 
 
+class XMLGenericWriter(FileWriter):
+    """This class is a writer in HTML/CSS3 format."""
+
+    def __init__(self, domain):
+        assert domain in ('clinical', 'general'), 'Wrong domain.'
+        super(XMLGenericWriter, self).__init__()
+        self.domain = domain
+
+    def write(self, documents, domain='general'):
+        """It writes on an external file in the HTML/CSS3 format.
+
+        """
+        outputs = []
+        for document in documents:
+            output = []
+            output.append('<?xml version="1.0" encoding="UTF-8"?>')
+            output.append('<mantime>')
+            output.append('<title>{}</title>'.format(str(document.title)))
+            output.append('<content>')
+
+            text = [cgi.escape(c, True) for c in list(document.text)]
+            # TO-DO: This works properly only for IO annotation schema!
+            for element in document.predicted_annotations:
+                # sostituisco il pezzetto nel testo con la stringa annotata
+                if isinstance(element, TemporalExpression):
+                    element.normalise(document, document.dct_text, 'clinical')
+                    annotation = unicode('<TIMEX3 tid="{tid}" type="{ttype}"' +
+                                         ' mod="{mod}" value="{value}">' +
+                                         '{text}</TIMEX3>').format(
+                                             **element.__dict__)
+                elif isinstance(element, Event):
+                    element.normalise(document)
+                    annotation = unicode('<EVENT id="{eid}" type="{eclass}" ' +
+                                         'modality="{modality}" ' +
+                                         'polarity="{polarity}"' +
+                                         '>{text}</EVENT>').format(
+                                             **element.__dict__)
+                text[element.start + document.text_offset] = annotation
+                # empty the remaining characters
+                for i in xrange(document.text_offset + element.start + 1,
+                                document.text_offset + element.end):
+                    text[i] = ''
+
+
+
+            output.append(u''.join(text))
+
+            output.append('</content>')
+            output.append(u'</mantime>')
+            outputs.append('\n'.join(output))
+        return outputs
+
 class AttributeMatrixWriter(Writer):
     """This class writes the attribute matrix taken by ML algorithms."""
 
