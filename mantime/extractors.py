@@ -21,7 +21,6 @@ import calendar
 import functools
 
 import nltk
-from num2words import num2words
 
 from utilities import search_subsequence
 from model_extractors import WordBasedResult
@@ -77,12 +76,8 @@ class WordBasedExtractors(object):
     COMMON_WORDS = cPickle.load(open_gazetteer('common_words.pickle'))
     POSITIVE_WORDS = cPickle.load(open_gazetteer('positive_words.pickle'))
     NEGATIVE_WORDS = cPickle.load(open_gazetteer('negative_words.pickle'))
-    CARDINAL_NUMBERS = set([num2words(num, True) for num in xrange(0, 1001)])
-    CARDINAL_NUMBERS.update([num.replace('-', '') for num in CARDINAL_NUMBERS])
-    CARDINAL_NUMBERS = '|'.join(CARDINAL_NUMBERS)
-    LITERAL_NUMBERS = set([num2words(num) for num in xrange(0, 1001)])
-    LITERAL_NUMBERS.update([num.replace('-', '') for num in LITERAL_NUMBERS])
-    LITERAL_NUMBERS = '|'.join(LITERAL_NUMBERS)
+    CARDINAL_NUMBERS = cPickle.load(open_gazetteer('cardinal_numbers.pickle'))
+    LITERAL_NUMBERS = cPickle.load(open_gazetteer('literal_numbers.pickle'))
 
     # @staticmethod
     # def token(word):
