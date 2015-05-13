@@ -3,7 +3,6 @@ TO-DO List
 
 This document lists all the things I should look more carefully in the future.
 
-- [ ] Fix the logging messages (info, warning, debug)
 - [ ] Activate the post processing pipeline.
 - [ ] In the attribute training phase, the multi-word expressions should be represented as one sample. The features will be merged according to the order of appearance.
 - [ ] pickle the num2py arrays and remove the dependency
@@ -23,6 +22,7 @@ This document lists all the things I should look more carefully in the future.
 
 Done:
 
+- [x] Fix the logging messages (info, warning, debug)
 - [x] The method search_subsequence is called many times. A more adequate ADT should be used.
 - [x] Implement a HTML (CSS3) writer (timesheet.js, TimelineJS).
 - [x] Make the features as lighter as possible (in terms of storage space).
