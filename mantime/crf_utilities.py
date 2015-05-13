@@ -144,8 +144,6 @@ def label_switcher(row_iterator, factors, index, threshold):
                     most_likely_label, confidence = \
                         factors[current_word].most_common(1)[0]
                     if confidence >= threshold:
-                        if prediction != most_likely_label:
-                            print 'LABEL_SWITCHER: changed \'{}\': from {} to {}'.format(current_word, prediction, most_likely_label)
                         yield '{}\t{}'.format(
                             data, most_likely_label)
                     else:
