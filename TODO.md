@@ -4,7 +4,6 @@ TO-DO List
 This document lists all the things I should look more carefully in the future.
 
 - [ ] In the attribute training phase, the multi-word expressions should be represented as one sample. The features will be merged according to the order of appearance.
-- [ ] pickle the num2py arrays and remove the dependency
 - [ ] port the ParentedTree implementation and remove the nltk dependency
 - [ ] `get_annotation` method is called in a wasteful way (I need a queue and that's it).
 - [ ] Implement the feature extractor for Temporal Links.
@@ -21,6 +20,7 @@ This document lists all the things I should look more carefully in the future.
 
 Done:
 
+- [x] pickle the num2py arrays and remove the dependency
 - [x] Activate the post processing pipeline.
 - [x] Fix the logging messages (info, warning, debug)
 - [x] The method search_subsequence is called many times. A more adequate ADT should be used.
