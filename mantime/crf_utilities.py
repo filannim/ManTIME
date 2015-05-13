@@ -26,37 +26,36 @@
 
 from __future__ import division
 import argparse
-import pickle
-import sys
+import codecs
 from collections import Counter
 from os.path import isfile
+import pickle
+import sys
 
 
 def get_scale_factors(source, column_index):
     '''It returns a dictionary of words with their:
-       p_word(label='O-TIMEX3').
+       p_word(label='I-TIMEX3').
     '''
     assert isfile(source), 'Input file doesn\'t exist.'
     assert column_index > 0, 'Invalid index.'
 
     scale_factors = dict()
-    with open(source) as source:
-        data = source.xreadlines()
-        for row in data:
+    with codecs.open(source) as source:
+        for row in source.xreadlines():
             row = row.strip().split('\t')
             if len(row) > 1:
                 word = row[column_index]
-                if word.startswith('"') and word.endswith('"'):
-                    word = word[1:-1]
-                label = row[-1]
-                if label != 'O':
-                    label = 'I'
-                scale_factors.setdefault(word, Counter(label))
+                label = unicode(row[-1])
+                scale_factors.setdefault(word, Counter([label]))
                 scale_factors[word][label] += 1.0
+
     # normalise scale_factors (counts)
     for word in scale_factors.keys():
         freq = sum(scale_factors[word].values())
-        if scale_factors[word]['I'] >= 2.0:
+        freq_positive = sum((c for k, c in scale_factors[word].iteritems()
+                             if k.startswith('I')))
+        if freq_positive >= 2.0:
             for label in scale_factors[word].iterkeys():
                 scale_factors[word][label] /= freq
         else:
@@ -64,7 +63,7 @@ def get_scale_factors(source, column_index):
     return scale_factors
 
 
-def probabilistic_correction(row_iterator, factors, index, threshold):
+def probabilistic_correction(row_iterator, factors, index, lenght, threshold):
     '''It yields perturbated sequences of predicted labels accoding to the
        specified *threshold*.
 
@@ -73,7 +72,10 @@ def probabilistic_correction(row_iterator, factors, index, threshold):
     '''
     assert 0. <= threshold <= 1., 'Invalid threshold.'
 
-    def perturbate_row(crf_predictions, factor, threshold):
+    def get_marginals(elements):
+        return {e.split('/')[0]: float(e.split('/')[1]) for e in elements}
+
+    def perturbate_row(marginals, factor, threshold):
         '''It analyses the CRF predictions of a single token and returns the
            most likely perturbated label with its confidence rate.
         '''
@@ -81,17 +83,14 @@ def probabilistic_correction(row_iterator, factors, index, threshold):
         # extract dictionary from CRF predictions
         perturbate_value = lambda value1, value2, threshold: \
             (value1*threshold) + value2*(1-threshold)
-        predictions = crf_predictions.replace('\t', '/').split('/')
-        confidences = [float(c) for c in predictions[1::2]]
-        predictions = dict(zip(predictions[0::2], confidences))
         # perturbate it in place
-        for label, confidence in predictions.iteritems():
-            predictions[label] = perturbate_value(confidence, factor[label],
-                                                  threshold)
+        for label, confidence in marginals.iteritems():
+            marginals[label] = perturbate_value(confidence, factor[label],
+                                                threshold)
         best_prediction, best_prediction_confidence = sorted(
-            predictions.iteritems(), key=operator.itemgetter(1),
+            marginals.iteritems(), key=operator.itemgetter(1),
             reverse=True)[0]
-        return (best_prediction[0], best_prediction_confidence)
+        return (best_prediction, best_prediction_confidence)
 
     try:
         line = next(row_iterator).strip().split('\t')
@@ -100,26 +99,25 @@ def probabilistic_correction(row_iterator, factors, index, threshold):
             # this happens when we use crf_test -v2 (verbose mode)
             # the second condition makes sure it's not a data line with simply
             # has a word starting by '#'.
-            if not (line[0].startswith('#') or len(line) == 1):
+            if not (line[0].strip().startswith('#') or len(line) == 1):
                 current_word = line[index]
-                predictions = '\t'.join(line[-3:])
-                prediction = predictions.split('/', 1)[0]
-                if prediction[0] in list('OBIW'):
-                    data = '\t'.join(line[:-4])
-                    if current_word in factors.keys():
-                        perturbated_label, confidence = \
-                            perturbate_row(predictions, factors[current_word],
-                                           threshold)
-                        if confidence >= threshold:
-                            yield '{}\t{}'.format(data, perturbated_label)
-                        else:
-                            yield '{}\t{}'.format(data, prediction)
+                prediction = line[lenght].split('/')[0]
+                assert prediction[0] in 'OBIW', 'Wrong sequence label.'
+                marginals = get_marginals(line[lenght+1:])
+                data = '\t'.join(line[:-4])
+                if current_word in factors.keys():
+                    perturbated_label, confidence = \
+                        perturbate_row(marginals, factors[current_word],
+                                       threshold)
+                    if confidence >= threshold:
+                        yield '{}\t{}'.format(data, perturbated_label)
+
                     else:
                         yield '{}\t{}'.format(data, prediction)
                 else:
-                    yield ''
+                    yield '{}\t{}'.format(data, prediction)
             else:
-                if line[0] == '':
+                if line[0].strip():
                     yield ''
             line = next(row_iterator).strip().split('\t')
     except StopIteration:
@@ -146,6 +144,8 @@ def label_switcher(row_iterator, factors, index, threshold):
                     most_likely_label, confidence = \
                         factors[current_word].most_common(1)[0]
                     if confidence >= threshold:
+                        if prediction != most_likely_label:
+                            print 'LABEL_SWITCHER: changed \'{}\': from {} to {}'.format(current_word, prediction, most_likely_label)
                         yield '{}\t{}'.format(
                             data, most_likely_label)
                     else:
