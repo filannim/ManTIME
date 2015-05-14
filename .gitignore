@@ -14,9 +14,6 @@
 # files I don't wanna touch right now
 pipeline.py
 
-# README.md
-!README.md
-
 # folders outside the scope of this project
 temporal_location/*
 datasets/*
@@ -30,3 +27,6 @@ data/*/.DS_Store
 
 # no models on GitHub
 mantime/models/
+
+!README.md
+!*/
