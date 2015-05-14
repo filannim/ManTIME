@@ -18,7 +18,9 @@ pipeline.py
 temporal_location/*
 datasets/*
 buffer/*
+!buffer/README.md
 mantime/output/*
+!mantime/output/README.md
 externals/
 experiments/*
 */screenlog.0
@@ -26,7 +28,5 @@ experiments/*
 data/*/.DS_Store
 
 # no models on GitHub
-mantime/models/
-
-!README.md
-!*/
+mantime/models/*
+!mantime/models/README.md
