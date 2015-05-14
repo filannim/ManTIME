@@ -25,10 +25,12 @@
 '''
 
 from __future__ import division
+
 import argparse
 import codecs
 from collections import Counter
 from os.path import isfile
+import logging
 import pickle
 import sys
 
@@ -110,8 +112,10 @@ def probabilistic_correction(row_iterator, factors, index, lenght, threshold):
                         perturbate_row(marginals, factors[current_word],
                                        threshold)
                     if confidence >= threshold:
+                        if prediction != perturbated_label:
+                            logging.debug('PER: "{}"  {} --> {}'.format(
+                                current_word, prediction, perturbated_label))
                         yield '{}\t{}'.format(data, perturbated_label)
-
                     else:
                         yield '{}\t{}'.format(data, prediction)
                 else:
@@ -144,6 +148,9 @@ def label_switcher(row_iterator, factors, index, threshold):
                     most_likely_label, confidence = \
                         factors[current_word].most_common(1)[0]
                     if confidence >= threshold:
+                        if prediction != most_likely_label:
+                            logging.debug('LBS: "{}"  {} --> {}'.format(
+                                current_word, prediction, most_likely_label))
                         yield '{}\t{}'.format(
                             data, most_likely_label)
                     else:

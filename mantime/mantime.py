@@ -102,7 +102,7 @@ def main():
     """ It annotates documents in a specific folder.
     """
     logging.basicConfig(format='%(asctime)s: %(message)s',
-                        level=logging.INFO,
+                        level=logging.DEBUG,
                         datefmt='%m/%d/%Y %I:%M:%S %p')
     # Parse input
     parser = argparse.ArgumentParser(
@@ -142,15 +142,15 @@ def main():
             if writein not in glob.glob('./output/*.*'):
                 file_path = writein
                 with codecs.open(file_path, 'w', encoding='utf8') as output:
-                    # try:
-                    logging.info('{} Doc {}.'.format(position, basename))
-                    output.write(mantime.label(doc)[0])
-                    logging.info('{} Doc {} annotated.'.format(position,
-                                                               basename))
-                    # except Exception:
-                        # logging.error('{} Doc {} ** skipped **!'.format(
-                        #     position, basename))
-                        # os.remove(file_path)
+                    try:
+                        logging.info('{} Doc {}.'.format(position, basename))
+                        output.write(mantime.label(doc)[0])
+                        logging.info('{} Doc {} annotated.'.format(position,
+                                                                   basename))
+                    except Exception:
+                        logging.error('{} Doc {} ** skipped **!'.format(
+                            position, basename))
+                        os.remove(file_path)
 
 if __name__ == '__main__':
     main()

@@ -258,7 +258,6 @@ class IdentificationClassifier(Classifier):
             # post-processing pipeline
             if post_processing_pipeline and factors:
                 scale_factors = factors[idnt_class]
-                logging.debug(model.pp_pipeline_attribute_pos)
                 lines = label_switcher(probabilistic_correction(
                     iter(process.stdout.readline, ''),
                     scale_factors, model.pp_pipeline_attribute_pos, model.num_of_features, .5),
