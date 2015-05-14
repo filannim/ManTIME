@@ -10,6 +10,7 @@ This document lists all the things I should look more carefully in the future.
 - [ ] Implement the classifier for Temporal Links.
 - [ ] The writers should use an xml library instead of writing strings to a file.
 - [ ] Adapt the writers to output temporal links too.
+- [ ] Installation script.
 - [ ] Probably some variables in Document and Sentence objects can be deleted.
 - [ ] Group the annotations token based at sentence level.
 - [ ] Implement an error method to get statistics from the models.
@@ -20,6 +21,7 @@ This document lists all the things I should look more carefully in the future.
 
 Done:
 
+- [x] add useful folder (models, output, buffer) in the Git repo
 - [x] pickle the num2py arrays and remove the dependency
 - [x] Activate the post processing pipeline.
 - [x] Fix the logging messages (info, warning, debug)
