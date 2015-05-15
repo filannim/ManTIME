@@ -18,26 +18,27 @@ ManTIME is based on the following software components:
 
 ![ManTIME web interface](http://www.cs.man.ac.uk/~filannim/images/thumb_mantime_demo.png)
 
-You can use ManTIME via its web server by ([clicking here](http://www.cs.man.ac.uk/~filannim/projects/tempeval-3/)). It currently runs on my personal workstation. If the web service doesn't work that only means I am using my machine to do some intense computing. It will be back online soon. :)
+You can use ManTIME (TempEval-3 version) via its web server by ([clicking here](http://www.cs.man.ac.uk/~filannim/projects/tempeval-3/)). It currently runs on my personal workstation. If the web service doesn't work that only means I am using my machine to do some intense computing. It will be back online soon. :)
 
+<!--
 ##Installation
 
 The easiest way to install ManTIME on a Debian-based system is by using the [install-mantime.sh](http://www.cs.man.ac.uk/~filannim/public/install-mantime.sh) script.
-
+-->
 ##How to use it
 
-Put the .tml files in a particular folder and run the pipeline.py script.
+Put the input files in a particular folder and run:
 
-    $ python pipeline.py <folder_path> [-pp]
+    $ python mantime.py test [-ppp] <folder_path> <model_name>
 
-the option -pp uses the post-processing pipeline on top of the CRFs model.
+the option -ppp uses the post-processing pipeline on top of the CRFs model.
 
 You can also annotate just a sentence using the following command:
 
-    $ echo "<sentence>" | python annotate_sentence.py
+    $ python mantime.py train <folder_path> <model_name>
 
 
-The script will create a new folder in it, called "annotated", with the annotated .tml documents.
+The script will create a new model folder in `mantime/models/`.
 
 ##License
 
