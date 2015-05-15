@@ -3,7 +3,7 @@ ManTIME
 
 ManTIME is a Temporal information extraction pipeline for general and clinical domain. Given a piece of English text it is able to recognise and highlight clinical named entities (problems, treatments, clinical departments) and temporal expressions.
 
-The clinical model is based on the ([i2b2/2012 annotation schema](http://www.sciencedirect.com/science/article/pii/S1532046413001032)), whereas the general model is based on the ([TempEval-3 annotation schema](http://arxiv.org/pdf/1206.5333v2.pdf)).
+The clinical model is based on the ([i2b2/2012 annotation schema](http://www.sciencedirect.com/science/article/pii/S1532046413001032)), whereas the general model is based on the ([TempEval-3 annotation schema](http://arxiv.org/pdf/1206.5333v2.pdf)) Models will be soon available.
 
 ##Dependencies
 
