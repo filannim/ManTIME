@@ -13,7 +13,7 @@ This document lists all the things I should look more carefully in the future.
 - [ ] Installation script.
 - [ ] Probably some variables in Document and Sentence objects can be deleted.
 - [ ] Group the annotations token based at sentence level.
-- [ ] Implement an error method to get statistics from the models.
+- [ ] Implement an error method (in ManTIME class) to get statistics from the models.
 - [ ] Implement a shuffle method and cross-fold validation for the data.
 - [ ] Do I really need to load Stanford Core NLP everytime for every document? Once (the problem)[https://github.com/dasmith/stanford-corenlp-python/issues/13] with long texts is solved I should switch to the new stanford-core-nlp.
 - [ ] Unit-test the code with a proper testing framework (py.test).
