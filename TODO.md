@@ -3,9 +3,9 @@ TO-DO List
 
 This document lists all the things I should look more carefully in the future.
 
+- [ ] Insert some sample files in input and output folders.
 - [ ] In the attribute training phase, the multi-word expressions should be represented as one sample. The features will be merged according to the order of appearance.
 - [ ] port the ParentedTree implementation and remove the nltk dependency
-- [ ] `get_annotation` method is called in a wasteful way (I need a queue and that's it).
 - [ ] Implement the feature extractor for Temporal Links.
 - [ ] Implement the classifier for Temporal Links.
 - [ ] The writers should use an xml library instead of writing strings to a file.
