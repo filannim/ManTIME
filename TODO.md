@@ -3,6 +3,9 @@ TO-DO List
 
 This document lists all the things I should look more carefully in the future.
 
+- [ ] What's `id_token` in Word class?
+- [ ] Do we need EventInstance? 
+- [ ] Can the same two objects be connected by two different types of temporal relations?
 - [ ] Insert some sample files in input and output folders.
 - [ ] In the attribute training phase, the multi-word expressions should be represented as one sample. The features will be merged according to the order of appearance.
 - [ ] port the ParentedTree implementation and remove the nltk dependency
