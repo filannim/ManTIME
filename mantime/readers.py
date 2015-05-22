@@ -30,12 +30,13 @@ import logging
 import codecs
 import cPickle
 
-from nltk import ParentedTree
-
 from model import Document
 from model import Sentence
 from model import Word
-from model import DependencyGraph
+from model import Event
+from model import EventInstance
+from model import TemporalExpression
+from model import TemporalLink
 from utilities import Mute_stderr
 from settings import PATH_CORENLP_FOLDER
 from normalisers.clinical_doc_analyser import DocumentAnalyser
@@ -91,6 +92,7 @@ class BatchedCoreNLP(object):
 
 with Mute_stderr():
     CORENLP = BatchedCoreNLP(PATH_CORENLP_FOLDER)
+
 
 class Reader(object):
     """This class is an abstract reader for ManTIME."""
@@ -148,7 +150,6 @@ class TempEval3FileReader(FileReader):
         left_chars = len(text_string) - len(text_string.lstrip())
 
         with Mute_stderr():
-            folder = os.path.dirname(file_path)
             stanford_tree = CORENLP.parse(text_string)
         document = Document(file_path)
         document.text_offset = left_chars
@@ -161,8 +162,10 @@ class TempEval3FileReader(FileReader):
                                         encoding='utf8').strip()
         document.text = text_string
         instances = self._get_event_instances(xml)
+        links = self._get_links(xml)
         document.gold_annotations = self._get_annotations(text_xml,
                                                           instances,
+                                                          links,
                                                           -left_chars)
         document.coref = stanford_tree.get('coref', None)
 
@@ -180,8 +183,8 @@ class TempEval3FileReader(FileReader):
                                 text=sentence_text)
             for num_word, (word_form, attr) in\
                     enumerate(stanford_sentence['words']):
-                offset_begin = int(attr['CharacterOffsetBegin'])-left_chars
-                offset_end = int(attr['CharacterOffsetEnd'])-left_chars
+                offset_begin = int(attr['CharacterOffsetBegin']) - left_chars
+                offset_end = int(attr['CharacterOffsetEnd']) - left_chars
                 word = Word(word_form=word_form,
                             char_offset_begin=offset_begin,
                             char_offset_end=offset_end,
@@ -196,49 +199,95 @@ class TempEval3FileReader(FileReader):
         logging.info('Document {}: parsed.'.format(os.path.relpath(file_path)))
         return document
 
-    def _get_annotations(self, source, event_instances, start_offset=0):
+    def _get_annotations(self, source, event_instances, links, start_offset=0):
         """It returns the annotations found in the document.
 
         It follows the following format:
-           [
-            ('TAG', {ATTRIBUTES}, (start_offset, end_offset)),
-            ('TAG', {ATTRIBUTES}, (start_offset, end_offset)),
+           {
+            obj_id: timex3<obj>,
+            obj)id: event<obj>,
             ...
-            ('TAG', {ATTRIBUTES}, (start_offset, end_offset))
-           ]
+            obj_id: tlink<obj>
+           }
 
         """
-        annotations = []
+        annotations = {}
         for event, element in etree.iterparse(
                 StringIO(source), events=('start', 'end')):
             try:
                 if event == 'start':
                     if element.tag in self.tags_to_spot:
                         end_offset = start_offset + len(element.text)
+                        obj_id, obj = None, None
+                        placeholder_word = Word(element.text, start_offset,
+                                                end_offset, '', '', '', '')
                         if element.tag == 'EVENT':
-                            eid = element.attrib['eid']
-                            if eid in event_instances.keys():
-                                element.attrib.update(event_instances[eid])
-                        annotations.append((element.tag, element.attrib,
-                                            (start_offset, end_offset)))
+                            obj_id = element.attrib['eid'].strip()
+                            # integrate attributes from the related
+                            # MAKEINSTANCE tag too
+                            try:
+                                eiid = event_instances[obj_id]['eiid']
+                                element.attrib.update(event_instances[obj_id])
+                                obj = Event(
+                                    obj_id, [placeholder_word],
+                                    eclass=element.attrib['class'],
+                                    pos=element.attrib['pos'],
+                                    tense=element.attrib['tense'],
+                                    aspect=element.attrib['aspect'],
+                                    polarity=element.attrib['polarity'],
+                                    tag_attributes=element.attrib)
+                                annotations[eiid] = EventInstance(eiid, obj)
+                            except KeyError:
+                                logging.warning(str('Event {} doesn\'t have ' +
+                                                    'an instance associated.'
+                                                    ).format(obj_id))
+                                continue
+                        elif element.tag == 'TIMEX3':
+                            obj_id = element.attrib['tid'].strip()
+                            obj = TemporalExpression(
+                                obj_id, [placeholder_word],
+                                ttype=element.attrib['type'],
+                                value=element.attrib['value'],
+                                tag_attributes=element.attrib)
+                        else:
+                            continue
+                        assert obj_id not in annotations, 'ID collision.'
+                        annotations[obj_id] = obj
                     start_offset += len(element.text)
                 elif event == 'end':
                     if element.text is not None and element.tail is not None:
                         start_offset += len(element.tail)
             except TypeError:
-                        continue
+                continue
+
+        # add the t0 meta temporal information
+        annotations['t0'] = TemporalExpression(
+            't0', [Word('', -2, -1, '', '', '', '')], meta=True)
+
+        # temporal links
+        for link_id, attributes in links.iteritems():
+            try:
+                annotations[link_id] = TemporalLink(
+                    link_id, annotations[attributes['from']],
+                    annotations[attributes['to']],
+                    relation_type=attributes['reltype'])
+            except KeyError:
+                # skip the link
+                logging.error('Link {} skipped.'.format(link_id))
+                continue
+
         return annotations
 
     def _get_event_instances(self, xml_document):
         """It returns the event instances found in the document.
 
             It follows the following format:
-               [
-                ('eiid', {ATTRIBUTES}),
-                ('eiid', {ATTRIBUTES}),
+               {
+                'eventID': {ATTRIBUTES},
+                'eventID': {ATTRIBUTES},
                 ...
-                ('eiid', {ATTRIBUTES})
-               ]
+                'eventID': {ATTRIBUTES})
+               }
 
         """
         event_instance_nodes = xml_document.findall('.//MAKEINSTANCE')
@@ -249,6 +298,33 @@ class TempEval3FileReader(FileReader):
                     if a != 'eventID'}
             result[eiid] = atts
         return result
+
+    def _get_links(self, xml_document):
+        """It returns the temporal links found in the document.
+
+            It follows the following format:
+               {
+                'lid': {reltype: 'reltypeA'}),
+                'lid': {reltype: 'reltypeB'}),
+                ...
+                'lid': {ATTRIBUTES})
+               }
+
+        """
+        event_instance_nodes = xml_document.findall('.//TLINK')
+        results = dict()
+        for instance in event_instance_nodes:
+            lid = instance.attrib['lid']
+            reltype = instance.attrib['relType']
+            from_obj = instance.attrib.get('eventInstanceID',
+                                           instance.attrib.get('timeID', ''))
+            to_obj = instance.attrib.get(
+                'relatedToTime', instance.attrib.get(
+                    'relatedToEventInstance', instance.attrib.get(
+                        'subordinatedEventInstance', None)))
+            assert to_obj, 'Destination anchor missed in the temporal link.'
+            results[lid] = {'reltype': reltype, 'from': from_obj, 'to': to_obj}
+        return results
 
 
 class WikiWarsInLineFileReader(FileReader):
@@ -312,8 +388,8 @@ class WikiWarsInLineFileReader(FileReader):
                                 text=sentence_text)
             for num_word, (word_form, attr) in\
                     enumerate(stanford_sentence['words']):
-                offset_begin = int(attr['CharacterOffsetBegin'])-left_chars
-                offset_end = int(attr['CharacterOffsetEnd'])-left_chars
+                offset_begin = int(attr['CharacterOffsetBegin']) - left_chars
+                offset_end = int(attr['CharacterOffsetEnd']) - left_chars
                 word = Word(word_form=word_form,
                             char_offset_begin=offset_begin,
                             char_offset_end=offset_end,
@@ -426,8 +502,8 @@ class i2b2FileReader(FileReader):
                                 text=sentence_text)
             for num_word, (word_form, attr) in\
                     enumerate(stanford_sentence['words']):
-                offset_begin = int(attr['CharacterOffsetBegin'])-left_chars
-                offset_end = int(attr['CharacterOffsetEnd'])-left_chars
+                offset_begin = int(attr['CharacterOffsetBegin']) - left_chars
+                offset_end = int(attr['CharacterOffsetEnd']) - left_chars
                 word = Word(word_form=word_form,
                             char_offset_begin=offset_begin,
                             char_offset_end=offset_end,

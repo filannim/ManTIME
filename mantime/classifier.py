@@ -301,12 +301,12 @@ class IdentificationClassifier(Classifier):
                             documents[n_doc].predicted_annotations.append(
                                 prev_element)
                         if curr_label.is_event():
-                            prev_element = Event(n_event, [curr_word],
-                                                 eclass=eclass)
+                            prev_element = Event('e{}'.format(n_event),
+                                                 [curr_word], eclass=eclass)
                             n_event += 1
                         elif curr_label.is_timex():
-                            prev_element = TemporalExpression(n_timex,
-                                                              [curr_word])
+                            prev_element = TemporalExpression(
+                                't{}'.format(n_timex), [curr_word])
                             n_timex += 1
                         else:
                             prev_element = None

@@ -29,8 +29,14 @@ def format_annotation(start_token, end_token, annotations,
     position = None
     tag_fired = ''
     attribs = {}
+    annotations = {obj_id: obj for obj_id, obj in annotations.iteritems()
+                   if type(obj) in (Event, TemporalExpression)}
     if annotations:
-        for tag, attribs, (start_offset, end_offset) in annotations:
+        for obj in annotations.itervalues():
+            tag = obj.tag
+            attribs = obj.tag_attributes
+            start_offset = obj.start
+            end_offset = obj.end
             tag_fired = tag
             if (start_offset, end_offset) == (start_token, end_token):
                 position = 'W'
@@ -190,8 +196,9 @@ class DependencyGraph(object):
 
 
 class Document(object):
-    '''It represents the root of a parsed document.'''
+    '''It represents the root of a parsed document.
 
+    '''
     def __init__(self, name, file_path='', dct=None):
         self.name = name
         self.text_offset = 0
@@ -204,7 +211,7 @@ class Document(object):
         self.text = ''
         self.sentences = []
         self.coref = None
-        self.gold_annotations = []
+        self.gold_annotations = {}
         self.predicted_annotations = []
 
     def get_text(self, start, end):
@@ -299,10 +306,11 @@ class TemporalExpression(object):
     """It represents an annotated temporal expression in the TimeML standard.
 
     """
-    def __init__(self, tid, words, ttype=None, value=None, mod=None):
-        assert isinstance(tid, int)
+    def __init__(self, tid, words, ttype=None, value=None, mod=None,
+                 meta=False, tag_attributes={}):
+        assert isinstance(tid, str)
         assert isinstance(words, list)
-        self.tid = 't{}'.format(tid)
+        self.tid = tid
         self.words = words
         self.start = words[0].character_offset_begin
         self.end = words[-1].character_offset_end
@@ -310,6 +318,9 @@ class TemporalExpression(object):
         self.value = value
         self.mod = mod
         self.text = ''
+        self.meta = meta
+        self.tag_attributes = tag_attributes
+        self.tag = 'TIMEX'
 
     def append_word(self, word):
         assert isinstance(word, Word)
@@ -344,16 +355,21 @@ class TemporalExpression(object):
         self.value = value
         self.mod = mod
 
+    def __eq__(self, other):
+        return (isinstance(self, type(other)) and self.text == other.text and
+                self.start == other.start and self.end == other.end)
+
 
 class Event(object):
     """It represents an annotated event in the TimeML standard.
 
     """
     def __init__(self, eid, words, eclass=None, pos=None, tense=None,
-                 aspect=None, polarity=None, modality=None, sec_time_rel=None):
-        assert isinstance(eid, int)
+                 aspect=None, polarity=None, modality=None, sec_time_rel=None,
+                 meta=False, tag_attributes={}):
+        assert isinstance(eid, str)
         assert isinstance(words, list)
-        self.eid = 'e{}'.format(eid)
+        self.eid = eid
         self.words = words
         self.eclass = eclass
         self.text = ''
@@ -365,6 +381,9 @@ class Event(object):
         self.sec_time_rel = sec_time_rel
         self.start = words[0].character_offset_begin
         self.end = words[-1].character_offset_end
+        self.meta = meta
+        self.tag_attributes = tag_attributes
+        self.tag = 'EVENT'
 
     def append_word(self, word):
         assert isinstance(word, Word)
@@ -390,26 +409,39 @@ class Event(object):
         self.text = cgi.escape(text.replace('\n', ' '), True)
         # [w.tag_attributes['sec_time_rel'] for w in self.words][0]
 
+    def __eq__(self, other):
+        return (isinstance(self, type(other)) and self.text == other.text and
+                self.start == other.start and self.end == other.end)
+
 
 class EventInstance(object):
     """It represents an instance for an annotated event.
 
     """
     def __init__(self, eiid, event):
-        assert isinstance(eiid, int)
+        assert isinstance(eiid, str)
         assert isinstance(event, Event)
-        self.eiid = 'ei{}'.format(eiid)
+        self.eiid = eiid
+        self.event = event
 
 
 class TemporalLink(object):
     """It represents an annotated temporal link in the TimeML standard.
 
     """
-    def __init__(self, lid, element1, element2, reltype=None):
-        assert isinstance(lid, int)
-        assert type(element1) in (TemporalExpression, Event, EventInstance)
-        assert type(element2) in (TemporalExpression, Event, EventInstance)
-        self.lid = 'l{}'.format(lid)
-        self.element1 = element1
-        self.element2 = element2
-        self.reltype = reltype
+    def __init__(self, lid, from_obj, to_obj, relation_type=None):
+        assert isinstance(lid, str)
+        assert type(from_obj) in (TemporalExpression, Event, EventInstance)
+        assert type(from_obj) in (TemporalExpression, Event, EventInstance)
+        self.lid = lid
+        self.from_obj = from_obj
+        self.to_obj = to_obj
+        self.relation_type = relation_type
+
+    def __eq__(self, other):
+        """Two temporal links are the same if they link the same objects.
+
+        """
+        return (isinstance(self, type(other)) and
+                (self.from_obj == other.from_obj and
+                 self.to_obj == other.to_obj))
