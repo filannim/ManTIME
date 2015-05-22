@@ -91,7 +91,7 @@ class TempEval3Writer(FileWriter):
 
             text = list(document.text)
             # TO-DO: This works properly only for IO annotation schema!
-            for element in document.predicted_annotations:
+            for element in document.predicted_annotations.itervalues():
                 # sostituisco il pezzetto nel testo con la stringa annotata
                 if isinstance(element, TemporalExpression):
                     utterance = document.dct.replace('-', '')
@@ -115,7 +115,7 @@ class TempEval3Writer(FileWriter):
                 ''.join(text)))
 
             # MAKEINSTANCEs
-            events = (e for e in document.predicted_annotations
+            events = (e for e in document.predicted_annotations.itervalues()
                       if isinstance(e, Event))
             for event in events:
                 instance = str('<MAKEINSTANCE eiid="{eid}" eventID="{eid}" ' +
@@ -208,7 +208,7 @@ class i2b2Writer(FileWriter):
 
             text = [cgi.escape(c, True) for c in list(document.text)]
             # TO-DO: This works properly only for IO annotation schema!
-            for element in document.predicted_annotations:
+            for element in document.predicted_annotations.itervalues():
                 # sostituisco il pezzetto nel testo con la stringa annotata
                 if isinstance(element, TemporalExpression):
                     element.normalise(document, document.dct_text, 'clinical')
@@ -270,7 +270,7 @@ class HTMLWriter(FileWriter):
 
             text = [cgi.escape(c, True) for c in list(document.text)]
             # TO-DO: This works properly only for IO annotation schema!
-            for element in document.predicted_annotations:
+            for element in document.predicted_annotations.itervalues():
                 # sostituisco il pezzetto nel testo con la stringa annotata
                 if isinstance(element, TemporalExpression):
                     element.normalise(document, document.dct_text, 'clinical')
@@ -358,7 +358,7 @@ class XMLGenericWriter(FileWriter):
 
             text = [cgi.escape(c, True) for c in list(document.text)]
             # TO-DO: This works properly only for IO annotation schema!
-            for element in document.predicted_annotations:
+            for element in document.predicted_annotations.itervalues():
                 # sostituisco il pezzetto nel testo con la stringa annotata
                 if isinstance(element, TemporalExpression):
                     element.normalise(document, document.dct_text, 'clinical')
@@ -379,14 +379,13 @@ class XMLGenericWriter(FileWriter):
                                 document.text_offset + element.end):
                     text[i] = ''
 
-
-
             output.append(u''.join(text))
 
             output.append('</content>')
             output.append(u'</mantime>')
             outputs.append('\n'.join(output))
         return outputs
+
 
 class AttributeMatrixWriter(Writer):
     """This class writes the attribute matrix taken by ML algorithms."""

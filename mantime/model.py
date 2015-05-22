@@ -212,7 +212,7 @@ class Document(object):
         self.sentences = []
         self.coref = None
         self.gold_annotations = {}
-        self.predicted_annotations = []
+        self.predicted_annotations = {}
 
     def get_text(self, start, end):
         return self.text[start + self.text_offset:end + self.text_offset]
@@ -355,6 +355,9 @@ class TemporalExpression(object):
         self.value = value
         self.mod = mod
 
+    def identifier(self):
+        return self.tid
+
     def __eq__(self, other):
         return (isinstance(self, type(other)) and self.text == other.text and
                 self.start == other.start and self.end == other.end)
@@ -409,6 +412,9 @@ class Event(object):
         self.text = cgi.escape(text.replace('\n', ' '), True)
         # [w.tag_attributes['sec_time_rel'] for w in self.words][0]
 
+    def identifier(self):
+        return self.eid
+
     def __eq__(self, other):
         return (isinstance(self, type(other)) and self.text == other.text and
                 self.start == other.start and self.end == other.end)
@@ -424,6 +430,9 @@ class EventInstance(object):
         self.eiid = eiid
         self.event = event
 
+    def identifier(self):
+        return self.eiid
+
 
 class TemporalLink(object):
     """It represents an annotated temporal link in the TimeML standard.
@@ -437,6 +446,9 @@ class TemporalLink(object):
         self.from_obj = from_obj
         self.to_obj = to_obj
         self.relation_type = relation_type
+
+    def identifier(self):
+        return self.lid
 
     def __eq__(self, other):
         """Two temporal links are the same if they link the same objects.

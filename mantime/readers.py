@@ -214,51 +214,45 @@ class TempEval3FileReader(FileReader):
         annotations = {}
         for event, element in etree.iterparse(
                 StringIO(source), events=('start', 'end')):
-            try:
-                if event == 'start':
-                    if element.tag in self.tags_to_spot:
-                        end_offset = start_offset + len(element.text)
-                        obj_id, obj = None, None
-                        placeholder_word = Word(element.text, start_offset,
-                                                end_offset, '', '', '', '')
-                        if element.tag == 'EVENT':
-                            obj_id = element.attrib['eid'].strip()
-                            # integrate attributes from the related
-                            # MAKEINSTANCE tag too
-                            try:
-                                eiid = event_instances[obj_id]['eiid']
-                                element.attrib.update(event_instances[obj_id])
-                                obj = Event(
-                                    obj_id, [placeholder_word],
-                                    eclass=element.attrib['class'],
-                                    pos=element.attrib['pos'],
-                                    tense=element.attrib['tense'],
-                                    aspect=element.attrib['aspect'],
-                                    polarity=element.attrib['polarity'],
-                                    tag_attributes=element.attrib)
-                                annotations[eiid] = EventInstance(eiid, obj)
-                            except KeyError:
-                                logging.warning(str('Event {} doesn\'t have ' +
-                                                    'an instance associated.'
-                                                    ).format(obj_id))
-                                continue
-                        elif element.tag == 'TIMEX3':
-                            obj_id = element.attrib['tid'].strip()
-                            obj = TemporalExpression(
+            if event == 'start':
+                if element.tag in self.tags_to_spot:
+                    end_offset = start_offset + len(element.text)
+                    obj_id, obj = None, None
+                    placeholder_word = Word(element.text, start_offset,
+                                            end_offset, '', '', '', '')
+                    if element.tag == 'EVENT':
+                        obj_id = element.attrib['eid'].strip()
+                        # integrate attributes from the related
+                        # MAKEINSTANCE tag too
+                        if obj_id in event_instances.keys():
+                            eiid = event_instances[obj_id]['eiid']
+                            element.attrib.update(event_instances[obj_id])
+                            obj = Event(
                                 obj_id, [placeholder_word],
-                                ttype=element.attrib['type'],
-                                value=element.attrib['value'],
+                                eclass=element.attrib['class'],
+                                pos=element.attrib['pos'],
+                                tense=element.attrib['tense'],
+                                aspect=element.attrib['aspect'],
+                                polarity=element.attrib['polarity'],
                                 tag_attributes=element.attrib)
+                            annotations[eiid] = EventInstance(eiid, obj)
+                            annotations[obj_id] = obj
                         else:
-                            continue
-                        assert obj_id not in annotations, 'ID collision.'
+                            logging.warning(str('Event {} doesn\'t have ' +
+                                                'an instance associated.'
+                                                ).format(obj_id))
+                    elif element.tag == 'TIMEX3':
+                        obj_id = element.attrib['tid'].strip()
+                        obj = TemporalExpression(
+                            obj_id, [placeholder_word],
+                            ttype=element.attrib['type'],
+                            value=element.attrib['value'],
+                            tag_attributes=element.attrib)
                         annotations[obj_id] = obj
-                    start_offset += len(element.text)
-                elif event == 'end':
-                    if element.text is not None and element.tail is not None:
-                        start_offset += len(element.tail)
-            except TypeError:
-                continue
+                start_offset += len(element.text)
+            elif event == 'end':
+                if element.text is not None and element.tail is not None:
+                    start_offset += len(element.tail)
 
         # add the t0 meta temporal information
         annotations['t0'] = TemporalExpression(
@@ -273,6 +267,8 @@ class TempEval3FileReader(FileReader):
                     relation_type=attributes['reltype'])
             except KeyError:
                 # skip the link
+                # this happens also when 2 or more different EventInstances
+                # referer to the same Event. :S
                 logging.error('Link {} skipped.'.format(link_id))
                 continue
 
@@ -291,12 +287,12 @@ class TempEval3FileReader(FileReader):
 
         """
         event_instance_nodes = xml_document.findall('.//MAKEINSTANCE')
-        result = dict()
+        result = {}
         for instance in event_instance_nodes:
-            eiid = instance.attrib['eventID']
+            event_id = instance.attrib['eventID']
             atts = {a: v for (a, v) in instance.attrib.items()
                     if a != 'eventID'}
-            result[eiid] = atts
+            result[event_id] = atts
         return result
 
     def _get_links(self, xml_document):
@@ -316,12 +312,13 @@ class TempEval3FileReader(FileReader):
         for instance in event_instance_nodes:
             lid = instance.attrib['lid']
             reltype = instance.attrib['relType']
-            from_obj = instance.attrib.get('eventInstanceID',
-                                           instance.attrib.get('timeID', ''))
+            from_obj = instance.attrib.get(
+                'eventInstanceID', instance.attrib.get('timeID', None))
             to_obj = instance.attrib.get(
                 'relatedToTime', instance.attrib.get(
                     'relatedToEventInstance', instance.attrib.get(
                         'subordinatedEventInstance', None)))
+            assert from_obj, 'Origin anchor missed in the temporal link.'
             assert to_obj, 'Destination anchor missed in the temporal link.'
             results[lid] = {'reltype': reltype, 'from': from_obj, 'to': to_obj}
         return results
