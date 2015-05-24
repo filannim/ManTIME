@@ -11,7 +11,7 @@ ManTIME is based on the following software components:
 
 * CRF++ 0.57 ([web page](http://crfpp.googlecode.com/svn/trunk/doc/index.html))
 * Stanford CoreNLP ([web page](http://nlp.stanford.edu/software/corenlp.shtml#Download)) 
-* stanfor-corenlp-python ([web page](https://pypi.python.org/pypi/stanford-corenlp-python/3.3.9))
+* stanford-corenlp-python ([web page](https://pypi.python.org/pypi/stanford-corenlp-python/3.3.9))
 * nltk ([web page](https://pypi.python.org/pypi/nltk/2.0.4)) + `stopwords` corpus
 
 ##Web interface
