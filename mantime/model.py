@@ -226,6 +226,21 @@ class Document(object):
                     int(word.character_offset_end),
                     self.gold_annotations)
 
+    def words(self, start=None, end=None):
+        '''It returns the words satisfying within the boundaries.
+
+        '''
+        if start is None:
+            start = 0
+        if end is None:
+            end = len(self.text)
+
+        for sentence in self.sentences:
+            for word in sentence.words:
+                if (word.character_offset_begin >= start and
+                        word.character_offset_end <= end):
+                    yield word
+
     def __str__(self):
         return str(self.__dict__)
 
@@ -290,7 +305,8 @@ class Word(object):
         return str(self.__dict__)
 
     def __repr__(self):
-        return repr(self.__dict__)
+        return '[{} ({},{})]'.format(self.lemma, self.character_offset_begin,
+                                     self.character_offset_end)
 
     def __eq__(self, other):
         return (isinstance(self, type(other)) and
@@ -362,6 +378,9 @@ class TemporalExpression(object):
         return (isinstance(self, type(other)) and self.text == other.text and
                 self.start == other.start and self.end == other.end)
 
+    def __repr__(self):
+        return '{} {}'.format(self.tag, repr(self.words))
+
 
 class Event(object):
     """It represents an annotated event in the TimeML standard.
@@ -419,6 +438,9 @@ class Event(object):
         return (isinstance(self, type(other)) and self.text == other.text and
                 self.start == other.start and self.end == other.end)
 
+    def __repr__(self):
+        return '{} {}'.format(self.tag, repr(self.words))
+
 
 class EventInstance(object):
     """It represents an instance for an annotated event.
@@ -429,9 +451,13 @@ class EventInstance(object):
         assert isinstance(event, Event)
         self.eiid = eiid
         self.event = event
+        self.tag = 'MAKEINSTANCE'
 
     def identifier(self):
         return self.eiid
+
+    def __repr__(self):
+        return '{} {}'.format(self.tag, repr(self.event))
 
 
 class TemporalLink(object):
@@ -446,6 +472,7 @@ class TemporalLink(object):
         self.from_obj = from_obj
         self.to_obj = to_obj
         self.relation_type = relation_type
+        self.tag = 'TLINK'
 
     def identifier(self):
         return self.lid
@@ -457,3 +484,7 @@ class TemporalLink(object):
         return (isinstance(self, type(other)) and
                 (self.from_obj == other.from_obj and
                  self.to_obj == other.to_obj))
+
+    def __repr__(self):
+        return '{} {} -> {}'.format(self.tag, repr(self.from_obj),
+                                    repr(self.to_obj))
