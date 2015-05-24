@@ -4,7 +4,7 @@ TO-DO List
 This document lists all the things I should look more carefully in the future.
 
 - [ ] What's `id_token` in Word class?
-- [ ] Do we need EventInstance? 
+- [ ] Can an event be anchored to two different MAKEINSTANCE tags?
 - [ ] Can the same two objects be connected by two different types of temporal relations?
 - [ ] Insert some sample files in input and output folders.
 - [ ] In the attribute training phase, the multi-word expressions should be represented as one sample. The features will be merged according to the order of appearance.
@@ -24,6 +24,7 @@ This document lists all the things I should look more carefully in the future.
 
 Done:
 
+- [x] Do we need EventInstance? Yes, we do.
 - [x] add useful folder (models, output, buffer) in the Git repo
 - [x] pickle the num2py arrays and remove the dependency
 - [x] Activate the post processing pipeline.
