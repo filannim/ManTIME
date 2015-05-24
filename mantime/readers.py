@@ -161,11 +161,6 @@ class TempEval3FileReader(FileReader):
                                         encoding='utf8').strip()
         document.text = text_string
         instances = self._get_event_instances(xml)
-        links = self._get_links(xml)
-        document.gold_annotations = self._get_annotations(text_xml,
-                                                          instances,
-                                                          links,
-                                                          -left_chars)
         document.coref = stanford_tree.get('coref', None)
 
         for stanford_sentence in stanford_tree['sentences']:
@@ -194,11 +189,14 @@ class TempEval3FileReader(FileReader):
                 sentence.words.append(word)
             document.sentences.append(sentence)
 
+        document.gold_annotations = self._get_annotations(
+            text_xml, instances, xml, document)
+        print document.gold_annotations
         document.store_gold_annotations()
         logging.info('Document {}: parsed.'.format(os.path.relpath(file_path)))
         return document
 
-    def _get_annotations(self, source, event_instances, links, start_offset=0):
+    def _get_annotations(self, source, event_instances, xml, document):
         """It returns the annotations found in the document.
 
         It follows the following format:
@@ -211,14 +209,15 @@ class TempEval3FileReader(FileReader):
 
         """
         annotations = {}
+        start_offset = - document.text_offset
         for event, element in etree.iterparse(
                 StringIO(source), events=('start', 'end')):
             if event == 'start':
                 if element.tag in self.tags_to_spot:
                     end_offset = start_offset + len(element.text)
                     obj_id, obj = None, None
-                    placeholder_word = Word(element.text, start_offset,
-                                            end_offset, '', '', '', '')
+                    words = list(document.words(start=start_offset,
+                                                end=end_offset))
                     if element.tag == 'EVENT':
                         obj_id = element.attrib['eid'].strip()
                         # integrate attributes from the related
@@ -227,7 +226,7 @@ class TempEval3FileReader(FileReader):
                             eiid = event_instances[obj_id]['eiid']
                             element.attrib.update(event_instances[obj_id])
                             obj = Event(
-                                obj_id, [placeholder_word],
+                                obj_id, words,
                                 eclass=element.attrib['class'],
                                 pos=element.attrib['pos'],
                                 tense=element.attrib['tense'],
@@ -243,7 +242,7 @@ class TempEval3FileReader(FileReader):
                     elif element.tag == 'TIMEX3':
                         obj_id = element.attrib['tid'].strip()
                         obj = TemporalExpression(
-                            obj_id, [placeholder_word],
+                            obj_id, words,
                             ttype=element.attrib['type'],
                             value=element.attrib['value'],
                             tag_attributes=element.attrib)
@@ -258,12 +257,19 @@ class TempEval3FileReader(FileReader):
             't0', [Word('', -2, -1, '', '', '', '')], meta=True)
 
         # temporal links
-        for link_id, attributes in links.iteritems():
+        for tlink in xml.findall('.//TLINK'):
+            link_id = tlink.attrib['lid']
+            rel_type = tlink.attrib['relType']
+            from_obj = tlink.attrib.get(
+                'eventInstanceID', tlink.attrib.get('timeID', None))
+            to_obj = tlink.attrib.get(
+                'relatedToTime', tlink.attrib.get(
+                    'relatedToEventInstance',
+                    tlink.attrib.get('subordinatedEventInstance', None)))
             try:
                 annotations[link_id] = TemporalLink(
-                    link_id, annotations[attributes['from']],
-                    annotations[attributes['to']],
-                    relation_type=attributes['reltype'])
+                    link_id, annotations[from_obj], annotations[to_obj],
+                    relation_type=rel_type)
             except KeyError:
                 # skip the link
                 # this happens also when 2 or more different EventInstances
@@ -293,34 +299,6 @@ class TempEval3FileReader(FileReader):
                     if a != 'eventID'}
             result[event_id] = atts
         return result
-
-    def _get_links(self, xml_document):
-        """It returns the temporal links found in the document.
-
-            It follows the following format:
-               {
-                'lid': {reltype: 'reltypeA'}),
-                'lid': {reltype: 'reltypeB'}),
-                ...
-                'lid': {ATTRIBUTES})
-               }
-
-        """
-        event_instance_nodes = xml_document.findall('.//TLINK')
-        results = dict()
-        for instance in event_instance_nodes:
-            lid = instance.attrib['lid']
-            reltype = instance.attrib['relType']
-            from_obj = instance.attrib.get(
-                'eventInstanceID', instance.attrib.get('timeID', None))
-            to_obj = instance.attrib.get(
-                'relatedToTime', instance.attrib.get(
-                    'relatedToEventInstance', instance.attrib.get(
-                        'subordinatedEventInstance', None)))
-            assert from_obj, 'Origin anchor missed in the temporal link.'
-            assert to_obj, 'Destination anchor missed in the temporal link.'
-            results[lid] = {'reltype': reltype, 'from': from_obj, 'to': to_obj}
-        return results
 
 
 class WikiWarsInLineFileReader(FileReader):
@@ -478,7 +456,6 @@ class i2b2FileReader(FileReader):
         document.dct_text = document.dct.replace('-', '')
         document.title = os.path.basename(file_path)
         document.text = text_string
-        document.gold_annotations = self._get_annotations(xml, -left_chars)
         document.coref = stanford_tree.get('coref', None)
 
         for stanford_sentence in stanford_tree['sentences']:
@@ -508,12 +485,14 @@ class i2b2FileReader(FileReader):
                 sentence.words.append(word)
             document.sentences.append(sentence)
 
+        document.gold_annotations = self._get_annotations(
+            xml, document)
         document.store_gold_annotations()
 
         logging.info('Document {}: parsed.'.format(os.path.relpath(file_path)))
         return document
 
-    def _get_annotations(self, source, start_offset=0):
+    def _get_annotations(self, source, document):
         """It returns the annotations found in the document.
 
         It follows the following format:
@@ -525,15 +504,43 @@ class i2b2FileReader(FileReader):
            ]
 
         """
-        annotations = []
+        annotations = {}
+        start_offset = - document.text_offset
         elements = source.findall(".//EVENT")
         elements.extend(source.findall(".//TIMEX3"))
         for element in elements:
+            elem_id = element.attrib['id']
             try:
                 start = int(element.attrib['start']) + start_offset
                 end = int(element.attrib['end']) + start_offset
-                annotations.append((element.tag, element.attrib, (start, end)))
+                words = list(document.words(start=start, end=end))
+                if element.tag == 'EVENT':
+                    obj = Event(elem_id, words,
+                                eclass=element.attrib['type'],
+                                polarity=element.attrib['polarity'],
+                                modality=element.attrib['modality'],
+                                tag_attributes=element.attrib)
+                else:   # TIMEX3 tags
+                    obj = TemporalExpression(elem_id, words,
+                                             ttype=element.attrib['type'],
+                                             value=element.attrib['val'],
+                                             mod=element.attrib['mod'],
+                                             tag_attributes=element.attrib)
+                annotations[elem_id] = obj
             except TypeError:
+                logging.warning('Element {} skipped.'.format(elem_id))
+                continue
+        # TLINKs
+        elements = source.findall(".//TLINK")
+        for element in elements:
+            elem_id = element.attrib['id']
+            try:
+                from_obj = annotations[element.attrib['fromID']]
+                to_obj = annotations[element.attrib['toID']]
+                annotations[elem_id] = TemporalLink(
+                    elem_id, from_obj, to_obj, element.attrib['type'])
+            except KeyError:
+                logging.warning('Temporal Link {} skipped.'.format(elem_id))
                 continue
         return annotations
 
