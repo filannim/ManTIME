@@ -121,7 +121,6 @@ class TempEval3FileReader(FileReader):
     def __init__(self, file_filter='*.tml'):
         super(TempEval3FileReader, self).__init__()
         self.tags_to_spot = {'TIMEX3', 'EVENT'}
-        self.annotations = []
         self.file_filter = file_filter
 
     def parse(self, file_path):
@@ -330,7 +329,6 @@ class WikiWarsInLineFileReader(FileReader):
     def __init__(self, file_filter='*.xml'):
         super(WikiWarsInLineFileReader, self).__init__()
         self.tags_to_spot = {'TIMEX2'}
-        self.annotations = []
         self.file_filter = file_filter
 
     def parse(self, file_path):
@@ -437,7 +435,6 @@ class i2b2FileReader(FileReader):
     def __init__(self, file_filter='*.xml'):
         super(i2b2FileReader, self).__init__()
         self.tags_to_spot = {'TIMEX3', 'EVENT', 'TLINK'}
-        self.annotations = []
         self.file_filter = file_filter
         self.clinical_doc_analyser = DocumentAnalyser()
 
