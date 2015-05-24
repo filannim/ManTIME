@@ -94,6 +94,8 @@ def normalisation_attribute_matrix(documents, dest, subject, training=True):
     else:
         get_label = lambda word: word.predicted_label
 
+    prev_label = get_label(documents[0].sentences[0].words[0])
+
     # It stores the attribute matrix
     with codecs.open(dest, 'w', encoding='utf8') as matrix:
         for ndoc, document in enumerate(documents):
@@ -109,6 +111,15 @@ def normalisation_attribute_matrix(documents, dest, subject, training=True):
                     if ident_label.is_timex():
                         ident_label.set_out()
                     row.append(str(ident_label))
+
+                    # discard words that are not positively labelled
+                    if ident_label.is_out():
+                        prev_label = ident_label
+                        continue
+
+                    # group sequences by identification label
+                    if str(prev_label) != str(ident_label):
+                        matrix.write('\n')
 
                     # normalisation label (CLASS) for training
                     if training:
@@ -130,7 +141,9 @@ def normalisation_attribute_matrix(documents, dest, subject, training=True):
                     matrix.write('\t'.join(row))
 
                     # I am using CRFs with singleton sequences
-                    matrix.write('\n\n')
+                    matrix.write('\n')
+
+                    prev_label = ident_label
         matrix.close()
 
 
