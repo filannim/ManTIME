@@ -81,7 +81,8 @@ class AttributesExtractor(object):
                 attribute_number += 1
             elif type(extractor_result) == SentenceBasedResults:
                 assert len(extractor_result.values) == len(sentence.words)
-                for word_num, word_values in enumerate(extractor_result.values):
+                for word_num, word_values in\
+                        enumerate(extractor_result.values):
                     num_attributes = 0
                     for (attr_name, value) in word_values:
                         word = sentence.words[word_num]
@@ -180,6 +181,29 @@ class TemporalRelationExtractor(AttributesExtractor):
                                     RelationExtractors,
                                     predicate=inspect.isfunction)]
 
+    def extract(self, from_obj, to_obj, document):
+        '''It returns a dictionary of computed features.
+
+        '''
+        features = dict()
+        for feature_id, extractor in enumerate(self.relation_extractors):
+            feature_name = '{:0>3}_{}'.format(feature_id,
+                                              extractor.func_name)
+            features[feature_name] = extractor(from_obj, to_obj, document)
+        return features
+
+    @staticmethod
+    def flip_relation(relation):
+        mapping = {'AFTER': 'BEFORE', 'BEFORE': 'AFTER',
+                   'BEGUN_BY': 'ENDED_BY', 'ENDED_BY': 'BEGUN_BY',
+                   'IAFTER': 'IBEFORE', 'IBEFORE': 'IAFTER',
+                   'INCLUDES': 'IS_INCLUDED', 'IS_INCLUDED': 'INCLUDES',
+                   'BEGINS': 'ENDS', 'ENDS': 'BEGINS'}
+        if relation in mapping:
+            return mapping[relation]
+        else:
+            return relation
+
 
 def main():
     '''Simple ugly non-elegant test.'''
@@ -188,12 +212,9 @@ def main():
     from readers import TempEval3FileReader
     file_reader = TempEval3FileReader(annotation_format='IO')
     document = file_reader.parse(sys.argv[1])
-    #extractor = FullExtractor()
-    #extractor.extract(document)
     pprint.pprint(document.gold_annotations)
     for sentence in document.sentences:
         for word in sentence.words:
-            #pprint.pprint(sorted(word.attributes.items()))
             pprint.pprint('({:5},{:5}) {:>20} > {:>10}'.format(
                 word.character_offset_begin,
                 word.character_offset_end,

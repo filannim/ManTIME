@@ -26,6 +26,7 @@ import cgi
 
 from model import TemporalExpression
 from model import Event
+from model import TemporalLink
 
 
 class Writer(object):
@@ -94,14 +95,11 @@ class TempEval3Writer(FileWriter):
             for element in document.predicted_annotations.itervalues():
                 # sostituisco il pezzetto nel testo con la stringa annotata
                 if isinstance(element, TemporalExpression):
-                    utterance = document.dct.replace('-', '')
-                    element.normalise(document, utterance, 'general')
                     annotation = str('<TIMEX3 tid="{tid}" type="{ttype}" ' +
                                      'mod="{mod}" value="{value}">' +
                                      '{text}</TIMEX3>').format(
                                          **element.__dict__)
                 elif isinstance(element, Event):
-                    element.normalise(document)
                     annotation = str('<EVENT eid="{eid}" class="{eclass}">' +
                                      '{text}</EVENT>').format(
                                          **element.__dict__)
@@ -159,22 +157,27 @@ class i2b2Writer(FileWriter):
             output.append(u'<TAGS>')
             # TIMEX3s and EVENTs
             for element in document.predicted_annotations:
-                element.text = document.get_text(element.start, element.end)
-                cstart, cend = element.start + 1, element.end + 1
+                xml_tag = ''
                 if isinstance(element, TemporalExpression):
-                    element.normalise(document, document.dct_text, 'clinical')
+                    element.text = document.get_text(element.start,
+                                                     element.end)
+                    cstart, cend = element.start + 1, element.end + 1
                     xml_tag = str('<TIMEX3 id="{tid}" start="{cstart}" ' +
                                   'end="{cend}" text="{text}" type="{ttype}"' +
                                   ' val="{value}" mod="{mod}" />').format(
                         cstart=cstart, cend=cend, **element.__dict__)
                 elif isinstance(element, Event):
-                    element.normalise(document)
+                    element.text = document.get_text(element.start,
+                                                     element.end)
+                    cstart, cend = element.start + 1, element.end + 1
                     xml_tag = str('<EVENT id="{eid}" start="{cstart}" ' +
                                   'end="{cend}" text="{text}" ' +
                                   'modality="{modality}" ' +
                                   'polarity="{polarity}" ' +
                                   'type="{eclass}" />').format(
                         cstart=cstart, cend=cend, **element.__dict__)
+                elif isinstance(element, TemporalLink):
+                    continue
                 output.append(xml_tag)
 
             # SECTIMEs
@@ -182,7 +185,7 @@ class i2b2Writer(FileWriter):
                               'text="_" type="ADMISSION" ' +
                               'dvalue="{}" />').format(
                 document.sec_times.admission_date))
-            output.append(str('<SECTIME id="S0" start="_" end="_" ' +
+            output.append(str('<SECTIME id="S1" start="_" end="_" ' +
                               'text="_" type="DISCHARGE" ' +
                               'dvalue="{}" />').format(
                 document.sec_times.discharge_date))
@@ -211,13 +214,11 @@ class i2b2Writer(FileWriter):
             for element in document.predicted_annotations.itervalues():
                 # sostituisco il pezzetto nel testo con la stringa annotata
                 if isinstance(element, TemporalExpression):
-                    element.normalise(document, document.dct_text, 'clinical')
                     annotation = unicode('<TIMEX3 tid="{tid}" type="{ttype}"' +
                                          ' mod="{mod}" value="{value}">' +
                                          '{text}</TIMEX3>').format(
                                              **element.__dict__)
                 elif isinstance(element, Event):
-                    element.normalise(document)
                     annotation = unicode('<EVENT id="{eid}" type="{eclass}" ' +
                                          'modality="{modality}" ' +
                                          'polarity="{polarity}"' +
@@ -273,13 +274,11 @@ class HTMLWriter(FileWriter):
             for element in document.predicted_annotations.itervalues():
                 # sostituisco il pezzetto nel testo con la stringa annotata
                 if isinstance(element, TemporalExpression):
-                    element.normalise(document, document.dct_text, 'clinical')
                     annotation = unicode('<TIMEX3 tid="{tid}" type="{ttype}"' +
                                          ' mod="{mod}" value="{value}">' +
                                          '{text}</TIMEX3>').format(
                                              **element.__dict__)
                 elif isinstance(element, Event):
-                    element.normalise(document)
                     annotation = unicode('<EVENT id="{eid}" type="{eclass}" ' +
                                          'modality="{modality}" ' +
                                          'polarity="{polarity}"' +
@@ -361,13 +360,11 @@ class XMLGenericWriter(FileWriter):
             for element in document.predicted_annotations.itervalues():
                 # sostituisco il pezzetto nel testo con la stringa annotata
                 if isinstance(element, TemporalExpression):
-                    element.normalise(document, document.dct_text, 'clinical')
                     annotation = unicode('<TIMEX3 tid="{tid}" type="{ttype}"' +
                                          ' mod="{mod}" value="{value}">' +
                                          '{text}</TIMEX3>').format(
                                              **element.__dict__)
                 elif isinstance(element, Event):
-                    element.normalise(document)
                     annotation = unicode('<EVENT id="{eid}" type="{eclass}" ' +
                                          'modality="{modality}" ' +
                                          'polarity="{polarity}"' +

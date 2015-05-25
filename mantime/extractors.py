@@ -23,6 +23,7 @@ import functools
 import nltk
 
 from utilities import search_subsequence
+from model import Event, TemporalExpression, EventInstance
 from model_extractors import WordBasedResult
 from model_extractors import SentenceBasedResult
 from model_extractors import SentenceBasedResults
@@ -725,4 +726,104 @@ class DocumentBasedExtractors(object):
 
 class RelationExtractors(object):
 
-    pass
+    @staticmethod
+    def from_text(from_obj, to_obj, document):
+        if isinstance(from_obj, EventInstance):
+            return WordBasedResult(from_obj.event.text)
+        else:
+            return WordBasedResult(from_obj.text)
+
+    @staticmethod
+    def to_text(from_obj, to_obj, document):
+        if isinstance(to_obj, EventInstance):
+            return WordBasedResult(to_obj.event.text)
+        else:
+            return WordBasedResult(to_obj.text)
+
+    @staticmethod
+    def from_pos(from_obj, to_obj, document):
+        if isinstance(from_obj, EventInstance):
+            res = '-'.join([e.part_of_speech for e in from_obj.event.words])
+        else:
+            res = '-'.join([e.part_of_speech for e in from_obj.words])
+        return WordBasedResult(res)
+
+    @staticmethod
+    def to_pos(from_obj, to_obj, document):
+        if isinstance(to_obj, EventInstance):
+            res = '-'.join([e.part_of_speech for e in to_obj.event.words])
+        else:
+            res = '-'.join([e.part_of_speech for e in to_obj.words])
+        return WordBasedResult(res)
+
+    @staticmethod
+    def from_tag(from_obj, to_obj, document):
+        return WordBasedResult(from_obj.tag)
+
+    @staticmethod
+    def to_tag(from_obj, to_obj, document):
+        return WordBasedResult(to_obj.tag)
+
+    @staticmethod
+    def from_meta(from_obj, to_obj, document):
+        return WordBasedResult(from_obj.meta)
+
+    @staticmethod
+    def to_meta(from_obj, to_obj, document):
+        return WordBasedResult(to_obj.meta)
+
+    @staticmethod
+    def from_tense(from_obj, to_obj, document):
+        return WordBasedResult(getattr(from_obj, 'tense', None))
+
+    @staticmethod
+    def to_tense(from_obj, to_obj, document):
+        return WordBasedResult(getattr(to_obj, 'tense', None))
+
+    @staticmethod
+    def from_aspect(from_obj, to_obj, document):
+        return WordBasedResult(getattr(from_obj, 'aspect', None))
+
+    @staticmethod
+    def to_aspect(from_obj, to_obj, document):
+        return WordBasedResult(getattr(to_obj, 'aspect', None))
+
+    @staticmethod
+    def from_polarity(from_obj, to_obj, document):
+        return WordBasedResult(getattr(from_obj, 'polarity', None))
+
+    @staticmethod
+    def to_polarity(from_obj, to_obj, document):
+        return WordBasedResult(getattr(to_obj, 'polarity', None))
+
+    @staticmethod
+    def from_modality(from_obj, to_obj, document):
+        return WordBasedResult(getattr(from_obj, 'modality', None))
+
+    @staticmethod
+    def to_modality(from_obj, to_obj, document):
+        return WordBasedResult(getattr(to_obj, 'modality', None))
+
+    @staticmethod
+    def direction(from_obj, to_obj, document):
+        if from_obj.id_sentence() - to_obj.id_sentence() < 0:
+            return WordBasedResult('>')
+        elif from_obj.id_sentence() - to_obj.id_sentence() > 0:
+            return WordBasedResult('<')
+        else:
+            if from_obj.id_first_word() - to_obj.id_first_word() > 0:
+                return WordBasedResult('>')
+            else:
+                return WordBasedResult('<')
+
+    @staticmethod
+    def next_each_other(from_obj, to_obj, document):
+        return WordBasedResult(
+            from_obj.id_sentence() == to_obj.id_sentence()
+            and (from_obj.id_first_word() == to_obj.id_last_word() + 1 or
+                 to_obj.id_first_word() == from_obj.id_last_word() + 1))
+
+    @staticmethod
+    def sentence_distance(from_obj, to_obj, document):
+        return WordBasedResult(
+            abs(from_obj.id_sentence() - to_obj.id_sentence()))

@@ -29,3 +29,4 @@ EVENT_ATTRIBUTES = ('class', 'pos', 'tense', 'aspect', 'polarity', 'modality')
 # EVENT_ATTRIBUTES = ('type', 'polarity', 'modality', 'sec_time_rel')
 NO_ATTRIBUTE = 'n/a'
 GAZETTEER_FOLDER = 'data/gazetteer/'
+SENTENCE_WINDOW_RELATION = 3

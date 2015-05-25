@@ -29,6 +29,7 @@ import os
 import logging
 import codecs
 import cPickle
+from operator import attrgetter
 
 from model import Document
 from model import Sentence
@@ -155,7 +156,7 @@ class TempEval3FileReader(FileReader):
         document.file_path = os.path.abspath(file_path)
         document.doc_id = etree.tostring(docid, method='text',
                                          encoding='utf8').strip()
-        document.dct = dct.attrib['value']
+        document.dct = dct.attrib['value'].replace('-', '')
         document.dct_text = etree.tostring(dct, method='text', encoding='utf8')
         document.title = etree.tostring(title, method='text',
                                         encoding='utf8').strip()
@@ -163,7 +164,7 @@ class TempEval3FileReader(FileReader):
         instances = self._get_event_instances(xml)
         document.coref = stanford_tree.get('coref', None)
 
-        for stanford_sentence in stanford_tree['sentences']:
+        for num_sen, stanford_sentence in enumerate(stanford_tree['sentences']):
             dependencies = stanford_sentence.get('dependencies', None)
             i_dependencies = stanford_sentence.get('indexeddependencies', None)
             # i_dependencies = DependencyGraph(i_dependencies)
@@ -185,7 +186,8 @@ class TempEval3FileReader(FileReader):
                             lemma=attr['Lemma'],
                             named_entity_tag=attr['NamedEntityTag'],
                             part_of_speech=attr['PartOfSpeech'],
-                            id_token=num_word)
+                            id_token=num_word,
+                            id_sentence=num_sen)
                 sentence.words.append(word)
             document.sentences.append(sentence)
 
@@ -347,7 +349,8 @@ class WikiWarsInLineFileReader(FileReader):
                                                           -left_chars)
         document.coref = stanford_tree.get('coref', None)
 
-        for stanford_sentence in stanford_tree['sentences']:
+        for num_sen, stanford_sentence in\
+                enumerate(stanford_tree['sentences']):
             dependencies = stanford_sentence.get('dependencies', None)
             i_dependencies = stanford_sentence.get('indexeddependencies', None)
             # i_dependencies = DependencyGraph(i_dependencies)
@@ -369,7 +372,8 @@ class WikiWarsInLineFileReader(FileReader):
                             lemma=attr['Lemma'],
                             named_entity_tag=attr['NamedEntityTag'],
                             part_of_speech=attr['PartOfSpeech'],
-                            id_token=num_word)
+                            id_token=num_word,
+                            id_sentence=num_sen)
                 sentence.words.append(word)
             document.sentences.append(sentence)
 
@@ -458,7 +462,8 @@ class i2b2FileReader(FileReader):
         document.text = text_string
         document.coref = stanford_tree.get('coref', None)
 
-        for stanford_sentence in stanford_tree['sentences']:
+        for num_sen, stanford_sentence in\
+                enumerate(stanford_tree['sentences']):
             dependencies = stanford_sentence.get('dependencies', None)
             i_dependencies = stanford_sentence.get('indexeddependencies', None)
             # i_dependencies = DependencyGraph(i_dependencies)
@@ -481,7 +486,8 @@ class i2b2FileReader(FileReader):
                             lemma=attr['Lemma'],
                             named_entity_tag=attr['NamedEntityTag'],
                             part_of_speech=attr['PartOfSpeech'],
-                            id_token=num_word)
+                            id_token=num_word,
+                            id_sentence=num_sen)
                 sentence.words.append(word)
             document.sentences.append(sentence)
 
@@ -530,6 +536,17 @@ class i2b2FileReader(FileReader):
             except TypeError:
                 logging.warning('Element {} skipped.'.format(elem_id))
                 continue
+
+        # the first 2 events and temporal expressions are always document
+        # meta-data. The order to the tags in the documents don't necessarily
+        # reflect the order of appearance, that's why I am picking the top 2
+        # now.
+        types = (Event, TemporalExpression)
+        for t in types:
+            elems = [a for a in annotations.values() if type(a) == t]
+            for elem in sorted(elems, key=attrgetter('start'))[0:2]:
+                elem.meta = True
+
         # TLINKs
         elements = source.findall(".//TLINK")
         for element in elements:
@@ -537,8 +554,12 @@ class i2b2FileReader(FileReader):
             try:
                 from_obj = annotations[element.attrib['fromID']]
                 to_obj = annotations[element.attrib['toID']]
+                reltype = element.attrib['type']
+                if not reltype:
+                    raise KeyError
                 annotations[elem_id] = TemporalLink(
-                    elem_id, from_obj, to_obj, element.attrib['type'])
+                    elem_id, from_obj, to_obj, reltype)
+
             except KeyError:
                 logging.warning('Temporal Link {} skipped.'.format(elem_id))
                 continue

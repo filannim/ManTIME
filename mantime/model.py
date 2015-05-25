@@ -288,7 +288,8 @@ class Sentence(object):
 class Word(object):
 
     def __init__(self, word_form, char_offset_begin, char_offset_end,
-                 lemma, named_entity_tag, part_of_speech, id_token):
+                 lemma, named_entity_tag, part_of_speech, id_token,
+                 id_sentence):
         self.word_form = word_form
         self.character_offset_begin = char_offset_begin
         self.character_offset_end = char_offset_end
@@ -297,6 +298,7 @@ class Word(object):
         self.part_of_speech = part_of_speech
         self.attributes = dict()
         self.id_token = id_token
+        self.id_sentence = id_sentence
         self.gold_label = SequenceLabel('O')
         self.predicted_label = SequenceLabel('O')
         self.tag_attributes = dict()
@@ -374,6 +376,15 @@ class TemporalExpression(object):
     def identifier(self):
         return self.tid
 
+    def id_sentence(self):
+        return self.words[0].id_sentence
+
+    def id_first_word(self):
+        return self.words[0].id_token
+
+    def id_last_word(self):
+        return self.words[-1].id_token
+
     def __eq__(self, other):
         return (isinstance(self, type(other)) and self.text == other.text and
                 self.start == other.start and self.end == other.end)
@@ -434,6 +445,15 @@ class Event(object):
     def identifier(self):
         return self.eid
 
+    def id_sentence(self):
+        return self.words[0].id_sentence
+
+    def id_first_word(self):
+        return self.words[0].id_token
+
+    def id_last_word(self):
+        return self.words[-1].id_token
+
     def __eq__(self, other):
         return (isinstance(self, type(other)) and self.text == other.text and
                 self.start == other.start and self.end == other.end)
@@ -456,6 +476,15 @@ class EventInstance(object):
     def identifier(self):
         return self.eiid
 
+    def id_sentence(self):
+        return self.event.words[0].id_sentence
+
+    def id_first_word(self):
+        return self.event.words[0].id_token
+
+    def id_last_word(self):
+        return self.event.words[-1].id_token
+
     def __repr__(self):
         return '{} {}'.format(self.tag, repr(self.event))
 
@@ -472,6 +501,7 @@ class TemporalLink(object):
         self.from_obj = from_obj
         self.to_obj = to_obj
         self.relation_type = relation_type
+        self.attributes = dict()
         self.tag = 'TLINK'
 
     def identifier(self):

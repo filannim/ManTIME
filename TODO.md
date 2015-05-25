@@ -3,19 +3,15 @@ TO-DO List
 
 This document lists all the things I should look more carefully in the future.
 
-- [ ] What's `id_token` in Word class?
+- [ ] Implement features for the temporal relation extraction task looking at my notes from the literature.
 - [ ] Can an event be anchored to two different MAKEINSTANCE tags?
 - [ ] Can the same two objects be connected by two different types of temporal relations?
 - [ ] Insert some sample files in input and output folders.
-- [ ] In the attribute training phase, the multi-word expressions should be represented as one sample. The features will be merged according to the order of appearance.
 - [ ] port the ParentedTree implementation and remove the nltk dependency
-- [ ] Implement the feature extractor for Temporal Links.
 - [ ] Implement the classifier for Temporal Links.
 - [ ] The writers should use an xml library instead of writing strings to a file.
 - [ ] Adapt the writers to output temporal links too.
 - [ ] Installation script.
-- [ ] Probably some variables in Document and Sentence objects can be deleted.
-- [ ] Group the annotations token based at sentence level.
 - [ ] Implement an error method (in ManTIME class) to get statistics from the models.
 - [ ] Implement a shuffle method and cross-fold validation for the data.
 - [ ] Do I really need to load Stanford Core NLP everytime for every document? Once (the problem)[https://github.com/dasmith/stanford-corenlp-python/issues/13] with long texts is solved I should switch to the new stanford-core-nlp.
@@ -24,7 +20,11 @@ This document lists all the things I should look more carefully in the future.
 
 Done:
 
+- [x] Implement the feature extractor for Temporal Links.
+- [x] Probably some variables in Document and Sentence objects can be deleted.
+- [x] What's `id_token` in Word class?
 - [x] Do we need EventInstance? Yes, we do.
+- [x] In the attribute training phase, the multi-word expressions should be represented as one sample. The features will be merged according to the order of appearance.
 - [x] add useful folder (models, output, buffer) in the Git repo
 - [x] pickle the num2py arrays and remove the dependency
 - [x] Activate the post processing pipeline.

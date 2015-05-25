@@ -19,6 +19,7 @@ import subprocess
 import re
 import codecs
 import cPickle
+from itertools import permutations
 import logging
 import os
 import shutil
@@ -28,20 +29,24 @@ from tempfile import NamedTemporaryFile
 from crf_utilities import get_scale_factors
 from crf_utilities import probabilistic_correction
 from crf_utilities import label_switcher
+from attributes_extractor import TemporalRelationExtractor
 from model import Event
 from model import TemporalExpression
+from model import TemporalLink
 from model import SequenceLabel
 from settings import PATH_MODEL_FOLDER
 from settings import PATH_CRF_PP_ENGINE_TEST
 from settings import PATH_CRF_PP_ENGINE_TRAIN
 from settings import EVENT_ATTRIBUTES
 from settings import NO_ATTRIBUTE
+from settings import SENTENCE_WINDOW_RELATION
 from utilities import Mute_stderr
 from utilities import extractors_stamp
 
 
 def identification_attribute_matrix(documents, dest, subject, training=True):
     """It writes in dest the entire training matrix for the identification.
+
     """
     assert type(documents) == list, 'Wrong type for documents.'
     assert len(documents) > 0, 'Empty documents list.'
@@ -84,6 +89,7 @@ def identification_attribute_matrix(documents, dest, subject, training=True):
 
 def normalisation_attribute_matrix(documents, dest, subject, training=True):
     """It writes in dest the entire training matrix for the attribute.
+
     """
     assert type(documents) == list, 'Wrong type for documents.'
     assert len(documents) > 0, 'Empty documents list.'
@@ -147,6 +153,65 @@ def normalisation_attribute_matrix(documents, dest, subject, training=True):
         matrix.close()
 
 
+def relation_matrix(documents, dest, training=True):
+    """ It writes in dest an entire feature matrix for the relations.
+
+    """
+    assert type(documents) == list, 'Wrong type for documents.'
+    assert len(documents) > 0, 'Empty documents list.'
+
+    if training:
+        annotations = lambda document: document.gold_annotations
+    else:
+        annotations = lambda document: document.predicted_annotations
+
+    sent_distance = lambda obj1, obj2: abs(obj1.id_sentence() -
+                                           obj2.id_sentence())
+
+    extractor = TemporalRelationExtractor()
+
+    # It stores the attribute matrix
+    features = None
+    with codecs.open(dest, 'w', encoding='utf8') as matrix:
+        for document in documents:
+            inverted_index = {(obj.from_obj.identifier(),
+                               obj.to_obj.identifier()): obj.relation_type
+                              for obj
+                              in annotations(document).itervalues()
+                              if type(obj) == TemporalLink}
+            events = [e.eid for e in annotations(document).values()
+                      if type(e) == Event]
+            timexes = [t.tid for t in annotations(document).values()
+                       if type(t) == TemporalExpression]
+            anchors = events + timexes
+            for from_id, to_id in permutations(anchors, 2):
+                from_obj = annotations(document)[from_id]
+                to_obj = annotations(document)[to_id]
+                distance = sent_distance(from_obj, to_obj)
+                if distance < SENTENCE_WINDOW_RELATION:
+                    if (from_id, to_id) in inverted_index.keys():
+                        features = extractor.extract(
+                            from_obj, to_obj, document)
+                        row = [v.value for _, v in sorted(features.items())]
+                        row.append(inverted_index[(from_id, to_id)])
+                    elif (to_id, from_id) in inverted_index.keys():
+                        features = extractor.extract(
+                            to_obj, from_obj, document)
+                        row = [v.value for _, v in sorted(features.items())]
+                        row.append(TemporalRelationExtractor.flip_relation(
+                            inverted_index[(to_id, from_id)]))
+                    else:
+                        features = extractor.extract(
+                            from_obj, to_obj, document)
+                        row = [v.value for _, v in sorted(features.items())]
+                        row.append('O')
+                    matrix.write('\t'.join(row))
+                    matrix.write('\n\n')
+    matrix.close()
+    header = [name for name, _ in sorted(features.items())]
+    return header
+
+
 class Classifier(object):
     """This class is an abstract classifier for ManTIME."""
     __metaclass__ = ABCMeta
@@ -157,14 +222,15 @@ class Classifier(object):
     @abstractmethod
     def train(self, documents, model_name):
         """ It returns a ClassificationModel object.
+
         """
         assert len(set([d.annotation_format for d in documents])) == 1
 
     @abstractmethod
     def test(self, documents, model, post_processing_pipeline=False):
-        """
+        """ It returns a List of <Document> (with .predicted_annotations
+            filled in.)
 
-            return List of <Document> (with .annotations filled in.)
         """
         pass
 
@@ -356,6 +422,7 @@ class IdentificationClassifier(Classifier):
                             # prev_element to the previous document.
                             documents[n_doc - 1].predicted_annotations[
                                 prev_element.identifier] = prev_element
+
         logging.info('Identification: done.')
         return documents
 
@@ -401,7 +468,7 @@ class NormalisationClassifier(Classifier):
                 logging.info(msg.format(attribute))
         return model
 
-    def test(self, documents, model):
+    def test(self, documents, model, domain='general'):
         """It returns the sequence of labels from the classifier.
 
         It returns the same data structure (list of documents, of sentences,
@@ -456,23 +523,63 @@ class NormalisationClassifier(Classifier):
             # delete testset
             os.remove(testset_path)
 
+        # normalisation of temporal expressions and events
+        for document in documents:
+            for element in document.predicted_annotations.itervalues():
+                if isinstance(element, Event):
+                    element.normalise(document)
+                elif isinstance(element, TemporalExpression):
+                    utterance = document.dct.replace('-', '')
+                    if domain == 'general':
+                        element.normalise(document, utterance)
+                    elif domain == 'clinical':
+                        element.normalise(document, utterance, 'clinical')
+
         logging.info('Normalisation: done.')
         return documents
 
 
-class LinkingClassifier(Classifier):
+class RelationClassifier(Classifier):
     """This class is a CRF interface for the temporal linking classification.
 
     """
     def __init__(self):
-        super(LinkingClassifier, self).__init__()
+        super(RelationClassifier, self).__init__()
 
     def train(self, documents, model):
+        """ It returns a RelationModel object.
+
+        """
         # TO-DO: feature extractor deve yieldare anziche' ritornare
         assert type(documents) == list, 'Wrong type for documents.'
         assert len(documents) > 0, 'Empty documents list.'
 
+        path_model_attribute = (PATH_MODEL_FOLDER, model.name)
+        trainingset_path = '{}/{}/relation.trainingset.TLINK'.format(
+            *path_model_attribute)
+        header = relation_matrix(documents, trainingset_path, training=True)
+        model.load_relation_header(header)
+        model_path = '{}'.format(model.path_relation)
+        crf_command = [PATH_CRF_PP_ENGINE_TRAIN, '-p', str(self.num_cores),
+                       model.path_relation_topology, trainingset_path,
+                       model_path]
+
+        with Mute_stderr():
+            process = subprocess.Popen(crf_command, stdout=subprocess.PIPE)
+            _, _ = process.communicate()
+
+        # Weakly check the output models
+        if not os.path.isfile(model_path):
+            logging.error('Temporal relation model: *not* trained.')
+        else:
+            logging.error('Temporal relation model: trained.')
+        return model
+
     def test(self, documents, model):
+        """ It returns a List of <Document> (with .predicted_annotations filled
+            in.)
+
+        """
         pass
 
 
@@ -493,15 +600,24 @@ class ClassificationModel(object):
         self.path = '{}/{}/identification.model'.format(*path_and_model)
         self.path_normalisation = '{}/{}/normalisation.model'.format(
             *path_and_model)
-        self.path_topology = '{}/{}/template'.format(*path_and_model)
+        self.path_relation = '{}/{}/relation.model'.format(*path_and_model)
+        self.path_topology = '{}/{}/identification.template'.format(
+            *path_and_model)
         self.path_attribute_topology = '{}/{}/attribute.template'.format(
             *path_and_model)
-        self.path_header = '{}/{}/header'.format(*path_and_model)
-        self.path_factors = '{}/{}/factors'.format(*path_and_model)
+        self.path_relation_topology = '{}/{}/relation.template'.format(
+            *path_and_model)
+        self.path_header = '{}/{}/identification.header'.format(
+            *path_and_model)
+        self.path_relation_header = '{}/{}/relation.header'.format(
+            *path_and_model)
+        self.path_factors = '{}/{}/identification.factors'.format(
+            *path_and_model)
         shutil.rmtree('{}/{}'.format(*path_and_model), ignore_errors=True)
         os.makedirs('{}/{}'.format(*path_and_model))
         self.num_of_features = 0
         self.topology = None
+        self.relation_topology = None
         self.attribute_topology = None
         self.pp_pipeline_attribute_pos = None
         self.extractors_md5 = extractors_stamp()
@@ -514,15 +630,44 @@ class ClassificationModel(object):
         self.num_of_features = len(header)
         with open(self.path_header, 'w') as header_file:
             header_file.write('\n'.join(header))
-        logging.info('Header: stored.')
+        logging.info('Identification header: stored.')
+        logging.info('Normalisation header: stored.')
         self.topology = self._generate_template()
+        self._save_template(self.topology)
         self.attribute_topology = self._generate_template(True)
+        self._save_template(self.attribute_topology, True)
+
+    def load_relation_header(self, header):
+        '''It loads the relation header and store it.
+
+        '''
+        self.num_of_relation_features = len(header)
+        with open(self.path_relation_header, 'w') as header_file:
+            header_file.write('\n'.join(header))
+        logging.info('Temporal relation header: stored.')
+        self.relation_topology = self._generate_template(relation=True)
+        self._save_template(self.relation_topology, False, True)
 
     def load_scaling_factors(self, factors):
         cPickle.dump(factors, open(self.path_factors, 'w'))
         logging.info('Identification scaling factors: stored.')
 
-    def _generate_template(self, attribute=False):
+    def _save_template(self, topology, attribute=False, relation=False):
+        if attribute:
+            dest = self.path_attribute_topology
+        else:
+            dest = self.path_topology
+        if relation:
+            dest = self.path_relation_topology
+        with open(dest, 'w') as template:
+            for pattern in topology:
+                template.write(pattern)
+                template.write('\n')
+        logging.info(
+            'CRF topology template (attribute={}, links={}): stored.'.format(
+                attribute, relation))
+
+    def _generate_template(self, attribute=False, relation=False):
         """It generates and dumps the CRF template for CRF++.
 
         """
@@ -531,6 +676,8 @@ class ClassificationModel(object):
         n_of_features = self.num_of_features
         if attribute:
             n_of_features += 1
+        if relation:
+            n_of_features = self.num_of_relation_features
 
         patterns = set()
         for i in xrange(n_of_features):
@@ -560,14 +707,4 @@ class ClassificationModel(object):
         topology = ['U{:0>7}:{}'.format(index, pattern)
                     for index, pattern
                     in enumerate(list(sorted(patterns)))]
-        if attribute:
-            dest = self.path_attribute_topology
-        else:
-            dest = self.path_topology
-        with open(dest, 'w') as template:
-            for pattern in topology:
-                template.write(pattern)
-                template.write('\n')
-        logging.info('CRF topology template (attribute={}): stored.'.format(
-            attribute))
         return topology
