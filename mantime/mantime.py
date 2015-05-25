@@ -29,12 +29,15 @@ from writers import i2b2Writer, TempEval3Writer, HTMLWriter
 from attributes_extractor import FullExtractor
 from classifier import IdentificationClassifier
 from classifier import NormalisationClassifier
+from classifier import RelationClassifier
 from settings import PATH_MODEL_FOLDER
 
 
 class ManTIME(object):
 
-    def __init__(self, reader, writer, extractor, model_name, pipeline=True):
+    def __init__(self, reader, writer, extractor, model_name, pipeline=True,
+                 domain='general'):
+        assert domain in ('general', 'clinical')
         self.post_processing_pipeline = pipeline
         self.reader = reader
         self.writer = writer
@@ -49,6 +52,7 @@ class ManTIME(object):
         except IOError:
             self.model = None
             logging.info('{} model: built.'.format(model_name))
+        self.domain = domain
 
     def train(self, folder):
         folder = os.path.abspath(folder)
@@ -56,6 +60,7 @@ class ManTIME(object):
 
         identifier = IdentificationClassifier()
         normaliser = NormalisationClassifier()
+        linker = RelationClassifier()
 
         # corpus collection
         input_files = os.path.join(folder, self.reader.file_filter)
@@ -75,6 +80,7 @@ class ManTIME(object):
         # training models (identification and normalisation)
         modl = identifier.train(self.documents, self.model_name)
         modl = normaliser.train(self.documents, modl)
+        modl = linker.train(self.documents, modl)
         self.model = modl
         # dumping models
         cPickle.dump(modl, open(self.model_path, 'w'))
@@ -92,7 +98,7 @@ class ManTIME(object):
         doc = self.extractor.extract(self.reader.parse(file_name))
         annotated_doc = identifier.test([doc], self.model,
                                         self.post_processing_pipeline)
-        annotated_doc = normaliser.test([doc], self.model)
+        annotated_doc = normaliser.test([doc], self.model, self.domain)
 
         output = self.writer.write(annotated_doc)
         return output
@@ -124,7 +130,8 @@ def main():
                       writer=i2b2Writer(),
                       extractor=FullExtractor(),
                       model_name=args.model,
-                      pipeline=args.post_processing_pipeline)
+                      pipeline=args.post_processing_pipeline,
+                      domain='clinical')
 
     if args.mode == 'train':
         # Training
@@ -142,15 +149,15 @@ def main():
             if writein not in glob.glob('./output/*.*'):
                 file_path = writein
                 with codecs.open(file_path, 'w', encoding='utf8') as output:
-                    try:
-                        logging.info('{} Doc {}.'.format(position, basename))
-                        output.write(mantime.label(doc)[0])
-                        logging.info('{} Doc {} annotated.'.format(position,
-                                                                   basename))
-                    except Exception:
-                        logging.error('{} Doc {} ** skipped **!'.format(
-                            position, basename))
-                        os.remove(file_path)
+                    # try:
+                    logging.info('{} Doc {}.'.format(position, basename))
+                    output.write(mantime.label(doc)[0])
+                    logging.info('{} Doc {} annotated.'.format(position,
+                                                               basename))
+                    # except Exception:
+                    #     logging.error('{} Doc {} ** skipped **!'.format(
+                    #         position, basename))
+                    #     os.remove(file_path)
 
 if __name__ == '__main__':
     main()
