@@ -155,8 +155,8 @@ class i2b2Writer(FileWriter):
             output.append(u'<TEXT><![CDATA[{}]]></TEXT>'.format(document.text))
 
             output.append(u'<TAGS>')
-            # TIMEX3s and EVENTs
-            for element in document.predicted_annotations:
+            # TIMEX3s, EVENTs, TLINKs
+            for element in document.predicted_annotations.itervalues():
                 xml_tag = ''
                 if isinstance(element, TemporalExpression):
                     element.text = document.get_text(element.start,
@@ -177,7 +177,12 @@ class i2b2Writer(FileWriter):
                                   'type="{eclass}" />').format(
                         cstart=cstart, cend=cend, **element.__dict__)
                 elif isinstance(element, TemporalLink):
-                    continue
+                    xml_tag = unicode('<TLINK id="{}" fromID="{}" ' +
+                                      'fromText="{}" toID="{}" toText="{}" ' +
+                                      'type="{}" />').format(
+                        element.lid, element.from_obj.identifier(),
+                        element.from_obj.text, element.to_obj.identifier(),
+                        element.to_obj.text, element.relation_type)
                 output.append(xml_tag)
 
             # SECTIMEs
@@ -224,6 +229,13 @@ class i2b2Writer(FileWriter):
                                          'polarity="{polarity}"' +
                                          '>{text}</EVENT>').format(
                                              **element.__dict__)
+                elif isinstance(element, TemporalLink):
+                    annotation = unicode('<TLINK id="{}" fromID="{}" ' +
+                                         'fromText="{}" toID="{}" ' +
+                                         'toText="{}" type="{}" />').format(
+                        element.lid, element.from_obj.identifier(),
+                        element.from_obj.text, element.to_obj.identifier(),
+                        element.to_obj.text, element.relation_type)
                 text[element.start + document.text_offset] = annotation
                 # empty the remaining characters
                 for i in xrange(document.text_offset + element.start + 1,
@@ -235,7 +247,6 @@ class i2b2Writer(FileWriter):
 
             output.append(u'')
 
-            # TLINKs
             output.append(u'</ClinicalNarrativeTemporalAnnotation>')
             outputs.append('\n'.join(output))
         return outputs

@@ -69,7 +69,7 @@ class ManTIME(object):
                 doc = self.extractor.extract(self.reader.parse(input_file))
                 self.documents.append(doc)
             except cElementTree.ParseError:
-                msg = 'Document {} skipped.'.format(
+                msg = 'Document {} skipped: parse error.'.format(
                     os.path.relpath(input_file))
                 logging.error(msg)
 
@@ -94,14 +94,22 @@ class ManTIME(object):
 
         identifier = IdentificationClassifier()
         normaliser = NormalisationClassifier()
+        linker = RelationClassifier()
 
-        doc = self.extractor.extract(self.reader.parse(file_name))
-        annotated_doc = identifier.test([doc], self.model,
-                                        self.post_processing_pipeline)
-        annotated_doc = normaliser.test([doc], self.model, self.domain)
+        try:
+            doc = self.extractor.extract(self.reader.parse(file_name))
+            annotated_doc = identifier.test([doc], self.model,
+                                            self.post_processing_pipeline)
+            annotated_doc = normaliser.test([doc], self.model, self.domain)
+            annotated_doc = linker.test([doc], self.model)
 
-        output = self.writer.write(annotated_doc)
-        return output
+            output = self.writer.write(annotated_doc)
+            return output
+        except cElementTree.ParseError:
+            msg = 'Document {} skipped: parse error.'.format(
+                os.path.relpath(file_name))
+            logging.error(msg)
+            return ['']
 
 
 def main():

@@ -388,7 +388,7 @@ class IdentificationClassifier(Classifier):
                     if curr_label != prev_label:
                         if prev_element:
                             documents[n_doc].predicted_annotations[
-                                prev_element.identifier] = prev_element
+                                prev_element.identifier()] = prev_element
                         if curr_label.is_event():
                             prev_element = Event('e{}'.format(n_event),
                                                  [curr_word], eclass=eclass)
@@ -425,13 +425,13 @@ class IdentificationClassifier(Classifier):
                     if prev_element:
                         try:
                             documents[n_doc].predicted_annotations[
-                                prev_element.identifier] = prev_element
+                                prev_element.identifier()] = prev_element
                         except IndexError:
                             # we are at the end of the document and n_doc has
                             # been already incremented. we need to add
                             # prev_element to the previous document.
                             documents[n_doc - 1].predicted_annotations[
-                                prev_element.identifier] = prev_element
+                                prev_element.identifier()] = prev_element
 
         logging.info('Identification: done.')
         return documents
@@ -600,15 +600,15 @@ class RelationClassifier(Classifier):
         if not os.path.isfile(model.path_relation):
             logging.warning('Model doesn\'t exist at {}'.format(
                 model.path_relation))
-            continue
+            return documents
         else:
             if os.stat(model.path_relation).st_size == 0:
                 logging.warning('Relation model is empty!')
-                continue
+                return documents
         if not os.path.isfile(testset_path):
             msg = 'Temporal relation test set doesn\'t exist at {}.'
             logging.error(msg.format(testset_path))
-            continue
+            return documents
 
         with Mute_stderr():
             process = subprocess.Popen(crf_command, stdout=subprocess.PIPE,
@@ -619,14 +619,17 @@ class RelationClassifier(Classifier):
                 line = line.strip()
                 if line:
                     line = line.split('\t')
-                    relation_type = line[-1]
-                    n_doc, from_id, to_id = line[-2].split('_')
-                    annotations = documents[int(n_doc)].predicted_annotations
-                    tlink_id = 'TL{}'.format(tlink_counter)
-                    from_obj = annotations[from_id]
-                    to_obj = annotations[to_id]
-                    annotations[tlink_id] = TemporalLink(tlink_id, from_obj,
-                                                         to_obj, relation_type)
+                    relation_type = line[-1].strip()
+                    if relation_type != 'O':
+                        n_doc, from_id, to_id = line[-2].split('_')
+                        n_doc = int(n_doc)
+                        annotations = documents[n_doc].predicted_annotations
+                        tlink_id = 'TL{}'.format(tlink_counter)
+                        from_obj = annotations[from_id]
+                        to_obj = annotations[to_id]
+                        annotations[tlink_id] = TemporalLink(
+                            tlink_id, from_obj, to_obj, relation_type)
+                        tlink_counter += 1
             # close stdout
             process.stdout.close()
             process.wait()
