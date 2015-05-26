@@ -3,6 +3,7 @@ TO-DO List
 
 This document lists all the things I should look more carefully in the future.
 
+- [ ] If an element ID contains `_` then the sneaking part in `relation_matrix` won't work.
 - [ ] Implement features for the temporal relation extraction task looking at my notes from the literature.
 - [ ] Can an event be anchored to two different MAKEINSTANCE tags?
 - [ ] Can the same two objects be connected by two different types of temporal relations?
