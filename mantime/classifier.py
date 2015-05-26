@@ -165,15 +165,15 @@ def relation_matrix(documents, dest, training=True):
     else:
         annotations = lambda document: document.predicted_annotations
 
-    sent_distance = lambda obj1, obj2: abs(obj1.id_sentence() -
-                                           obj2.id_sentence())
+    def sent_distance(obj1, obj2):
+        return abs(obj1.id_sentence() - obj2.id_sentence())
 
     extractor = TemporalRelationExtractor()
 
     # It stores the attribute matrix
     features = None
     with codecs.open(dest, 'w', encoding='utf8') as matrix:
-        for document in documents:
+        for doc_id, document in enumerate(documents):
             inverted_index = {(obj.from_obj.identifier(),
                                obj.to_obj.identifier()): obj.relation_type
                               for obj
@@ -183,12 +183,16 @@ def relation_matrix(documents, dest, training=True):
                       if type(e) == Event]
             timexes = [t.tid for t in annotations(document).values()
                        if type(t) == TemporalExpression]
-            anchors = events + timexes
-            for from_id, to_id in permutations(anchors, 2):
+            candidated_objs = events + timexes
+            for from_id, to_id in permutations(candidated_objs, 2):
                 from_obj = annotations(document)[from_id]
                 to_obj = annotations(document)[to_id]
-                distance = sent_distance(from_obj, to_obj)
-                if distance < SENTENCE_WINDOW_RELATION:
+
+                criteria_sent_distance = sent_distance(from_obj, to_obj) < \
+                    SENTENCE_WINDOW_RELATION
+                criteria_meta = from_obj.meta or to_obj.meta
+
+                if criteria_meta or criteria_sent_distance:
                     if (from_id, to_id) in inverted_index.keys():
                         features = extractor.extract(
                             from_obj, to_obj, document)
@@ -208,6 +212,9 @@ def relation_matrix(documents, dest, training=True):
                         row = [v.value for _, v in sorted(features.items())]
                         if training:
                             row.append('O')
+                    if not training:
+                        # I sneak in the objects IDs
+                        row.append('{}_{}_{}'.format(doc_id, from_id, to_id))
                     matrix.write('\t'.join(row))
                     matrix.write('\n\n')
     matrix.close()
@@ -583,7 +590,52 @@ class RelationClassifier(Classifier):
             in.)
 
         """
-        pass
+        logging.info('Temporal relation extraction: applying ML models.')
+        testset_path = NamedTemporaryFile(delete=False).name
+        relation_matrix(documents, testset_path, training=False)
+        crf_command = [PATH_CRF_PP_ENGINE_TEST, '-m', model.path_relation,
+                       testset_path]
+
+        # Weakly check the input files
+        if not os.path.isfile(model.path_relation):
+            logging.warning('Model doesn\'t exist at {}'.format(
+                model.path_relation))
+            continue
+        else:
+            if os.stat(model.path_relation).st_size == 0:
+                logging.warning('Relation model is empty!')
+                continue
+        if not os.path.isfile(testset_path):
+            msg = 'Temporal relation test set doesn\'t exist at {}.'
+            logging.error(msg.format(testset_path))
+            continue
+
+        with Mute_stderr():
+            process = subprocess.Popen(crf_command, stdout=subprocess.PIPE,
+                                       stderr=None, stdin=None)
+
+            tlink_counter = 0
+            for line in iter(process.stdout.readline, ''):
+                line = line.strip()
+                if line:
+                    line = line.split('\t')
+                    relation_type = line[-1]
+                    n_doc, from_id, to_id = line[-2].split('_')
+                    annotations = documents[int(n_doc)].predicted_annotations
+                    tlink_id = 'TL{}'.format(tlink_counter)
+                    from_obj = annotations[from_id]
+                    to_obj = annotations[to_id]
+                    annotations[tlink_id] = TemporalLink(tlink_id, from_obj,
+                                                         to_obj, relation_type)
+            # close stdout
+            process.stdout.close()
+            process.wait()
+
+        # delete testset
+        os.remove(testset_path)
+
+        logging.info('Temporal relation extraction: done.')
+        return documents
 
 
 class ClassificationModel(object):

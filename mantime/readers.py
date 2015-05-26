@@ -192,13 +192,13 @@ class TempEval3FileReader(FileReader):
             document.sentences.append(sentence)
 
         document.gold_annotations = self._get_annotations(
-            text_xml, instances, xml, document)
+            text_xml, dct, instances, xml, document)
         print document.gold_annotations
         document.store_gold_annotations()
         logging.info('Document {}: parsed.'.format(os.path.relpath(file_path)))
         return document
 
-    def _get_annotations(self, source, event_instances, xml, document):
+    def _get_annotations(self, source, dct, event_instances, xml, document):
         """It returns the annotations found in the document.
 
         It follows the following format:
@@ -255,8 +255,12 @@ class TempEval3FileReader(FileReader):
                     start_offset += len(element.tail)
 
         # add the t0 meta temporal information
-        annotations['t0'] = TemporalExpression(
-            't0', [Word('', -2, -1, '', '', '', '')], meta=True)
+        dct_id = dct.attrib['tid'].strip()
+        dct_ttype = dct.attrib['type'].strip()
+        dct_value = dct.attrib['value'].strip()
+        words = [Word(dct.text, -2, -1, dct.text, '', '', -1, -1)]
+        annotations[dct_id] = TemporalExpression(
+            dct_id, words, ttype=dct_ttype, value=dct_value, meta=True)
 
         # temporal links
         for tlink in xml.findall('.//TLINK'):
@@ -537,12 +541,11 @@ class i2b2FileReader(FileReader):
                 logging.warning('Element {} skipped.'.format(elem_id))
                 continue
 
-        # the first 2 events and temporal expressions are always document
-        # meta-data. The order to the tags in the documents don't necessarily
+        # the first 2 temporal expressions are always document
+        # meta-data. The order of the tags in the documents doesn't necessarily
         # reflect the order of appearance, that's why I am picking the top 2
         # now.
-        types = (Event, TemporalExpression)
-        for t in types:
+        for t in (Event, TemporalExpression):
             elems = [a for a in annotations.values() if type(a) == t]
             for elem in sorted(elems, key=attrgetter('start'))[0:2]:
                 elem.meta = True
