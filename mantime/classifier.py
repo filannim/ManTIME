@@ -193,18 +193,21 @@ def relation_matrix(documents, dest, training=True):
                         features = extractor.extract(
                             from_obj, to_obj, document)
                         row = [v.value for _, v in sorted(features.items())]
-                        row.append(inverted_index[(from_id, to_id)])
+                        if training:
+                            row.append(inverted_index[(from_id, to_id)])
                     elif (to_id, from_id) in inverted_index.keys():
                         features = extractor.extract(
                             to_obj, from_obj, document)
                         row = [v.value for _, v in sorted(features.items())]
-                        row.append(TemporalRelationExtractor.flip_relation(
-                            inverted_index[(to_id, from_id)]))
+                        if training:
+                            row.append(TemporalRelationExtractor.flip_relation(
+                                inverted_index[(to_id, from_id)]))
                     else:
                         features = extractor.extract(
                             from_obj, to_obj, document)
                         row = [v.value for _, v in sorted(features.items())]
-                        row.append('O')
+                        if training:
+                            row.append('O')
                     matrix.write('\t'.join(row))
                     matrix.write('\n\n')
     matrix.close()
