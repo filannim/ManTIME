@@ -195,10 +195,11 @@ class TemporalRelationExtractor(AttributesExtractor):
     @staticmethod
     def flip_relation(relation):
         mapping = {'AFTER': 'BEFORE', 'BEFORE': 'AFTER',
-                   'BEGUN_BY': 'ENDED_BY', 'ENDED_BY': 'BEGUN_BY',
+                   'BEGUN_BY': 'BEGINS', 'BEGINS': 'BEGUN_BY',
                    'IAFTER': 'IBEFORE', 'IBEFORE': 'IAFTER',
                    'INCLUDES': 'IS_INCLUDED', 'IS_INCLUDED': 'INCLUDES',
-                   'BEGINS': 'ENDS', 'ENDS': 'BEGINS'}
+                   'ENDS': 'ENDED_BY', 'ENDED_BY': 'ENDS',
+                   'DURING': 'DURING_INV', 'DURING_INV': 'DURING'}
         if relation in mapping:
             return mapping[relation]
         else:
