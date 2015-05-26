@@ -28,6 +28,9 @@ class WordBasedResult(object):
             self.value = '{}'.format(str(value).replace(' ', '_'))
         self.value = self.value.replace(' ', '_')
 
+    def __eq__(self, other):
+        return self.value == other.value
+
 
 class WordBasedResults(object):
     '''Wraps a tuple of results.

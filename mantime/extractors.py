@@ -18,6 +18,7 @@ from __future__ import division
 import re
 import cPickle
 import calendar
+from datetime import date
 import functools
 
 import nltk
@@ -757,6 +758,10 @@ class RelationExtractors(object):
         return WordBasedResult(res)
 
     @staticmethod
+    def same_pos(from_obj, to_obj, document):
+        return WordBasedResult(RelationExtractors.from_pos(from_obj, to_obj, document) == RelationExtractors.to_pos(from_obj, to_obj, document))
+
+    @staticmethod
     def from_tag(from_obj, to_obj, document):
         return WordBasedResult(from_obj.tag)
 
@@ -773,12 +778,27 @@ class RelationExtractors(object):
         return WordBasedResult(to_obj.meta)
 
     @staticmethod
+    def both_meta(from_obj, to_obj, document):
+        return WordBasedResult(from_obj.meta and to_obj.meta)
+
+    @staticmethod
+    def both_non_meta(from_obj, to_obj, document):
+        return WordBasedResult(not from_obj.meta and not to_obj.meta)
+
+    @staticmethod
     def from_tense(from_obj, to_obj, document):
         return WordBasedResult(getattr(from_obj, 'tense', None))
 
     @staticmethod
     def to_tense(from_obj, to_obj, document):
         return WordBasedResult(getattr(to_obj, 'tense', None))
+
+    @staticmethod
+    def same_tense(from_obj, to_obj, document):
+        if isinstance(from_obj, Event) and isinstance(to_obj, Event):
+                return WordBasedResult(from_obj.tense == to_obj.tense)
+        else:
+            return WordBasedResult(False)
 
     @staticmethod
     def from_aspect(from_obj, to_obj, document):
@@ -789,6 +809,13 @@ class RelationExtractors(object):
         return WordBasedResult(getattr(to_obj, 'aspect', None))
 
     @staticmethod
+    def same_aspect(from_obj, to_obj, document):
+        if isinstance(from_obj, Event) and isinstance(to_obj, Event):
+                return WordBasedResult(from_obj.aspect == to_obj.aspect)
+        else:
+            return WordBasedResult(False)
+
+    @staticmethod
     def from_polarity(from_obj, to_obj, document):
         return WordBasedResult(getattr(from_obj, 'polarity', None))
 
@@ -797,12 +824,26 @@ class RelationExtractors(object):
         return WordBasedResult(getattr(to_obj, 'polarity', None))
 
     @staticmethod
+    def same_polarity(from_obj, to_obj, document):
+        if isinstance(from_obj, Event) and isinstance(to_obj, Event):
+                return WordBasedResult(from_obj.polarity == to_obj.polarity)
+        else:
+            return WordBasedResult(False)
+
+    @staticmethod
     def from_modality(from_obj, to_obj, document):
         return WordBasedResult(getattr(from_obj, 'modality', None))
 
     @staticmethod
     def to_modality(from_obj, to_obj, document):
         return WordBasedResult(getattr(to_obj, 'modality', None))
+
+    @staticmethod
+    def same_modality(from_obj, to_obj, document):
+        if isinstance(from_obj, Event) and isinstance(to_obj, Event):
+                return WordBasedResult(from_obj.modality == to_obj.modality)
+        else:
+            return WordBasedResult(False)
 
     @staticmethod
     def direction(from_obj, to_obj, document):
@@ -827,3 +868,91 @@ class RelationExtractors(object):
     def sentence_distance(from_obj, to_obj, document):
         return WordBasedResult(
             abs(from_obj.id_sentence() - to_obj.id_sentence()))
+
+    @staticmethod
+    def word_distance(from_obj, to_obj, document):
+        if from_obj.id_sentence == to_obj.id_sentence:
+            if from_obj.id_first_word() < to_obj.id_first_word():
+                return WordBasedResult(
+                    abs(to_obj.id_first_word() - from_obj.id_last_word()))
+            else:
+                return WordBasedResult(
+                    abs(from_obj.id_first_word() - to_obj.id_last_word()))
+        else:
+            return WordBasedResult('_')
+
+    # TODO
+    @staticmethod
+    def linked_by_coref(from_obj, to_obj, document):
+        return WordBasedResult(True or False)
+
+    # TODO
+    @staticmethod
+    def linked_by_dependency_relation(from_obj, to_obj, document):
+        return WordBasedResult(True or False)
+
+    @staticmethod
+    def temporal_difference(from_obj, to_obj, document):
+        if isinstance(from_obj, TemporalExpression) and \
+                isinstance(to_obj, TemporalExpression):
+            from_dt = re.match(
+                r'^([0-9]{4})-([0-9]{2})-([0-9]{2})', from_obj.value)
+            to_dt = re.match(
+                r'^([0-9]{4})-([0-9]{2})-([0-9]{2})', to_obj.value)
+            if from_dt and to_dt:
+                from_dt = date(*from_dt.group(1, 2, 3))
+                to_dt = date(*from_dt.group(1, 2, 3))
+                diff = from_dt - to_dt
+                return WordBasedResult(diff.days)
+            return WordBasedResult('_')
+        else:
+            return WordBasedResult('_')
+
+    @staticmethod
+    def from_temporal_dct(from_obj, to_obj, document):
+        if isinstance(from_obj, TemporalExpression):
+            res = from_obj.value.replace('-', '') == \
+                document.dct.replace('_', '')
+            return WordBasedResult(res)
+        else:
+            return WordBasedResult('_')
+
+    @staticmethod
+    def from_ttype(from_obj, to_obj, document):
+        if isinstance(from_obj, TemporalExpression):
+            return WordBasedResult(from_obj.ttype)
+        else:
+            return WordBasedResult('_')
+
+    @staticmethod
+    def to_ttype(from_obj, to_obj, document):
+        if isinstance(to_obj, TemporalExpression):
+            return WordBasedResult(to_obj.ttype)
+        else:
+            return WordBasedResult('_')
+
+    @staticmethod
+    def same_ttype(from_obj, to_obj, document):
+        if isinstance(from_obj, TemporalExpression) and \
+                isinstance(to_obj, TemporalExpression):
+                return WordBasedResult(from_obj.ttype == to_obj.ttype)
+        else:
+            return WordBasedResult(False)
+
+    @staticmethod
+    def from_mod(from_obj, to_obj, document):
+        if isinstance(from_obj, TemporalExpression):
+            return WordBasedResult(from_obj.mod)
+        else:
+            return WordBasedResult('_')
+
+    @staticmethod
+    def to_mod(from_obj, to_obj, document):
+        if isinstance(to_obj, TemporalExpression):
+            return WordBasedResult(to_obj.mod)
+        else:
+            return WordBasedResult('_')
+
+    @staticmethod
+    def preposition_in_between(from_obj, to_obj, document):
+        return WordBasedResult('AA-BB-CC')
