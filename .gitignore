@@ -16,6 +16,7 @@ temporal_location/*
 datasets/*
 buffer/*
 !buffer/README.md
+data/*
 output/*
 !mantime/output/README.md
 externals/
