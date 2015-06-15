@@ -11,15 +11,12 @@
 # iPython notebooks
 *.ipynb
 
-# files I don't wanna touch right now
-pipeline.py
-
 # folders outside the scope of this project
 temporal_location/*
 datasets/*
 buffer/*
 !buffer/README.md
-mantime/output/*
+output/*
 !mantime/output/README.md
 externals/
 experiments/*
@@ -28,5 +25,5 @@ experiments/*
 data/*/.DS_Store
 
 # no models on GitHub
-mantime/models/*
-!mantime/models/README.md
+models/*
+!models/README.md
