@@ -14,7 +14,6 @@
 '''This module collect attributes from a sentence.'''
 
 from __future__ import division
-import cPickle
 import inspect
 import logging
 
@@ -59,7 +58,7 @@ class AttributesExtractor(object):
                     attribute_name = self.__name_attr(level,
                                                       attribute_number,
                                                       attribute_name)
-                    word.attributes[attribute_name] = attribute_value
+                    word.attributes[attribute_name] = attribute_value.value
                     attribute_number += 1
             else:
                 print extractor_result, type(extractor_result)
@@ -120,23 +119,6 @@ class AttributesExtractor(object):
                 self.__extract_from_word(word, sent_attr_number)
         logging.info('Attributes: extracted.')
         return document
-
-    def store_caches(self):
-        # all the extractors (word, sentence, document-level)
-        extractors = self.word_extractors + self.sentence_extractors + \
-            self.document_extractors
-        pickle_path = lambda filename: '../buffer/extractors/' + str(filename)
-        for extractor in extractors:
-            try:
-                cPickle.dump(extractor.cache,
-                             open(pickle_path(extractor.__name__), 'w'))
-                # print 'Extractor \'{}\'s cache SAVED.'.format(
-                #     extractor.__name__)
-            except AttributeError:
-                # the extrator is not memoised
-                # print 'Extractor \'{}\' not memoised.'.format(
-                #     extractor.__name__)
-                continue
 
 
 class TimexesExtractor(AttributesExtractor):

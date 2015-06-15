@@ -31,13 +31,13 @@ import codecs
 import cPickle
 from operator import attrgetter
 
-from model import Document
-from model import Sentence
-from model import Word
-from model import Event
-from model import EventInstance
-from model import TemporalExpression
-from model import TemporalLink
+from model.document import Document
+from model.document import Sentence
+from model.document import Word
+from model.data import Event
+from model.data import EventInstance
+from model.data import TemporalExpression
+from model.data import TemporalLink
 from utilities import Mute_stderr
 from settings import PATH_CORENLP_FOLDER
 from normalisers.clinical_doc_analyser import DocumentAnalyser
@@ -53,7 +53,7 @@ class BatchedCoreNLP(object):
     def __init__(self, stanford_dir):
         self.folder = stanford_dir
 
-    def parse(self, text, folder='../buffer/'):
+    def parse(self, text, folder='./buffer/'):
         """Returns the parsing from file (if already parsed), or computes it.
 
         Long description...
@@ -162,18 +162,17 @@ class TempEval3FileReader(FileReader):
                                         encoding='utf8').strip()
         document.text = text_string
         instances = self._get_event_instances(xml)
-        document.coref = stanford_tree.get('coref', None)
+        document._coref = stanford_tree.get('coref', None)
 
         for num_sen, stanford_sentence in enumerate(stanford_tree['sentences']):
-            dependencies = stanford_sentence.get('dependencies', None)
-            i_dependencies = stanford_sentence.get('indexeddependencies', None)
-            # i_dependencies = DependencyGraph(i_dependencies)
+            collp_deps = stanford_sentence.get('collapsed_dependencies', None)
+            basic_deps = stanford_sentence.get('basic_dependencies', None)
             parsetree = stanford_sentence.get('parsetree', u'')
-            # parsetree = ParentedTree(parsetree)
             sentence_text = stanford_sentence.get('text', u'')
 
-            sentence = Sentence(dependencies=dependencies,
-                                indexed_dependencies=i_dependencies,
+            sentence = Sentence(id_sentence=num_sen,
+                                basic_dependencies=basic_deps,
+                                collapsed_dependencies=collp_deps,
                                 parsetree=parsetree,
                                 text=sentence_text)
             for num_word, (word_form, attr) in\
@@ -193,8 +192,8 @@ class TempEval3FileReader(FileReader):
 
         document.gold_annotations = self._get_annotations(
             text_xml, dct, instances, xml, document)
-        print document.gold_annotations
         document.store_gold_annotations()
+        document.complete_structure()
         logging.info('Document {}: parsed.'.format(os.path.relpath(file_path)))
         return document
 
@@ -234,7 +233,8 @@ class TempEval3FileReader(FileReader):
                                 tense=element.attrib['tense'],
                                 aspect=element.attrib['aspect'],
                                 polarity=element.attrib['polarity'],
-                                tag_attributes=element.attrib)
+                                tag_attributes=element.attrib,
+                                document=document)
                             annotations[eiid] = EventInstance(eiid, obj)
                             annotations[obj_id] = obj
                         else:
@@ -247,7 +247,8 @@ class TempEval3FileReader(FileReader):
                             obj_id, words,
                             ttype=element.attrib['type'],
                             value=element.attrib['value'],
-                            tag_attributes=element.attrib)
+                            tag_attributes=element.attrib,
+                            document=document)
                         annotations[obj_id] = obj
                 start_offset += len(element.text)
             elif event == 'end':
@@ -351,19 +352,18 @@ class WikiWarsInLineFileReader(FileReader):
         document.text = text_string
         document.gold_annotations = self._get_annotations(text_xml,
                                                           -left_chars)
-        document.coref = stanford_tree.get('coref', None)
+        document._coref = stanford_tree.get('coref', None)
 
         for num_sen, stanford_sentence in\
                 enumerate(stanford_tree['sentences']):
-            dependencies = stanford_sentence.get('dependencies', None)
-            i_dependencies = stanford_sentence.get('indexeddependencies', None)
-            # i_dependencies = DependencyGraph(i_dependencies)
+            collp_deps = stanford_sentence.get('collapsed_dependencies', None)
+            basic_deps = stanford_sentence.get('basic_dependencies', None)
             parsetree = stanford_sentence.get('parsetree', u'')
-            # parsetree = ParentedTree(parsetree)
             sentence_text = stanford_sentence.get('text', u'')
 
-            sentence = Sentence(dependencies=dependencies,
-                                indexed_dependencies=i_dependencies,
+            sentence = Sentence(id_sentence=num_sen,
+                                basic_dependencies=basic_deps,
+                                collapsed_dependencies=collp_deps,
                                 parsetree=parsetree,
                                 text=sentence_text)
             for num_word, (word_form, attr) in\
@@ -382,6 +382,7 @@ class WikiWarsInLineFileReader(FileReader):
             document.sentences.append(sentence)
 
         document.store_gold_annotations()
+        document.complete_structure()
         logging.info('{}: parsed.'.format(os.path.relpath(file_path)))
         return document
 
@@ -464,20 +465,19 @@ class i2b2FileReader(FileReader):
         document.dct_text = document.dct.replace('-', '')
         document.title = os.path.basename(file_path)
         document.text = text_string
-        document.coref = stanford_tree.get('coref', None)
+        document._coref = stanford_tree.get('coref', None)
 
         for num_sen, stanford_sentence in\
                 enumerate(stanford_tree['sentences']):
-            dependencies = stanford_sentence.get('dependencies', None)
-            i_dependencies = stanford_sentence.get('indexeddependencies', None)
-            # i_dependencies = DependencyGraph(i_dependencies)
+            collp_deps = stanford_sentence.get('collapsed_dependencies', None)
+            basic_deps = stanford_sentence.get('basic_dependencies', None)
             parsetree = stanford_sentence.get('parsetree', u'')
-            # parsetree = ParentedTree(parsetree)
 
             sentence_text = stanford_sentence.get('text', u'')
 
-            sentence = Sentence(dependencies=dependencies,
-                                indexed_dependencies=i_dependencies,
+            sentence = Sentence(id_sentence=num_sen,
+                                basic_dependencies=basic_deps,
+                                collapsed_dependencies=collp_deps,
                                 parsetree=parsetree,
                                 text=sentence_text)
             for num_word, (word_form, attr) in\
@@ -498,6 +498,7 @@ class i2b2FileReader(FileReader):
         document.gold_annotations = self._get_annotations(
             xml, document)
         document.store_gold_annotations()
+        document.complete_structure()
 
         logging.info('Document {}: parsed.'.format(os.path.relpath(file_path)))
         return document

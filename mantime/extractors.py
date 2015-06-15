@@ -24,8 +24,9 @@ import functools
 import nltk
 
 from utilities import search_subsequence
-from model import Event, TemporalExpression, EventInstance
+from model.data import Event, TemporalExpression, EventInstance
 from model_extractors import WordBasedResult
+from model_extractors import WordBasedResults
 from model_extractors import SentenceBasedResult
 from model_extractors import SentenceBasedResults
 from settings import LANGUAGE
@@ -34,21 +35,16 @@ from settings import GAZETTEER_FOLDER
 
 open_gazetteer = lambda file_name: open(GAZETTEER_FOLDER + file_name)
 
-
-def memoise(obj):
-    try:
-        cache_file = open('../buffer/extractors/' + obj.__name__)
-        cache = obj.cache = cPickle.load(cache_file)
-    except IOError:
-        cache = obj.cache = {}
-
-    @functools.wraps(obj)
-    def memoiser(*args, **kwargs):
-        key = hash(args) * hash(frozenset(kwargs))
-        if key not in cache:
-            cache[key] = obj(*args, **kwargs)
-        return cache[key]
-    return memoiser
+dep_labels = ['root', 'dep', 'aux', 'auxpass', 'cop', 'arg',
+              'agent', 'comp', 'acomp', 'ccomp', 'xcomp', 'obj',
+              'dobj', 'iobj', 'pobj', 'subj', 'nsubj', 'nsubjpass',
+              'csubj', 'csubjpass', 'cc', 'conj', 'expl', 'mod',
+              'amod', 'appos', 'advcl', 'det', 'predet', 'preconj',
+              'vmod', 'mwe', 'mark', 'advmod', 'neg', 'rcmod',
+              'quantmod', 'nn', 'npadvmod', 'tmod', 'num', 'number',
+              'prep', 'prepc', 'poss', 'possessive', 'prt',
+              'parataxis', 'punct', 'ref', 'sdep', 'xsubj',
+              'discourse', 'n_of_outgoing_relations']
 
 
 def matching_gazetteer(gazetteer, sentence):
@@ -447,6 +443,229 @@ class WordBasedExtractors(object):
         pattrn = r'^[0-9]+\-(century|decade|year|month|week\-?end|week|day|hour|minute|second|fortnight)$'
         return WordBasedResult(any(re.findall(pattrn, word.word_form.lower())))
 
+    @staticmethod
+    def parse_2_levels_up_node(word):
+        try:
+            node_label = word.constituency_parent.parent().node
+            return WordBasedResult(node_label)
+        except TypeError:
+            return WordBasedResult('_^_')
+
+    @staticmethod
+    def parse_3_levels_up_node(word):
+        try:
+            node_label = word.constituency_parent.parent().parent().node
+            return WordBasedResult(node_label)
+        except AttributeError:
+            return WordBasedResult('_^_')
+
+    @staticmethod
+    def parse_2_levels_up_childs(word):
+        try:
+            node = word.constituency_parent.parent()
+            node_labels = [i.node for i in node]
+            return WordBasedResult('_'.join(node_labels))
+        except AttributeError:
+            return WordBasedResult('_^_')
+
+    @staticmethod
+    def parse_3_levels_up_childs(word):
+        try:
+            node = word.constituency_parent.parent().parent()
+            node_label = [i.node for i in node]
+            return WordBasedResult('_'.join(node_label))
+        except AttributeError:
+            return WordBasedResult('_^_')
+
+    @staticmethod
+    def parse_3_levels_up_nodes(word):
+        parents = []
+        try:
+            parents.append(word.constituency_parent.parent().node)
+            parents.append(word.constituency_parent.parent().parent().node)
+            parents.append(
+                word.constituency_parent.parent().parent().parent().node)
+        except AttributeError:
+            pass
+        return WordBasedResult('_'.join(reversed(parents)))
+
+    @staticmethod
+    def parse_2_levels_up_nodes(word):
+        parents = []
+        try:
+            parents.append(word.constituency_parent.parent().node)
+            parents.append(word.constituency_parent.parent().parent().node)
+        except AttributeError:
+            pass
+        return WordBasedResult('_'.join(reversed(parents)))
+
+    @staticmethod
+    def is_coreference_head(word):
+        return WordBasedResult(word.is_coreference_head)
+
+    @staticmethod
+    def is_part_of_coreference_mention(word):
+        return WordBasedResult(word.coreference_mention is not None)
+
+    # BASIC DEPENDENCY RELATIONS
+    @staticmethod
+    def dependency_outgoing_relations_basic(word):
+        '''For each word I represent a vector of all outgoing relations
+
+           for each word =
+            dr1   dr2   dr2   dr2   dr2   dr2   ...   dr2
+           [ F  ,  F  ,  T ,   F  ,  F  ,  F  , ... ,  T ]
+
+           Dependencies relations are taken from:
+           http://nlp.stanford.edu/software/dependencies_manual.pdf
+
+        '''
+        f_suffix = lambda f_name: 'basic_dependency_outgoing_' + f_name
+
+        r = ((f_suffix(l),
+              WordBasedResult(bool(word.basic_dependencies_out.get(l, False))))
+             for l in dep_labels)
+        return WordBasedResults(tuple(r))
+
+    @staticmethod
+    def dependency_outgoing_relations_number_basic(word):
+        return WordBasedResult(len(word.basic_dependencies_out))
+
+    @staticmethod
+    def dependency_incoming_relations_basic(word):
+        '''For each word I represent a vector of all incoming relations
+
+           for each word =
+            dr1   dr2   dr2   dr2   dr2   dr2   ...   dr2
+           [ F  ,  F  ,  T ,   F  ,  F  ,  F  , ... ,  T ]
+
+           Dependencies relations are taken from:
+           http://nlp.stanford.edu/software/dependencies_manual.pdf
+
+        '''
+        f_suffix = lambda f_name: 'basic_dependency_incoming_' + f_name
+
+        r = ((f_suffix(l),
+              WordBasedResult(bool(word.basic_dependencies_in.get(l, False))))
+             for l in dep_labels)
+        return WordBasedResults(tuple(r))
+
+    @staticmethod
+    def dependency_incoming_relations_number_basic(word):
+        return WordBasedResult(len(word.basic_dependencies_in))
+
+    # COLLAPSED DEPENDENCY RELATIONS
+    @staticmethod
+    def dependency_outgoing_relations_collapsed(word):
+        '''For each word I represent a vector of all outgoing collapsed
+        relations.
+
+           for each word =
+            dr1   dr2   dr2   dr2   dr2   dr2   ...   dr2
+           [ F  ,  F  ,  T ,   F  ,  F  ,  F  , ... ,  T ]
+
+           Dependencies relations are taken from:
+           http://nlp.stanford.edu/software/dependencies_manual.pdf
+
+        '''
+        f_suffix = lambda f_name: 'collapsed_dependency_outgoing_' + f_name
+
+        r = ((f_suffix(l),
+              WordBasedResult(bool(word.collapsed_dependencies_out.get(l,
+                                                                       False)))
+              )
+             for l in dep_labels)
+        return WordBasedResults(tuple(r))
+
+    @staticmethod
+    def dependency_outgoing_relations_number_collapsed(word):
+        return WordBasedResult(len(word.collapsed_dependencies_out))
+
+    @staticmethod
+    def dependency_incoming_relations_collapsed(word):
+        '''For each word I represent a vector of all incoming collapsed
+        relations.
+
+           for each word =
+            dr1   dr2   dr2   dr2   dr2   dr2   ...   dr2
+           [ F  ,  F  ,  T ,   F  ,  F  ,  F  , ... ,  T ]
+
+           Dependencies relations are taken from:
+           http://nlp.stanford.edu/software/dependencies_manual.pdf
+
+        '''
+        f_suffix = lambda f_name: 'collapsed_dependency_incoming_' + f_name
+
+        r = ((f_suffix(l),
+              WordBasedResult(bool(word.collapsed_dependencies_in.get(l,
+                                                                      False))))
+             for l in dep_labels)
+        return WordBasedResults(tuple(r))
+
+    @staticmethod
+    def dependency_incoming_relations_number_collapsed(word):
+        return WordBasedResult(len(word.collapsed_dependencies_in))
+
+    @staticmethod
+    def dependency_incoming_granfather_relations_basic(word):
+        try:
+            gfather = word.dependencies_in('basic')[0][1].dependencies_in(
+                'basic')[0][0]
+            return WordBasedResult(gfather)
+        except IndexError:
+            return WordBasedResult(False)
+
+    @staticmethod
+    def dependency_incoming_granfather_relations_collapsed(word):
+        try:
+            gfather = word.dependencies_in('collapsed')[0][1].dependencies_in(
+                'collapsed')[0][0]
+            return WordBasedResult(gfather)
+        except IndexError:
+            return WordBasedResult(False)
+
+    @staticmethod
+    def dependency_incoming_granfather_pos_basic(word):
+        try:
+            pos = word.dependencies_in('basic')[0][1].dependencies_in(
+                'basic')[0][1].part_of_speech
+            return WordBasedResult(pos)
+        except IndexError:
+            return WordBasedResult(False)
+
+    @staticmethod
+    def dependency_incoming_granfather_pos_collapsed(word):
+        try:
+            pos = word.dependencies_in('collapsed')[0][1].dependencies_in(
+                'collapsed')[0][1].part_of_speech
+            return WordBasedResult(pos)
+        except IndexError:
+            return WordBasedResult(False)
+
+    @staticmethod
+    def dominant_verb_basic(word):
+        if word.part_of_speech.startswith('V'):
+            return WordBasedResult(word.part_of_speech)
+        else:
+            while not word.part_of_speech.startswith('V'):
+                try:
+                    word = word.dependencies_in('basic')[0][1]
+                except IndexError:
+                    return WordBasedResult(False)
+            return WordBasedResult(word.part_of_speech)
+
+    @staticmethod
+    def dominant_verb_collapsed(word):
+        if word.part_of_speech.startswith('V'):
+            return WordBasedResult(word.part_of_speech)
+        else:
+            while not word.part_of_speech.startswith('V'):
+                try:
+                    word = word.dependencies_in('collapsed')[0][1]
+                except:
+                    return WordBasedResult(False)
+            return WordBasedResult(word.part_of_speech)
+
 
 class SentenceBasedExtractors(object):
 
@@ -467,85 +686,6 @@ class SentenceBasedExtractors(object):
     def gazetteer_festivity(sentence):
         return matching_gazetteer(SentenceBasedExtractors.FESTIVITIES,
                                   sentence)
-
-    @staticmethod
-    def parse_2_levels_up_node(sentence):
-        result = []
-        for tree_index in sentence.parsetree.treepositions(order='leaves'):
-            try:
-                node_label = sentence.parsetree[tree_index[:-2]].node()
-                result.append(WordBasedResult(node_label))
-            except TypeError:
-                result.append(WordBasedResult('_^_'))
-                continue
-        return SentenceBasedResult(tuple(result))
-
-    @staticmethod
-    def parse_3_levels_up_node(sentence):
-        result = []
-        for tree_index in sentence.parsetree.treepositions(order='leaves'):
-            node = tree_index[:-3]
-            try:
-                node_label = sentence.parsetree[node].node()
-                result.append(WordBasedResult(node_label))
-            except TypeError:
-                result.append(WordBasedResult('_^_'))
-                continue
-        return SentenceBasedResult(tuple(result))
-
-    @staticmethod
-    def parse_2_levels_up_childs(sentence):
-        result = []
-        for tree_index in sentence.parsetree.treepositions(order='leaves'):
-            node = tree_index[:-2]
-            try:
-                node_labels = [i.node for i in sentence.parsetree[node]]
-                result.append(WordBasedResult('_'.join(node_labels)))
-            except TypeError:
-                result.append(WordBasedResult('_^_'))
-                continue
-        return SentenceBasedResult(tuple(result))
-
-    @staticmethod
-    def parse_3_levels_up_childs(sentence):
-        result = []
-        for tree_index in sentence.parsetree.treepositions(order='leaves'):
-            node = tree_index[:-3]
-            try:
-                node_label = [i.node for i in sentence.parsetree[node]]
-                result.append(WordBasedResult('_'.join(node_label)))
-            except TypeError:
-                result.append(WordBasedResult('_^_'))
-                continue
-        return SentenceBasedResult(tuple(result))
-
-    @staticmethod
-    def parse_3_levels_up_nodes(sentence):
-        result = []
-        for tree_index in sentence.parsetree.treepositions(order='leaves'):
-            parents = []
-            for level in xrange(-3, 0):
-                node = tree_index[:-level]
-                try:
-                    parents.append(sentence.parsetree[node].node)
-                except (TypeError, AttributeError):
-                    continue
-            result.append(WordBasedResult('_'.join(parents)))
-        return SentenceBasedResult(tuple(result))
-
-    @staticmethod
-    def parse_2_levels_up_nodes(sentence):
-        result = []
-        for tree_index in sentence.parsetree.treepositions(order='leaves'):
-            parents = []
-            for level in xrange(-2, 0):
-                node = tree_index[:-level]
-                try:
-                    parents.append(sentence.parsetree[node].node)
-                except (TypeError, AttributeError):
-                    continue
-            result.append(WordBasedResult('_'.join(parents)))
-        return SentenceBasedResult(tuple(result))
 
     @staticmethod
     def parse_start_or_end_child_in_s_clause(sentence):
@@ -577,6 +717,7 @@ class SentenceBasedExtractors(object):
     @staticmethod
     def parse_distance_from_s_node(sentence):
         '''How far the current node (its POS) is from an S-parent.
+
         '''
         parsetree = sentence.parsetree
         result = []
@@ -598,127 +739,6 @@ class SentenceBasedExtractors(object):
             result.append(WordBasedResult(steps_up))
         return SentenceBasedResult(tuple(result))
 
-    @staticmethod
-    def dependency_outgoing_relations(sentence):
-        '''For each word I represent a vector of all outgoing relations, plus
-           the information related to the number of outgoing dependency
-           relations.
-
-           for each word =
-            dr1   dr2   dr2   dr2   dr2   dr2   ...   dr2   #outgoing_deps
-           [ F  ,  F  , NNS ,  F  ,  F  ,  F  , ... , VBZ ,       2         ]
-
-           Dependencies relations are taken from:
-           http://nlp.stanford.edu/software/dependencies_manual.pdf
-
-           Since I don't trust 100% the documentat linked above, I print out
-           a warning message in case a dependency relation is not in the list
-           belove (*dep_labels*), so that I can update this list in the future.
-           Anyway, the list should be quite complete as it is.
-        '''
-        dependencies = sentence.indexed_dependencies
-        dep_labels = ['root', 'dep', 'aux', 'auxpass', 'cop', 'arg',
-                      'agent', 'comp', 'acomp', 'ccomp', 'xcomp', 'obj',
-                      'dobj', 'iobj', 'pobj', 'subj', 'nsubj', 'nsubjpass',
-                      'csubj', 'csubjpass', 'cc', 'conj', 'expl', 'mod',
-                      'amod', 'appos', 'advcl', 'det', 'predet', 'preconj',
-                      'vmod', 'mwe', 'mark', 'advmod', 'neg', 'rcmod',
-                      'quantmod', 'nn', 'npadvmod', 'tmod', 'num', 'number',
-                      'prep', 'prepc', 'poss', 'possessive', 'prt',
-                      'parataxis', 'punct', 'ref', 'sdep', 'xsubj',
-                      'discourse', 'n_of_outgoing_relations']
-
-        result = []
-        f_suffix = lambda function_name: 'dependency_outgoing_' + function_name
-        for word in sentence.words:
-            word_vector = {f_suffix(dep): WordBasedResult(False) for dep
-                           in dep_labels}
-            word_dep_node = dependencies.nodes.get(word.id_token, None)
-            if word_dep_node:
-                for out_ref, relation in word_dep_node.childs.iteritems():
-                    if relation in dep_labels:
-                        relation = relation.split('-')[0]
-                        try:
-                            word_vector[f_suffix(relation)] = WordBasedResult(
-                                sentence.words[out_ref].part_of_speech)
-                        except KeyError:
-                            print 'WARNING: {} dep. relation missed.'.format(
-                                relation)
-                        word_vector[f_suffix('n_of_outgoing_relations')] =\
-                            WordBasedResult(len(word_dep_node.childs))
-            result.append(tuple(word_vector.items()))
-        return SentenceBasedResults(tuple(result))
-
-    @staticmethod
-    def dependency_incoming_relations(sentence):
-        '''For each word I represent a vector derived from the incoming
-           dependency relations. I represent the following information:
-           - father dependency relation (fdr);
-           - grandfather dependecy relation (gdr);
-           - part-of-speech tag for the father word (pfw);
-           - part-of-speech tag for the grandfather word (pgw);
-           - dominant verb (dmv);
-
-           for each word =
-            fdr   gdr   pfw   pgw   dmv
-           [aux , cop , NNS,  F  ,  F  ,  F  , ... , VBZ ,       2         ]
-        '''
-
-        deps = sentence.indexed_dependencies
-        attributes = ['father_dep_rel',
-                      'gfather_dep_rel',
-                      'postag_father',
-                      'postag_gfather',
-                      'dominant_verb']
-        f_suffix = lambda function_name: 'dependency_incoming_' + function_name
-        result = []
-        for _ in sentence.words:
-            result.append({f_suffix(dep): WordBasedResult(False) for dep
-                           in attributes})
-        for ref in deps.nodes.iterkeys():
-            if ref == deps.DUMMY_LABEL:
-                continue
-            elif deps.grandfather(ref):
-                fref = deps.father(ref)
-                gref = deps.father(fref)
-                result[ref][f_suffix('father_dep_rel')] = WordBasedResult(
-                    deps.nodes[fref].childs[ref])
-                result[ref][f_suffix('postag_father')] =\
-                    WordBasedResult(sentence.words[fref].part_of_speech)
-                result[ref][f_suffix('gfather_dep_rel')] = WordBasedResult(
-                    deps.nodes[gref].childs[fref])
-                result[ref][f_suffix('postag_gfather')] =\
-                    WordBasedResult(sentence.words[gref].part_of_speech)
-            elif deps.father(ref):
-                fref = deps.father(ref)
-                result[ref][f_suffix('father_dep_rel')] = WordBasedResult(
-                    deps.nodes[fref].childs[ref])
-                result[ref][f_suffix('postag_father')] =\
-                    WordBasedResult(sentence.words[fref].part_of_speech)
-                result[ref][f_suffix('gfather_dep_rel')] =\
-                    WordBasedResult(False)
-                result[ref][f_suffix('postag_gfather')] =\
-                    WordBasedResult(False)
-
-            # Dominant verb calculation
-            current_ref = ref
-            current_pos = sentence.words[ref].part_of_speech
-            if current_pos.startswith('V'):
-                result[ref][f_suffix('dominant_verb')] =\
-                    WordBasedResult(current_pos)
-            else:
-                while not (current_pos.startswith('V')
-                           or deps.is_dummy(current_ref)):
-                    current_ref = deps.father(current_ref)
-                    if current_ref is None:
-                        break
-                    current_pos = sentence.words[current_ref].part_of_speech
-                result[ref][f_suffix('dominant_verb')] =\
-                    WordBasedResult(current_pos)
-        for num, word_result in enumerate(result):
-            result[num] = tuple(word_result.items())
-        return SentenceBasedResults(tuple(result))
-
 
 class DocumentBasedExtractors(object):
 
@@ -729,37 +749,38 @@ class RelationExtractors(object):
 
     @staticmethod
     def from_text(from_obj, to_obj, document):
-        if isinstance(from_obj, EventInstance):
-            return WordBasedResult(from_obj.event.text)
-        else:
-            return WordBasedResult(from_obj.text)
+        return WordBasedResult(from_obj.text)
 
     @staticmethod
     def to_text(from_obj, to_obj, document):
-        if isinstance(to_obj, EventInstance):
-            return WordBasedResult(to_obj.event.text)
-        else:
-            return WordBasedResult(to_obj.text)
+        return WordBasedResult(to_obj.text)
+
+    @staticmethod
+    def from_lemma(from_obj, to_obj, document):
+        res = '-'.join([e.part_of_speech for e in from_obj.words])
+        return WordBasedResult(res)
+
+    @staticmethod
+    def to_lemma(from_obj, to_obj, document):
+        res = ' '.join([e.lemma for e in to_obj.words])
+        return WordBasedResult(res)
 
     @staticmethod
     def from_pos(from_obj, to_obj, document):
-        if isinstance(from_obj, EventInstance):
-            res = '-'.join([e.part_of_speech for e in from_obj.event.words])
-        else:
-            res = '-'.join([e.part_of_speech for e in from_obj.words])
+        res = '-'.join([e.part_of_speech for e in from_obj.words])
         return WordBasedResult(res)
 
     @staticmethod
     def to_pos(from_obj, to_obj, document):
-        if isinstance(to_obj, EventInstance):
-            res = '-'.join([e.part_of_speech for e in to_obj.event.words])
-        else:
-            res = '-'.join([e.part_of_speech for e in to_obj.words])
+        res = '-'.join([e.part_of_speech for e in to_obj.words])
         return WordBasedResult(res)
 
     @staticmethod
     def same_pos(from_obj, to_obj, document):
-        return WordBasedResult(RelationExtractors.from_pos(from_obj, to_obj, document) == RelationExtractors.to_pos(from_obj, to_obj, document))
+        return WordBasedResult(
+            RelationExtractors.from_pos(
+                from_obj, to_obj, document) ==
+            RelationExtractors.to_pos(from_obj, to_obj, document))
 
     @staticmethod
     def from_tag(from_obj, to_obj, document):
@@ -871,7 +892,7 @@ class RelationExtractors(object):
 
     @staticmethod
     def word_distance(from_obj, to_obj, document):
-        if from_obj.id_sentence == to_obj.id_sentence:
+        if from_obj.id_sentence() == to_obj.id_sentence():
             if from_obj.id_first_word() < to_obj.id_first_word():
                 return WordBasedResult(
                     abs(to_obj.id_first_word() - from_obj.id_last_word()))
@@ -880,16 +901,6 @@ class RelationExtractors(object):
                     abs(from_obj.id_first_word() - to_obj.id_last_word()))
         else:
             return WordBasedResult('_')
-
-    # TODO
-    @staticmethod
-    def linked_by_coref(from_obj, to_obj, document):
-        return WordBasedResult(True or False)
-
-    # TODO
-    @staticmethod
-    def linked_by_dependency_relation(from_obj, to_obj, document):
-        return WordBasedResult(True or False)
 
     @staticmethod
     def temporal_difference(from_obj, to_obj, document):
@@ -911,7 +922,7 @@ class RelationExtractors(object):
             return WordBasedResult('_')
 
     @staticmethod
-    def from_temporal_dct(from_obj, to_obj, document):
+    def from_temp_dct(from_obj, to_obj, document):
         if isinstance(from_obj, TemporalExpression):
             res = from_obj.value.replace('-', '') == \
                 document.dct.replace('_', '')
@@ -920,21 +931,21 @@ class RelationExtractors(object):
             return WordBasedResult('_')
 
     @staticmethod
-    def from_ttype(from_obj, to_obj, document):
+    def from_temp_type(from_obj, to_obj, document):
         if isinstance(from_obj, TemporalExpression):
             return WordBasedResult(from_obj.ttype)
         else:
             return WordBasedResult('_')
 
     @staticmethod
-    def to_ttype(from_obj, to_obj, document):
+    def to_temp_type(from_obj, to_obj, document):
         if isinstance(to_obj, TemporalExpression):
             return WordBasedResult(to_obj.ttype)
         else:
             return WordBasedResult('_')
 
     @staticmethod
-    def same_ttype(from_obj, to_obj, document):
+    def same_temp_type(from_obj, to_obj, document):
         if isinstance(from_obj, TemporalExpression) and \
                 isinstance(to_obj, TemporalExpression):
                 return WordBasedResult(from_obj.ttype == to_obj.ttype)
@@ -942,19 +953,252 @@ class RelationExtractors(object):
             return WordBasedResult(False)
 
     @staticmethod
-    def from_mod(from_obj, to_obj, document):
+    def from_temp_modality(from_obj, to_obj, document):
         if isinstance(from_obj, TemporalExpression):
             return WordBasedResult(from_obj.mod)
         else:
             return WordBasedResult('_')
 
     @staticmethod
-    def to_mod(from_obj, to_obj, document):
+    def to_temp_modality(from_obj, to_obj, document):
         if isinstance(to_obj, TemporalExpression):
             return WordBasedResult(to_obj.mod)
         else:
             return WordBasedResult('_')
 
     @staticmethod
-    def preposition_in_between(from_obj, to_obj, document):
-        return WordBasedResult('AA-BB-CC')
+    def same_temp_modality(from_obj, to_obj, document):
+        if isinstance(from_obj, TemporalExpression) and \
+                isinstance(to_obj, TemporalExpression):
+                return WordBasedResult(from_obj.mod == to_obj.mod)
+        else:
+            return WordBasedResult(False)
+
+    @staticmethod
+    def sentences_linked_by_coref(from_obj, to_obj, document):
+        """Checks whether the sentence of from_obj and the one of to_obj are
+        linked by a coreferencial link.
+
+        """
+        linked = document.sentences[from_obj.id_sentence()].connected_to(
+            to_obj.id_sentence())
+        return WordBasedResult(linked)
+
+    @staticmethod
+    def linked_by_dependency_relation(from_obj, to_obj, document):
+        '''It returns if the two elements are connected through one of their
+        words.
+
+        '''
+        def same_sentence(from_obj, to_obj):
+            return from_obj.id_sentence() == to_obj.id_sentence()
+
+        def connected(word1, word2):
+            cond1 = word1.dependencies_in('basic', word2)
+            cond2 = word2.dependencies_in('basic', word1)
+            if cond1:
+                return '<'
+            if cond2:
+                return '>'
+            return False
+
+        if same_sentence(from_obj, to_obj):
+            for from_word in from_obj.words:
+                for to_word in to_obj.words:
+                    conn = connected(from_word, to_word)
+                    if conn:
+                        return WordBasedResult(conn)
+        return WordBasedResult(False)
+
+    @staticmethod
+    def prepositions_in_between(from_obj, to_obj, document):
+        words_in_between = document.words(start=from_obj.end, end=to_obj.start)
+        preps = '-'.join([w.lemma for w in words_in_between
+                          if w.part_of_speech == 'IN'])
+        return WordBasedResult(preps)
+
+    @staticmethod
+    def prepositions_first_last_in_between(from_obj, to_obj, document):
+        words_in_between = document.words(start=from_obj.end, end=to_obj.start)
+        preps = [w.lemma for w in words_in_between if w.part_of_speech == 'IN']
+        if len(preps) >= 2:
+            preps = [preps[0], preps[-1]]
+        return WordBasedResult(' '.join(preps))
+
+    @staticmethod
+    def dependency_relation_type(from_obj, to_obj, document):
+        if from_obj.id_sentence() != to_obj.id_sentence():
+            return WordBasedResult('')
+
+        result = []
+        for from_word in from_obj.words:
+            for to_word in to_obj.words:
+                try:
+                    from_father = from_word.dependencies_in('basic', to_word)
+                    to_father = to_word.dependencies_in('basic', from_word)
+                    if from_father:
+                        result.append(from_father[0][0])
+                        continue
+                    if to_father:
+                        result.append(to_father[0][0])
+                        continue
+                except KeyError:
+                    pass
+        return WordBasedResult(' '.join(result))
+
+    @staticmethod
+    def from_is_root(from_obj, to_obj, document):
+        """It returns True if one of the words in `from_obj` is ROOT according
+        to the dependency relations.
+
+        """
+        sent = document.sentences[from_obj.id_sentence()]
+        from_ids = [w.id_token for w in from_obj.words]
+        res = any([sent.basic_dependencies.is_root(n) for n in from_ids])
+        return WordBasedResult(res)
+
+    @staticmethod
+    def to_is_root(from_obj, to_obj, document):
+        """It returns True if one of the words in `to_obj` is ROOT according
+        to the dependency relations.
+
+        """
+        sent = document.sentences[to_obj.id_sentence()]
+        to_ids = [w.id_token for w in to_obj.words]
+        res = any([sent.basic_dependencies.is_root(n) for n in to_ids])
+        return WordBasedResult(res)
+
+    @staticmethod
+    def from_governor_verb_lemma(from_obj, to_obj, document):
+
+        def stop_condition(word):
+            return any([word_to.part_of_speech.startswith('V') for _, word_to
+                        in word.dependencies_in('basic')])
+
+        sentence = document.sentences[from_obj.id_sentence()]
+        governors_lemma = set()
+        for word in from_obj.words:
+            try:
+                while not stop_condition(word):
+                    parents = sentence.dependencies_in('basic')
+                    if parents:
+                        word = parents[0][1]
+                governors_lemma.add(word.lemma)
+            except:
+                continue
+        return WordBasedResult('-'.join(sorted(governors_lemma)))
+
+    @staticmethod
+    def from_governor_verb_pos(from_obj, to_obj, document):
+
+        def stop_condition(word):
+            return any([word_to.part_of_speech.startswith('V') for _, word_to
+                        in word.dependencies_in('basic')])
+
+        sentence = document.sentences[from_obj.id_sentence()]
+        governors_pos = set()
+        for word in from_obj.words:
+            try:
+                while not stop_condition(word):
+                    parents = sentence.dependencies_in('basic')
+                    if parents:
+                        word = parents[0][1]
+                governors_pos.add(word.part_of_speech)
+            except:
+                continue
+        return WordBasedResult('-'.join(sorted(governors_pos)))
+
+    @staticmethod
+    def to_governor_verb_lemma(from_obj, to_obj, document):
+
+        def stop_condition(word):
+            return any([word_to.part_of_speech.startswith('V') for _, word_to
+                        in word.dependencies_in('basic')])
+
+        sentence = document.sentences[from_obj.id_sentence()]
+        governors_lemma = set()
+        for word in from_obj.words:
+            try:
+                while not stop_condition(word):
+                    parents = sentence.dependencies_in('basic')
+                    if parents:
+                        word = parents[0][1]
+                governors_lemma.add(word.lemma)
+            except:
+                continue
+        return WordBasedResult('-'.join(sorted(governors_lemma)))
+
+    @staticmethod
+    def to_governor_verb_pos(from_obj, to_obj, document):
+
+        def stop_condition(word):
+            return any([word_to.part_of_speech.startswith('V') for _, word_to
+                        in word.dependencies_in('basic')])
+
+        sentence = document.sentences[to_obj.id_sentence()]
+        governors_pos = set()
+        for word in to_obj.words:
+            try:
+                while not stop_condition(word):
+                    parents = sentence.dependencies_in('basic')
+                    if parents:
+                        word = parents[0][1]
+                governors_pos.add(word.part_of_speech)
+            except:
+                continue
+        return WordBasedResult('-'.join(sorted(governors_pos)))
+
+    @staticmethod
+    def temporal_signals_in_between(from_obj, to_obj, document):
+        start, end = from_obj.id_first_word(), to_obj.id_last_word()
+        words = document.words(start=start, end=end)
+        return WordBasedResult(' '.join([w.lemma for w in words
+                                         if w.part_of_speech == 'IN']))
+
+    @staticmethod
+    def from_prepositional_phrase(from_obj, to_obj, document):
+        start, end = from_obj.id_first_word() + 1, from_obj.id_last_word() + 1
+        sentence = document.sentences[from_obj.words[0].id_sentence]
+        positions = list(sentence.parsetree.treepositions(order='leaves'))
+        address = positions[start - 1]
+        for w in positions[start:end]:
+            if len(w) < len(address):
+                address = w
+        common_ancestor = sentence.parsetree[address[:-1]]
+        return WordBasedResult(common_ancestor == 'PP')
+
+    @staticmethod
+    def to_prepositional_phrase(from_obj, to_obj, document):
+        start, end = to_obj.id_first_word() + 1, to_obj.id_last_word() + 1
+        sentence = document.sentences[to_obj.words[0].id_sentence]
+        positions = list(sentence.parsetree.treepositions(order='leaves'))
+        address = positions[start - 1]
+        for w in positions[start:end]:
+            if len(w) < len(address):
+                address = w
+        common_ancestor = sentence.parsetree[address[:-1]]
+        return WordBasedResult(common_ancestor == 'PP')
+
+    @staticmethod
+    def from_parse_common_ancestor(from_obj, to_obj, document):
+        start, end = from_obj.id_first_word() + 1, from_obj.id_last_word() + 1
+        sentence = document.sentences[from_obj.words[0].id_sentence]
+        positions = list(sentence.parsetree.treepositions(order='leaves'))
+        address = positions[start - 1]
+        for w in positions[start:end]:
+            if len(w) < len(address):
+                address = w
+        common_ancestor = sentence.parsetree[address[:-1]]
+        return WordBasedResult(common_ancestor.node)
+
+    @staticmethod
+    def to_parse_common_ancestor(from_obj, to_obj, document):
+        start, end = to_obj.id_first_word() + 1, to_obj.id_last_word() + 1
+        sentence = document.sentences[to_obj.words[0].id_sentence]
+        positions = list(sentence.parsetree.treepositions(order='leaves'))
+        address = positions[start - 1]
+        for w in positions[start:end]:
+            if len(w) < len(address):
+                address = w
+        common_ancestor = sentence.parsetree[address[:-1]]
+        return WordBasedResult(common_ancestor.node)

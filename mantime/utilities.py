@@ -118,7 +118,8 @@ def search_subsequence(sequence, key, end=False):
 
 
 def extractors_stamp():
-    attributes_extractor_content = open('./attributes_extractor.py').read()
+    path = os.path.abspath('./mantime/attributes_extractor.py')
+    attributes_extractor_content = open(path).read()
     md5_obj = md5.new()
     md5_obj.update(attributes_extractor_content)
     return md5_obj.digest()

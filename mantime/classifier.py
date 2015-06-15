@@ -30,10 +30,10 @@ from crf_utilities import get_scale_factors
 from crf_utilities import probabilistic_correction
 from crf_utilities import label_switcher
 from attributes_extractor import TemporalRelationExtractor
-from model import Event
-from model import TemporalExpression
-from model import TemporalLink
-from model import SequenceLabel
+from model.data import Event
+from model.data import TemporalExpression
+from model.data import TemporalLink
+from model.document import SequenceLabel
 from settings import PATH_MODEL_FOLDER
 from settings import PATH_CRF_PP_ENGINE_TEST
 from settings import PATH_CRF_PP_ENGINE_TRAIN
@@ -179,9 +179,9 @@ def relation_matrix(documents, dest, training=True):
                               for obj
                               in annotations(document).itervalues()
                               if type(obj) == TemporalLink}
-            events = [e.eid for e in annotations(document).values()
+            events = [e.identifier() for e in annotations(document).values()
                       if type(e) == Event]
-            timexes = [t.tid for t in annotations(document).values()
+            timexes = [t.identifier() for t in annotations(document).values()
                        if type(t) == TemporalExpression]
             candidated_objs = events + timexes
             for from_id, to_id in permutations(candidated_objs, 2):

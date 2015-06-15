@@ -3,15 +3,16 @@ TO-DO List
 
 This document lists all the things I should look more carefully in the future.
 
+- [x] Move the output folder up.
+- [x] Complete the InTextEntity class development.
+- [ ] Make the code general with respect to different annotation standards for CRF (IO, BIO, WIO, WBIO, WBIOE, BIOE).
 - [ ] If an element ID contains `_` then the sneaking part in `relation_matrix` won't work.
-- [ ] Implement features for the temporal relation extraction task looking at my notes from the literature.
+- [x] Implement features for the temporal relation extraction task looking at my notes from the literature.
 - [ ] Can an event be anchored to two different MAKEINSTANCE tags?
 - [ ] Can the same two objects be connected by two different types of temporal relations?
 - [ ] Insert some sample files in input and output folders.
 - [ ] port the ParentedTree implementation and remove the nltk dependency
-- [ ] Implement the classifier for Temporal Links.
 - [ ] The writers should use an xml library instead of writing strings to a file.
-- [ ] Adapt the writers to output temporal links too.
 - [ ] Installation script.
 - [ ] Implement an error method (in ManTIME class) to get statistics from the models.
 - [ ] Implement a shuffle method and cross-fold validation for the data.
@@ -21,6 +22,8 @@ This document lists all the things I should look more carefully in the future.
 
 Done:
 
+- [x] Implement the classifier for Temporal Links.
+- [x] Adapt the writers to output temporal links too.
 - [x] Implement the feature extractor for Temporal Links.
 - [x] Probably some variables in Document and Sentence objects can be deleted.
 - [x] What's `id_token` in Word class?

@@ -244,7 +244,7 @@ def parse_parser_xml_results(xml, file_name="", raw_output=False):
     # Turning the raw xml into a raw python dictionary:
     raw_dict = xmltodict.parse(xml)
     if raw_output:
-        return raw_dict
+        return xml
 
     document = raw_dict[u'root'][u'document']
 
@@ -329,23 +329,24 @@ def parse_parser_xml_results(xml, file_name="", raw_output=False):
                              for token in raw_sent_list[id]['tokens']['token']]
 
         # Dependencies: Unindexed and Indexed
-        sent['dependencies'] = []
-        sent['indexeddependencies'] = []
+        sent['basic_dependencies'] = []
+        sent['collapsed_dependencies'] = []
         for dep in raw_sent_list[id]['dependencies']:
             for i, _ in enumerate(enforceList(dep.get('dep', []))):
+                current_dep = enforceList(dep['dep'])[i]
+                dep_type = current_dep['@type']
+                # dep_start_text = current_dep['governor']['#text']
+                dep_start_index = current_dep['governor']['@idx']
+                # dep_end_text = current_dep['dependent']['#text']
+                dep_end_index = current_dep['dependent']['@idx']
+                # dep_start = '-'.join([dep_start_text, dep_start_index])
+                # dep_end = '-'.join([dep_end_text, dep_end_index])
+                if dep['@type'] == 'collapsed-dependencies':
+                    sent['collapsed_dependencies'].append(
+                        (dep_type, dep_start_index, dep_end_index))
                 if dep['@type'] == 'basic-dependencies':
-                    current_dep = enforceList(dep['dep'])[i]
-                    dep_type = current_dep['@type']
-                    dep_start_text = current_dep['governor']['#text']
-                    dep_start_index = current_dep['governor']['@idx']
-                    dep_end_text = current_dep['dependent']['#text']
-                    dep_end_index = current_dep['dependent']['@idx']
-                    dep_start = '-'.join([dep_start_text, dep_start_index])
-                    dep_end = '-'.join([dep_end_text, dep_end_index])
-                    sent['dependencies'].append(
-                        (dep_type, dep_start_text, dep_end_text))
-                    sent['indexeddependencies'].append(
-                        (dep_type, dep_start, dep_end))
+                    sent['basic_dependencies'].append(
+                        (dep_type, dep_start_index, dep_end_index))
 
         sentences.append(sent)
 
@@ -582,7 +583,7 @@ if __name__ == '__main__':
     parser.add_option('-S', '--corenlp', default=DIRECTORY,
                       help='Stanford CoreNLP tool directory (default %s)' % DIRECTORY)
     parser.add_option('-P', '--properties', default='default.properties',
-                      help='Stanford CoreNLP properties fieles (default: default.properties)')
+                      help='Stanford CoreNLP properties files (default: default.properties)')
     options, args = parser.parse_args()
     VERBOSE = options.verbose
     # server = jsonrpc.Server(jsonrpc.JsonRpc20(),

@@ -24,9 +24,9 @@
 from abc import ABCMeta, abstractmethod
 import cgi
 
-from model import TemporalExpression
-from model import Event
-from model import TemporalLink
+from model.data import TemporalExpression
+from model.data import Event
+from model.data import TemporalLink
 
 
 class Writer(object):
@@ -162,7 +162,7 @@ class i2b2Writer(FileWriter):
                     element.text = document.get_text(element.start,
                                                      element.end)
                     cstart, cend = element.start + 1, element.end + 1
-                    xml_tag = str('<TIMEX3 id="{tid}" start="{cstart}" ' +
+                    xml_tag = str('<TIMEX3 id="{idx}" start="{cstart}" ' +
                                   'end="{cend}" text="{text}" type="{ttype}"' +
                                   ' val="{value}" mod="{mod}" />').format(
                         cstart=cstart, cend=cend, **element.__dict__)
@@ -170,7 +170,7 @@ class i2b2Writer(FileWriter):
                     element.text = document.get_text(element.start,
                                                      element.end)
                     cstart, cend = element.start + 1, element.end + 1
-                    xml_tag = str('<EVENT id="{eid}" start="{cstart}" ' +
+                    xml_tag = str('<EVENT id="{idx}" start="{cstart}" ' +
                                   'end="{cend}" text="{text}" ' +
                                   'modality="{modality}" ' +
                                   'polarity="{polarity}" ' +
@@ -219,12 +219,12 @@ class i2b2Writer(FileWriter):
             for element in document.predicted_annotations.itervalues():
                 # sostituisco il pezzetto nel testo con la stringa annotata
                 if isinstance(element, TemporalExpression):
-                    annotation = unicode('<TIMEX3 tid="{tid}" type="{ttype}"' +
+                    annotation = unicode('<TIMEX3 tid="{idx}" type="{ttype}"' +
                                          ' mod="{mod}" value="{value}">' +
                                          '{text}</TIMEX3>').format(
                                              **element.__dict__)
                 elif isinstance(element, Event):
-                    annotation = unicode('<EVENT id="{eid}" type="{eclass}" ' +
+                    annotation = unicode('<EVENT id="{idx}" type="{eclass}" ' +
                                          'modality="{modality}" ' +
                                          'polarity="{polarity}"' +
                                          '>{text}</EVENT>').format(
@@ -285,12 +285,12 @@ class HTMLWriter(FileWriter):
             for element in document.predicted_annotations.itervalues():
                 # sostituisco il pezzetto nel testo con la stringa annotata
                 if isinstance(element, TemporalExpression):
-                    annotation = unicode('<TIMEX3 tid="{tid}" type="{ttype}"' +
+                    annotation = unicode('<TIMEX3 tid="{idx}" type="{ttype}"' +
                                          ' mod="{mod}" value="{value}">' +
                                          '{text}</TIMEX3>').format(
                                              **element.__dict__)
                 elif isinstance(element, Event):
-                    annotation = unicode('<EVENT id="{eid}" type="{eclass}" ' +
+                    annotation = unicode('<EVENT eid="{idx}" type="{eclass}" ' +
                                          'modality="{modality}" ' +
                                          'polarity="{polarity}"' +
                                          '>{text}</EVENT>').format(
@@ -371,12 +371,12 @@ class XMLGenericWriter(FileWriter):
             for element in document.predicted_annotations.itervalues():
                 # sostituisco il pezzetto nel testo con la stringa annotata
                 if isinstance(element, TemporalExpression):
-                    annotation = unicode('<TIMEX3 tid="{tid}" type="{ttype}"' +
+                    annotation = unicode('<TIMEX3 tid="{idx}" type="{ttype}"' +
                                          ' mod="{mod}" value="{value}">' +
                                          '{text}</TIMEX3>').format(
                                              **element.__dict__)
                 elif isinstance(element, Event):
-                    annotation = unicode('<EVENT id="{eid}" type="{eclass}" ' +
+                    annotation = unicode('<EVENT id="{idx}" type="{eclass}" ' +
                                          'modality="{modality}" ' +
                                          'polarity="{polarity}"' +
                                          '>{text}</EVENT>').format(

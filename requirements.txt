@@ -1,5 +1,5 @@
-nltk==2.0.4
-corenlp==3.4.1-0
-jsonrpclib==0.1.3
-pexpect==3.1
-xmltodict==0.9.0
+nltk==2.0.5
+python-corenlp>=3.4.1-0
+jsonrpclib>=0.1.3
+pexpect>=3.1
+xmltodict>=0.9.0
