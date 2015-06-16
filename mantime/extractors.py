@@ -915,12 +915,16 @@ class RelationExtractors(object):
             to_dt = re.match(
                 r'^([0-9]{4})-([0-9]{2})-([0-9]{2})', to_obj.value)
             if from_dt and to_dt:
-                from_dt = date(int(from_dt.group(1)), int(from_dt.group(2)),
-                               int(from_dt.group(3)))
-                to_dt = date(int(to_dt.group(1)), int(to_dt.group(2)),
-                             int(to_dt.group(3)))
-                diff = from_dt - to_dt
-                return WordBasedResult(diff.days)
+                try:
+                    from_dt = date(int(from_dt.group(1)),
+                                   int(from_dt.group(2)),
+                                   int(from_dt.group(3)))
+                    to_dt = date(int(to_dt.group(1)), int(to_dt.group(2)),
+                                 int(to_dt.group(3)))
+                    diff = from_dt - to_dt
+                    return WordBasedResult(diff.days)
+                except ValueError:
+                    return WordBasedResult('_')
             return WordBasedResult('_')
         else:
             return WordBasedResult('_')
