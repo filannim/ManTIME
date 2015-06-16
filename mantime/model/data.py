@@ -48,7 +48,8 @@ class InTextEntity(Entity):
         if document:
             self.start = words[0].character_offset_begin + document.text_offset
             self.end = words[-1].character_offset_end + document.text_offset
-            self.text = cgi.escape(document.text[self.start:self.end], True)
+            self.text = cgi.escape(
+                document.text[self.start:self.end].replace('\n', ''), True)
         else:
             self.text = ''
             self.start = words[0].character_offset_begin
