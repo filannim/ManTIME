@@ -3,18 +3,13 @@ TO-DO List
 
 This document lists all the things I should look more carefully in the future.
 
-- [x] Move the output folder up.
-- [x] Complete the InTextEntity class development.
 - [ ] Make the code general with respect to different annotation standards for CRF (IO, BIO, WIO, WBIO, WBIOE, BIOE).
 - [ ] If an element ID contains `_` then the sneaking part in `relation_matrix` won't work.
-- [x] Implement features for the temporal relation extraction task looking at my notes from the literature.
-- [ ] Can an event be anchored to two different MAKEINSTANCE tags?
-- [ ] Can the same two objects be connected by two different types of temporal relations?
 - [ ] Insert some sample files in input and output folders.
-- [ ] port the ParentedTree implementation and remove the nltk dependency
+- [ ] Update the code to support the last version of NLTK ParentedTree implementation.
 - [ ] The writers should use an xml library instead of writing strings to a file.
 - [ ] Installation script.
-- [ ] Implement an error method (in ManTIME class) to get statistics from the models.
+- [ ] Implement an error measurement framework (in ManTIME class) to get statistics from the models.
 - [ ] Implement a shuffle method and cross-fold validation for the data.
 - [ ] Do I really need to load Stanford Core NLP everytime for every document? Once (the problem)[https://github.com/dasmith/stanford-corenlp-python/issues/13] with long texts is solved I should switch to the new stanford-core-nlp.
 - [ ] Unit-test the code with a proper testing framework (py.test).
@@ -22,6 +17,11 @@ This document lists all the things I should look more carefully in the future.
 
 Done:
 
+- [x] Can the same two objects be connected by two different types of temporal relations? No.
+- [x] Can an event be anchored to two different MAKEINSTANCE tags? Yes. (not supported yet.)
+- [x] Move the output folder up.
+- [x] Complete the InTextEntity class development.
+- [x] Implement features for the temporal relation extraction task looking at my notes from the literature.
 - [x] Implement the classifier for Temporal Links.
 - [x] Adapt the writers to output temporal links too.
 - [x] Implement the feature extractor for Temporal Links.
