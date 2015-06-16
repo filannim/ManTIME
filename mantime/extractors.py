@@ -34,7 +34,6 @@ from settings import GAZETTEER_FOLDER
 
 
 open_gazetteer = lambda file_name: open(GAZETTEER_FOLDER + file_name)
-
 dep_labels = ['root', 'dep', 'aux', 'auxpass', 'cop', 'arg',
               'agent', 'comp', 'acomp', 'ccomp', 'xcomp', 'obj',
               'dobj', 'iobj', 'pobj', 'subj', 'nsubj', 'nsubjpass',
@@ -45,6 +44,7 @@ dep_labels = ['root', 'dep', 'aux', 'auxpass', 'cop', 'arg',
               'prep', 'prepc', 'poss', 'possessive', 'prt',
               'parataxis', 'punct', 'ref', 'sdep', 'xsubj',
               'discourse', 'n_of_outgoing_relations']
+max_steps = 30
 
 
 def matching_gazetteer(gazetteer, sentence):
@@ -647,9 +647,11 @@ class WordBasedExtractors(object):
         if word.part_of_speech.startswith('V'):
             return WordBasedResult(word.part_of_speech)
         else:
-            while not word.part_of_speech.startswith('V'):
+            steps = max_steps
+            while not word.part_of_speech.startswith('V') and steps:
                 try:
                     word = word.dependencies_in('basic')[0][1]
+                    steps -= 1
                 except IndexError:
                     return WordBasedResult(False)
             return WordBasedResult(word.part_of_speech)
@@ -659,9 +661,11 @@ class WordBasedExtractors(object):
         if word.part_of_speech.startswith('V'):
             return WordBasedResult(word.part_of_speech)
         else:
-            while not word.part_of_speech.startswith('V'):
+            steps = max_steps
+            while not word.part_of_speech.startswith('V') and steps:
                 try:
                     word = word.dependencies_in('collapsed')[0][1]
+                    steps -= 1
                 except:
                     return WordBasedResult(False)
             return WordBasedResult(word.part_of_speech)
