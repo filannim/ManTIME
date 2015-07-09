@@ -59,13 +59,17 @@ class ManTIME(object):
 
         # corpus collection
         input_files = os.path.join(folder, self.reader.file_filter)
-        for input_file in glob.glob(input_files):
+        documents = sorted(glob.glob(input_files))
+        for index, input_file in enumerate(documents, start=1):
+            basename = os.path.basename(input_file)
+            position = '[{}/{}]'.format(index, len(documents))
             try:
+                logging.info('{} Doc {}.'.format(position, basename))
                 doc = self.extractor.extract(self.reader.parse(input_file))
                 self.documents.append(doc)
             except cElementTree.ParseError:
-                msg = 'Document {} skipped: parse error.'.format(
-                    os.path.relpath(input_file))
+                msg = '{} Doc {} skipped: parse error.'.format(position,
+                                                               basename)
                 logging.error(msg)
 
         # training models (identification and normalisation)

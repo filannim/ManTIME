@@ -23,6 +23,7 @@
 
 from abc import ABCMeta, abstractmethod
 import xml.etree.cElementTree as etree
+from lxml import etree as letree
 from StringIO import StringIO
 import sys
 import os
@@ -211,7 +212,7 @@ class TempEval3FileReader(FileReader):
         """
         annotations = {}
         start_offset = - document.text_offset
-        for event, element in etree.iterparse(
+        for event, element in letree.iterparse(
                 StringIO(source), events=('start', 'end')):
             if event == 'start':
                 if element.tag in self.tags_to_spot:

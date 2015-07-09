@@ -171,7 +171,7 @@ def relation_matrix(documents, dest, training=True):
     extractor = TemporalRelationExtractor()
 
     # It stores the attribute matrix
-    features = None
+    features = {}
     with codecs.open(dest, 'w', encoding='utf8') as matrix:
         for doc_id, document in enumerate(documents):
             inverted_index = {(obj.from_obj.identifier(),
