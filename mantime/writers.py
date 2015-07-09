@@ -75,6 +75,22 @@ class TempEval3Writer(FileWriter):
 
         """
 
+        def attribute_name_tlink(obj, direction):
+            assert direction in ('to', 'from')
+            if direction == 'to':
+                name = {'EVENT': 'EventInstance',
+                        'MAKEINSTANCE': 'EventInstance',
+                        'TIMEX': 'Time'}
+            else:
+                name = {'EVENT': 'eventInstance',
+                        'MAKEINSTANCE': 'eventInstance',
+                        'TIMEX': 'time'}
+            relatedTo = {'to': 'relatedTo', 'from': ''}
+            id_str = {'to': '', 'from': 'ID'}
+            result = '{}{}{}'.format(relatedTo[direction],
+                                     name[obj.tag], id_str[direction])
+            return result
+
         outputs = []
         for document in documents:
             output = []
@@ -92,15 +108,26 @@ class TempEval3Writer(FileWriter):
 
             text = list(document.text)
             # TO-DO: This works properly only for IO annotation schema!
-            for element in document.predicted_annotations.itervalues():
+            elements = (e for e in document.predicted_annotations.itervalues()
+                        if type(e) in (Event, TemporalExpression))
+            for element in elements:
                 # sostituisco il pezzetto nel testo con la stringa annotata
                 if isinstance(element, TemporalExpression):
-                    annotation = str('<TIMEX3 tid="{tid}" type="{ttype}" ' +
-                                     'mod="{mod}" value="{value}">' +
-                                     '{text}</TIMEX3>').format(
-                                         **element.__dict__)
+                    if element.mod:
+                        annotation = str('<TIMEX3 tid="{idx}" ' +
+                                         'type="{ttype}" ' +
+                                         'mod="{mod}" value="{value}">' +
+                                         '{text}</TIMEX3>').format(
+                            **element.__dict__)
+                    else:
+                        annotation = str('<TIMEX3 tid="{idx}" ' +
+                                         'type="{ttype}" ' +
+                                         'value="{value}">' +
+                                         '{text}</TIMEX3>').format(
+                            **element.__dict__)
+                    text[element.start + document.text_offset] = annotation
                 elif isinstance(element, Event):
-                    annotation = str('<EVENT eid="{eid}" class="{eclass}">' +
+                    annotation = str('<EVENT eid="{idx}" class="{eclass}">' +
                                      '{text}</EVENT>').format(
                                          **element.__dict__)
                 text[element.start + document.text_offset] = annotation
@@ -109,14 +136,13 @@ class TempEval3Writer(FileWriter):
                                 document.text_offset + element.end):
                     text[i] = ''
 
-            output.append(u'<TEXT>{}</TEXT>\n\n'.format(
-                ''.join(text)))
+            output.append(u'<TEXT>{}</TEXT>\n\n'.format(''.join(text)))
 
             # MAKEINSTANCEs
             events = (e for e in document.predicted_annotations.itervalues()
                       if isinstance(e, Event))
             for event in events:
-                instance = str('<MAKEINSTANCE eiid="{eid}" eventID="{eid}" ' +
+                instance = str('<MAKEINSTANCE eiid="i{idx}" eventID="{idx}" ' +
                                'pos="{pos}" tense="{tense}" ' +
                                'aspect="{aspect}" polarity="{polarity}" ' +
                                'modality="{modality}" />').format(
@@ -125,6 +151,26 @@ class TempEval3Writer(FileWriter):
             output.append('')
 
             # TLINKs
+            def makeinstance(obj):
+                if type(obj) == Event:
+                    return 'i{}'.format(obj.identifier())
+                else:
+                    return obj.identifier()
+
+            tlinks = (e for e in document.predicted_annotations.itervalues()
+                      if isinstance(e, TemporalLink))
+            for tlink in tlinks:
+                xml_tag = unicode('<TLINK lid="{}" {}="{}" ' +
+                                  '{}="{}" ' +
+                                  'relType="{}" />').format(
+                    tlink.lid,
+                    attribute_name_tlink(tlink.from_obj, 'from'),
+                    makeinstance(tlink.from_obj),
+                    attribute_name_tlink(tlink.to_obj, 'to'),
+                    makeinstance(tlink.to_obj),
+                    tlink.relation_type)
+                output.append(xml_tag)
+
             output.append('</TimeML>\n')
             outputs.append('\n'.join(output))
         return outputs

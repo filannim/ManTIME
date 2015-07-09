@@ -18,8 +18,8 @@ import logging
 import os
 
 from mantime.mantime import ManTIME
-from mantime.readers import i2b2FileReader
-from mantime.writers import i2b2Writer
+from mantime.readers import TempEval3FileReader
+from mantime.writers import TempEval3Writer
 from mantime.attributes_extractor import FullExtractor
 
 
@@ -45,12 +45,11 @@ def main():
     args = parser.parse_args()
 
     # ManTIME
-    mantime = ManTIME(reader=i2b2FileReader(),
-                      writer=i2b2Writer(),
+    mantime = ManTIME(reader=TempEval3FileReader(),
+                      writer=TempEval3Writer(),
                       extractor=FullExtractor(),
                       model_name=args.model,
-                      pipeline=args.post_processing_pipeline,
-                      domain='clinical')
+                      pipeline=args.post_processing_pipeline)
 
     if args.mode == 'train':
         # Training
@@ -65,21 +64,21 @@ def main():
             basename = os.path.basename(doc)
             writein = os.path.join('./output/', basename)
             position = '[{}/{}]'.format(index, len(documents))
-            if writein not in glob.glob('./output/*.*'):
-                file_path = writein
-                with codecs.open(file_path, 'w', encoding='utf8') as output:
-                    # try:
+            # if writein not in glob.glob('./output/*.*'):
+            file_path = '.'.join(writein.split('.')[:-1])
+            with codecs.open(file_path, 'w', encoding='utf8') as output:
+                # try:
                     logging.info('{} Doc {}.'.format(position, basename))
                     output.write(mantime.label(doc)[0])
                     logging.info('{} Doc {} annotated.'.format(position,
                                                                basename))
-                    # except Exception:
-                    #     logging.error('{} Doc {} ** skipped **!'.format(
-                    #         position, basename))
-                    #     os.remove(file_path)
-            else:
-                logging.info('{} Doc {} already in output folder.'.format(
-                    position, basename))
+                # except Exception:
+                    # logging.error('{} Doc {} ** skipped **!'.format(
+                    #     position, basename))
+                    # os.remove(file_path)
+            # else:
+            #     logging.info('{} Doc {} already in output folder.'.format(
+            #         position, basename))
 
 if __name__ == '__main__':
     main()
