@@ -18,42 +18,6 @@
 from ..utilities import deephash
 
 
-def format_annotation(start, end, annotations, annotation_format='IO'):
-    '''It returns the correct sequence class label for the given token.'''
-    from data import Event, TemporalExpression
-    position = None
-    tag_fired = ''
-    attribs = {}
-    annotations = {obj_id: obj for obj_id, obj in annotations.iteritems()
-                   if type(obj) in (Event, TemporalExpression)}
-    if annotations:
-        for obj in annotations.itervalues():
-            tag = obj.tag
-            attribs = obj.tag_attributes
-            start_offset = obj.start
-            end_offset = obj.end
-            tag_fired = tag
-            if (start_offset, end_offset) == (start, end):
-                position = 'W'
-                break
-            elif end_offset == end:
-                position = 'E'
-                break
-            elif start_offset == start:
-                position = 'B'
-                break
-            elif start_offset < start and end_offset > end:
-                position = 'I'
-                break
-            else:
-                position = 'O'
-        if position not in list(annotation_format):
-            position = 'I'
-        return SequenceLabel(position, tag_fired), attribs
-    else:
-        return SequenceLabel('O'), attribs
-
-
 class SequenceLabel(object):
     '''It represents a sequence label in the sequence labelling classifier.
 
@@ -328,14 +292,26 @@ class Document(object):
     def get_text(self, start, end):
         return self.text[start + self.text_offset:end + self.text_offset]
 
-    def store_gold_annotations(self):
-        """Enriching the Stanford Parser output with gold annotations."""
-        for sentence in self.sentences:
-            for word in sentence.words:
-                word.gold_label, word.tag_attributes = format_annotation(
-                    int(word.character_offset_begin),
-                    int(word.character_offset_end),
-                    self.gold_annotations)
+    def store_gold_annotations(self, annotation_format='IO'):
+        '''It updates the SequenceLabels into the document's words.
+
+        '''
+        from data import Event, TemporalExpression
+        objs = [obj for obj in self.gold_annotations.itervalues()
+                if type(obj) in (Event, TemporalExpression)]
+
+        for obj in objs:
+            pattern = ['I'] * len(obj.words)
+            pattern[0] = 'B'
+            pattern[-1] = 'E'
+            if len(obj.words) == 1:
+                pattern = ['W']
+            for idx, pos in enumerate(pattern):
+                if pos not in annotation_format:
+                    pattern[idx] = 'I'
+            for idx, word in enumerate(obj.words):
+                word.gold_label = SequenceLabel(pattern[idx], obj.tag)
+                word.tag_attributes = obj.tag_attributes
 
     def words(self, start=None, end=None):
         '''It returns the words satisfying within the boundaries.

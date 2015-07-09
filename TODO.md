@@ -3,7 +3,6 @@ TO-DO List
 
 This document lists all the things I should look more carefully in the future.
 
-- [ ] Make the code general with respect to different annotation standards for CRF (IO, BIO, WIO, WBIO, WBIOE, BIOE).
 - [ ] If an element ID contains `_` then the sneaking part in `relation_matrix` won't work.
 - [ ] Insert some sample files in input and output folders.
 - [ ] Update the code to support the last version of NLTK ParentedTree implementation.
@@ -16,7 +15,7 @@ This document lists all the things I should look more carefully in the future.
 - [ ] Comment the code: better and more verbosely using Google Commenting Style.
 
 Done:
-
+- [x] Make the code general with respect to different annotation standards for CRF (IO, BIO, WIO, WBIO, WBIOE, BIOE).
 - [x] Can the same two objects be connected by two different types of temporal relations? No.
 - [x] Can an event be anchored to two different MAKEINSTANCE tags? Yes. (not supported yet.)
 - [x] Move the output folder up.
