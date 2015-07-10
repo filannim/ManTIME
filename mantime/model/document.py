@@ -180,7 +180,7 @@ class Document(object):
         self.sec_times = []
         self.text = ''
         self.sentences = []
-        self._coref = None
+        self._coref = []
         self.coreferences = []
         self.gold_annotations = {}
         self.predicted_annotations = {}
