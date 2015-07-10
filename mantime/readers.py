@@ -22,15 +22,18 @@
 """
 
 from abc import ABCMeta, abstractmethod
-import xml.etree.cElementTree as etree
-from lxml import etree as letree
-from StringIO import StringIO
-import sys
-import os
-import logging
+import cgi
 import codecs
 import cPickle
+from datetime import datetime
+import logging
+from lxml import etree as letree
 from operator import attrgetter
+import os
+import sys
+from StringIO import StringIO
+import tempfile
+import xml.etree.cElementTree as etree
 
 from model.document import Document
 from model.document import Sentence
@@ -105,6 +108,35 @@ class Reader(object):
         pass
 
 
+class TextReader(Reader):
+    '''Handles textual input.
+
+    '''
+    def __init__(self):
+        pass
+
+    def parse(self, text):
+        '''It parses a textual unicode input and return a Document object.
+
+        '''
+        assert type(text) == unicode
+        now = datetime.now()
+        month, day = '{:0>2}'.format(now.month), '{:0>2}'.format(now.day)
+        tmp_file = tempfile.NamedTemporaryFile(delete=False)
+        filename = tmp_file.name
+        tmp_file.close()
+        with codecs.open(filename, 'w', encoding='utf8') as tmp_file:
+            tmp_file.write('<?xml version="1.0" ?>\n')
+            tmp_file.write('<TimeML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://timeml.org/timeMLdocs/TimeML_1.2.1.xsd">\n')
+            tmp_file.write('<DOCID>tmp_file</DOCID>\n')
+            tmp_file.write('<DCT><TIMEX3 tid="t0" type="DATE" value="{y}-{m}-{d}" temporalFunction="false" functionInDocument="CREATION_TIME">{y}{m}{d}</TIMEX3></DCT>\n'.format(y=now.year, m=month, d=day))
+            tmp_file.write('<TEXT>\n')
+            tmp_file.write(cgi.escape(text, True))
+            tmp_file.write('</TEXT>\n</TimeML>')
+        tempeval_parser = TempEval3FileReader()
+        return tempeval_parser.parse(filename)
+
+
 class FileReader(Reader):
     """This classs is an abstract file reader for ManTIME."""
     __metaclass__ = ABCMeta
@@ -130,6 +162,7 @@ class TempEval3FileReader(FileReader):
         from a TempEval-3 annotated file. Those information are packed in a
         Document object, which is our internal representation.
         """
+        assert os.path.isfile(file_path), 'File path does not exist!'
         logging.info('Document {}: parsing...'.format(
             os.path.relpath(file_path)))
         xml = etree.parse(file_path)
@@ -163,7 +196,7 @@ class TempEval3FileReader(FileReader):
                                         encoding='utf8').strip()
         document.text = text_string
         instances = self._get_event_instances(xml)
-        document._coref = stanford_tree.get('coref', None)
+        document._coref = stanford_tree.get('coref', [])
 
         for num_sen, stanford_sentence in enumerate(stanford_tree['sentences']):
             collp_deps = stanford_sentence.get('collapsed_dependencies', None)
@@ -324,6 +357,7 @@ class WikiWarsInLineFileReader(FileReader):
         internal representation.
 
         """
+        assert os.path.isfile(file_path), 'File path does not exist!'
         xml = etree.parse(file_path)
         docid = xml.findall(".//DOCID")[0]
         dct = xml.findall(".//DATETIME/TIMEX2")[0]
@@ -353,7 +387,7 @@ class WikiWarsInLineFileReader(FileReader):
         document.text = text_string
         document.gold_annotations = self._get_annotations(text_xml,
                                                           -left_chars)
-        document._coref = stanford_tree.get('coref', None)
+        document._coref = stanford_tree.get('coref', [])
 
         for num_sen, stanford_sentence in\
                 enumerate(stanford_tree['sentences']):
@@ -440,6 +474,7 @@ class i2b2FileReader(FileReader):
         from a TempEval-3 annotated file. Those information are packed in a
         Document object, which is our internal representation.
         """
+        assert os.path.isfile(file_path), 'File path does not exist!'
         logging.info('Document {}: parsing...'.format(
             os.path.relpath(file_path)))
         xml = etree.parse(file_path)
@@ -466,7 +501,7 @@ class i2b2FileReader(FileReader):
         document.dct_text = document.dct.replace('-', '')
         document.title = os.path.basename(file_path)
         document.text = text_string
-        document._coref = stanford_tree.get('coref', None)
+        document._coref = stanford_tree.get('coref', [])
 
         for num_sen, stanford_sentence in\
                 enumerate(stanford_tree['sentences']):
@@ -572,6 +607,7 @@ class i2b2FileReader(FileReader):
 
 
 Reader.register(FileReader)
+Reader.register(TextReader)
 FileReader.register(TempEval3FileReader)
 FileReader.register(WikiWarsInLineFileReader)
 FileReader.register(i2b2FileReader)

@@ -82,9 +82,8 @@ class ManTIME(object):
 
         return modl
 
-    def label(self, file_name):
+    def label(self, input_obj):
         # according to the type
-        assert os.path.isfile(file_name), 'Input file does not exist.'
         assert self.model, 'Model not loaded.'
 
         identifier = IdentificationClassifier()
@@ -92,7 +91,7 @@ class ManTIME(object):
         linker = RelationClassifier()
 
         try:
-            doc = self.extractor.extract(self.reader.parse(file_name))
+            doc = self.extractor.extract(self.reader.parse(input_obj))
             annotated_doc = identifier.test([doc], self.model,
                                             self.post_processing_pipeline)
             annotated_doc = normaliser.test([doc], self.model, self.domain)
@@ -102,6 +101,6 @@ class ManTIME(object):
             return output
         except cElementTree.ParseError:
             msg = 'Document {} skipped: parse error.'.format(
-                os.path.relpath(file_name))
+                os.path.relpath(input_obj))
             logging.error(msg)
             return ['']

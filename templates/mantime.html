@@ -4,42 +4,15 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta name="Author" content="Michele Filannino" />
-        <link href="http://www.cs.man.ac.uk/~filannim/css/bootstrap.css" rel="stylesheet">
-        <link href="http://www.cs.man.ac.uk/~filannim/css/bootstrap-responsive.css" rel="stylesheet">
-        <link href="http://www.cs.man.ac.uk/~filannim/css/docs.css" rel="stylesheet">
-        <link rel="stylesheet" href="http://www.cs.man.ac.uk/~filannim/css/font-awesome.min.css">
+        <link href="http://www.cs.man.ac.uk/~filannim/css/bootstrap.css" rel="stylesheet" />
+        <link href="http://www.cs.man.ac.uk/~filannim/css/bootstrap-responsive.css" rel="stylesheet" />
+        <link href="http://www.cs.man.ac.uk/~filannim/css/docs.css" rel="stylesheet" />
+        <link rel="stylesheet" href="http://www.cs.man.ac.uk/~filannim/css/font-awesome.min.css" />
         <!--[if IE 7]>
             <link rel="stylesheet" href="../../css/font-awesome-ie7.min.css">
         <![endif]-->
         <link href="http://www.cs.man.ac.uk/~filannim/style.css" rel="stylesheet" type="text/css" media="screen" />
         <title>ManTIME annotation results</title>
-        <script type="text/javascript" src="https://www.google.com/jsapi?autoload={'modules':[{'name':'visualization',
-       'version':'1','packages':['timeline']}]}"></script>
-        <script type="text/javascript">
-        google.setOnLoadCallback(drawChart);
-
-        function drawChart() {
-          var container = document.getElementById('temporal_visualisation');
-
-          var chart = new google.visualization.Timeline(container);
-
-          var dataTable = new google.visualization.DataTable();
-
-          dataTable.addColumn({ type: 'string', id: 'TIMEX3' });
-          dataTable.addColumn({ type: 'date', id: 'Start' });
-          dataTable.addColumn({ type: 'date', id: 'End' });
-
-          dataTable.addRows([{{tags|safe}}]);
-
-          //[['T1', new Date(2014, 1, 2), new Date(2014, 2, 3)],['T2', new Date(2014, 2, 3), new Date(2014, 2, 3)],['T3', new Date(2014, 2, 3), new Date(2014, 2, 3) ]]);
-          
-          var options = {
-            timeline: { showRowLabels: false }
-          };
-
-          chart.draw(dataTable);
-        }
-        </script>
         <script type="text/javascript">
             var _gaq = _gaq || [];
             _gaq.push(['_setAccount', 'UA-16136788-3']);
@@ -51,41 +24,68 @@
             })();
         </script>
     	<style>
-        TIMEX3 {
-            display: inline-block;
-            padding: 2px 4px;
-            font-weight: bold;
-            line-height: 14px;
-            color: #ffffff;
-            text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
-            white-space: nowrap;
-            vertical-align: baseline;
-            -webkit-border-radius: 3px;
-            -moz-border-radius: 3px;
-            border-radius: 3px;
-        }
+            TIMEX3, EVENT {
+                display: inline-block;
+                -webkit-box-sizing: content-box;
+                -moz-box-sizing: content-box;
+                box-sizing: content-box;            
+                float: none;            
+                z-index: auto;            
+                position: static;            
+                overflow: visible;            
+                padding: 2px 4px;            
+                line-height: 14px;            
+                color: #ffffff;            
+                text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);            
+                white-space: nowrap;            
+                vertical-align: baseline;            
+                -webkit-border-radius: 3px;            
+                -moz-border-radius: 3px;            
+                border-radius: 3px;            
+                border: 1px solid;
+                border-bottom: 4px solid;
+            }        
+                
+            EVENT {
+                color: black;
+                background-color: white;
+                border-color: #000;
+            }
 
-        TIMEX3[type=TIME] {
-            background-color: #468847;
-        }
+            TIMEX3 {
+                color: white;
+                background-color: black;
+                border-color: #000;
+            }
 
-        TIMEX3[type=DATE] {
-            background-color: #3a87ad;
-        }
+            /* EVENTs i2b2 colour schema */
+            EVENT[type=PROBLEM] { border-bottom-color: #d11141;}
+            EVENT[type=TREATMENT] { border-bottom-color: #00b159;}
+            EVENT[type=TEST] { border-bottom-color: #00aedb;}
+            EVENT[type=OCCURRENCE] { border-bottom-color: #f37735;}
+            EVENT[type=CLINICAL_DEPT] { border-bottom-color: #ffc425;}
+            EVENT[type=EVIDENTIAL] { border-bottom-color: #dfe3ee;}
+            /* EVENTs TempEval colour schema */
+            EVENT[type=STATE] { border-bottom-color: #d11141;}
+            EVENT[type=REPORTING] { border-bottom-color: #00b159;}
+            EVENT[type=I_ACTION] { border-bottom-color: #00aedb;}
+            EVENT[type=OCCURRENCE] { border-bottom-color: #f37735;}
+            EVENT[type=I_STATE] { border-bottom-color: #ffc425;}
+            EVENT[type=ASPECTUAL] { border-bottom-color: #dfe3ee;}
+            EVENT[type=PERCEPTION] { border-bottom-color: #000000;}
 
-        TIMEX3[type=DURATION] {
-            background-color: #f89406;
-        }
-
-        TIMEX3[type=SET] {
-            background-color: #b94a48;
-        }
-        
-        #result TIMEX3:after[value], #result TIMEX3:after {
-            content: " (" attr(value) ") ";
-            font-size: xx-small;
-            vertical-align: top;
-        }
+            /* TIMEXes colour schema */
+            TIMEX3[type=TIME] { border-bottom-color: #468847;}        
+            TIMEX3[type=DATE] { border-bottom-color: #3a87ad;}
+            TIMEX3[type=DURATION] { border-bottom-color: #f89406;}
+            TIMEX3[type=SET] { border-bottom-color: #b94a48;}
+            TIMEX3[type=FREQUENCY] { border-bottom-color: #b94a48;}
+            
+            #result TIMEX3:after[value], #result TIMEX3:after {
+                content: " (" attr(value) ") ";
+                font-size: xx-small;
+                vertical-align: top;
+            }
         </style>
     </head>
 
@@ -95,45 +95,29 @@
             <h1>ManTIME</h1>
             
             <div class="row">
-                <div id="result" class="span9">
+                <div id="result" class="span12">
                     <h3>Result</h3>
                     <blockquote>
                         <p>{{result|safe}}</p>
                         <small>{{utterance}}, <cite title="Source Title">ManTIME</cite></small>
                     </blockquote>
-                    <h3>Visualisation</h3>
-                    <blockquote>
-                        <div id="temporal_visualisation" style="width: 100%; height: {{height}}px"></div>
-                        <!--<small>work in progress...</small>-->
-                    </blockquote>
                 </div>
-
-                <div id="legend" class="span3">
-                    <h3>The annotation is…</h3>
-                    <p>
-                        <form action="http://130.88.192.69:4001/send_feedback" method="post" style="display:inline">
-                            <input type="hidden" value="{{sentence}}" name="sentence" id="sentence" />
-                            <input type="hidden" value="{{result}}" name="result" id="result" />
-                            <input type="hidden" value="{{utterance}}" name="utterance" id="utterance" />
-                            <input type="hidden" value="positive" name="feedback" id="feedback" />
-                            <button class="btn btn-success" type="submit">correct <i class="icon-thumbs-up"></i></button>
-                        </form>
-
-                        <form action="http://130.88.192.69:4001/send_feedback" method="post" style="display:inline">
-                            <input type="hidden" value="{{sentence}}" name="sentence" id="sentence" />
-                            <input type="hidden" value="{{result}}" name="result" id="result" />
-                            <input type="hidden" value="{{utterance}}" name="utterance" id="utterance" />
-                            <input type="hidden" value="negative" name="feedback" id="feedback" />
-                            <button class="btn btn-danger" type="submit">wrong <i class="icon-thumbs-down"></i></button>
-                        </form>
-                    </p>
-                </div>
-
-                
             </div>
 
             <h3>Legend</h3>
-            <TIMEX3 type="DATE">date</TIMEX3>, <TIMEX3 type="TIME">time</TIMEX3>, <TIMEX3 type="DURATION">duration</TIMEX3>, <TIMEX3 type="SET">set</TIMEX3>.
+            <p>Temporal expressions: 
+            <TIMEX3 type="DATE">date</TIMEX3>, 
+            <TIMEX3 type="TIME">time</TIMEX3>, 
+            <TIMEX3 type="DURATION">duration</TIMEX3> and 
+            <TIMEX3 type="SET">set</TIMEX3>.</p>
+            <p>Events: 
+            <EVENT class="OCCURRENCE">occurrence</EVENT>, 
+            <EVENT class="STATE">state</EVENT>, 
+            <EVENT class="REPORTING">reporting</EVENT>, 
+            <EVENT class="I_ACTION">i_action</EVENT>, 
+            <EVENT class="I_STATE">i_state</EVENT>, 
+            <EVENT class="ASPECTUAL">aspectual</EVENT> and 
+            <EVENT class="PERCEPTION">perception</EVENT>.</p>
 
             <h4>Notes</h4>
             <p>This demo is using the model trained on <span class="text-error">human-annotated data</span> (gold only) and <span class="text-error">today's date</span> as utterance.<br/>A sentence splitter module is not integrated yet, if you typed more than one sentence, performance could be bad.</p>
