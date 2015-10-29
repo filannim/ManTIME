@@ -34,7 +34,7 @@ def index():
     sentence = request.form['sentence']
     result = MANTIME.label(sentence)[0]
     print sentence, result
-    return render_template('result.html', sentence=sentence, result=result,
+    return render_template('mantime.html', sentence=sentence, result=result,
                            utterance=utterance)
 
 app.run(host="130.88.192.69", port=4001, use_reloader=True)
