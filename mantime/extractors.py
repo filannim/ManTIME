@@ -432,7 +432,7 @@ class WordBasedExtractors(object):
 
     @staticmethod
     def temporal_festivity(word):
-        festivities = ('christmas', 'easter', 'epifany', 'martin', 'luther',
+        festivities = ('christmas', 'easter', 'epifhany', 'martin', 'luther',
                        'thanksgiving', 'halloween', 'saints', 'armistice',
                        'nativity', 'advent', 'solstice', 'boxing', 'stephen',
                        'sylvester')
@@ -456,7 +456,7 @@ class WordBasedExtractors(object):
         try:
             node_label = word.constituency_parent.parent().parent().node
             return WordBasedResult(node_label)
-        except AttributeError:
+        except (AttributeError, TypeError):
             return WordBasedResult('_^_')
 
     @staticmethod
@@ -465,7 +465,7 @@ class WordBasedExtractors(object):
             node = word.constituency_parent.parent()
             node_labels = [i.node for i in node]
             return WordBasedResult('_'.join(node_labels))
-        except AttributeError:
+        except (AttributeError, TypeError):
             return WordBasedResult('_^_')
 
     @staticmethod
@@ -474,7 +474,7 @@ class WordBasedExtractors(object):
             node = word.constituency_parent.parent().parent()
             node_label = [i.node for i in node]
             return WordBasedResult('_'.join(node_label))
-        except AttributeError:
+        except (AttributeError, TypeError):
             return WordBasedResult('_^_')
 
     @staticmethod
@@ -485,7 +485,7 @@ class WordBasedExtractors(object):
             parents.append(word.constituency_parent.parent().parent().node)
             parents.append(
                 word.constituency_parent.parent().parent().parent().node)
-        except AttributeError:
+        except (AttributeError, TypeError):
             pass
         return WordBasedResult('_'.join(reversed(parents)))
 
@@ -495,7 +495,7 @@ class WordBasedExtractors(object):
         try:
             parents.append(word.constituency_parent.parent().node)
             parents.append(word.constituency_parent.parent().parent().node)
-        except AttributeError:
+        except (AttributeError, TypeError):
             pass
         return WordBasedResult('_'.join(reversed(parents)))
 
