@@ -1,3 +1,5 @@
+
+
 ManTIME
 =======
 
@@ -32,7 +34,7 @@ Put the input files in a particular folder and run:
 
 the option -ppp uses the post-processing pipeline on top of the CRFs model.
 
-You can also annotate just a sentence using the following command:
+You can also train a new model using the following command:
 
     $ python mantime.py train <folder_path> <model_name>
 
